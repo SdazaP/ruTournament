@@ -18,6 +18,7 @@ import Buttons from './pages/UiElements/Buttons';
 import DefaultLayout from './layout/DefaultLayout'; */
 import TournamentCreation from './pages/NewTournament/TournamentCreation';
 import DashboardLayout from './layout/DashboardLayout';
+import DashboardTournament from './layout/DashboardTournament';
 import Tournaments from './pages/Dashboard/Tournaments';
 
 function App() {
@@ -166,6 +167,27 @@ function App() {
                 />
               </Routes>
             </DashboardLayout>
+          </>
+        }
+      />
+      <Route
+        path="/tournament"
+        element={
+          <>
+            <PageTitle title="Dashboard Tournamenmt" />
+            <DashboardTournament>
+              <Routes>
+                <Route
+                  index
+                  element={
+                    <>
+                      <PageTitle title="Dashboard Tournament" />
+                      <Tournaments />
+                    </>
+                  }
+                />
+              </Routes>
+            </DashboardTournament>
           </>
         }
       />
