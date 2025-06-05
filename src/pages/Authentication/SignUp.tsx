@@ -5,7 +5,7 @@ import Logo from '../../images/logo/logo.svg';
 import useColorMode from '../../hooks/useColorMode';
 
 const SignUp: React.FC = () => {
-  const [colorMode, setColorMode] = useColorMode();
+  useColorMode();
   return (
     <>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">

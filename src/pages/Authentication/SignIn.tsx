@@ -5,7 +5,7 @@ import Logo from '../../images/logo/logo.svg';
 import useColorMode from '../../hooks/useColorMode';
 
 const SignIn: React.FC = () => {
-  const [colorMode, setColorMode] = useColorMode();
+  useColorMode();
   return (
     <>
       <div className="h-screen rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
