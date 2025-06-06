@@ -1,65 +1,69 @@
 import React, { useState } from "react";
 
 const TableTournament = () => {
-  // Estado inicial de tournamentData
   const [tournamentData, setTournamentData] = useState([
     {
-      category: "3x3", // Valor inicial seleccionado
-      rounds: "Final directa", // Valor inicial seleccionado
-      mode: "WCA", // Valor inicial seleccionado
+      category: "3x3",
+      rounds: "Final directa",
+      mode: "WCA",
       avg_mode: "ao5",
     },
   ]);
 
-  // Opciones disponibles para cada campo
   const options = {
-    category: ["3x3", "4x4", "3x3 OH"],
-    rounds: ["Final directa", "Ronda única", "3 Rondas"],
-    mode: ["WCA", "Red Bull"],
+    category: ["3x3", "4x4", "3x3 OH", "2x2", "Pyraminx", "Megaminx"],
+    rounds: ["Final directa", "Ronda única", "3 Rondas", "5 Rondas"],
+    mode: ["WCA", "Red Bull", "Personalizado"],
+    avg_modes: ["ao5", "mo3", "bo1", "bo3"],
   };
 
-  // Función para agregar una nueva fila
   const handleAddRow = () => {
-    const newRow = {
-      category: options.category[0], // Valor predeterminado
-      rounds: options.rounds[0], // Valor predeterminado
-      mode: options.mode[0], // Valor predeterminado
-      avg_mode: "Nuevo AVG", // Puedes cambiar esto por un valor dinámico
-    };
-
-    // Actualiza el estado agregando la nueva fila
-    setTournamentData([...tournamentData, newRow]);
+    setTournamentData([
+      ...tournamentData,
+      {
+        category: options.category[0],
+        rounds: options.rounds[0],
+        mode: options.mode[0],
+        avg_mode: options.avg_modes[0],
+      },
+    ]);
   };
 
-  // Función para manejar cambios en los dropdowns
   const handleChange = (index, field, value) => {
     const updatedData = [...tournamentData];
     updatedData[index][field] = value;
     setTournamentData(updatedData);
   };
 
+  const handleRemoveRow = (index) => {
+    if (tournamentData.length > 1) {
+      const updatedData = tournamentData.filter((_, i) => i !== index);
+      setTournamentData(updatedData);
+    }
+  };
+
   return (
-    <div className="rounded-sm border border-stroke bg-gray-900 px-5 pt-6 pb-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-6">
-      <div className="flex flex-col">
+    <div className="w-full rounded-lg border border-gray-700 bg-gray-800 p-4 shadow sm:p-6">
+      <div className="overflow-x-auto">
         {/* Encabezados de la tabla */}
-        <div className="grid grid-cols-3 rounded-sm bg-gray-800 dark:bg-meta-4 sm:grid-cols-4">
-          <div className="p-2.5 text-center xl:px-20">
-            <h5 className="text-sm font-medium uppercase xsm:text-base text-white">
+        <div className="grid min-w-[600px] grid-cols-4 rounded-t-lg bg-gray-800">
+          <div className="p-3 text-center">
+            <h5 className="text-sm font-medium uppercase text-white sm:text-base">
               Categorías
             </h5>
           </div>
-          <div className="p-2.5 text-center xl:px-20">
-            <h5 className="text-sm font-medium uppercase xsm:text-base text-white">
+          <div className="p-3 text-center">
+            <h5 className="text-sm font-medium uppercase text-white sm:text-base">
               Rondas
             </h5>
           </div>
-          <div className="p-2.5 text-center xl:px-20">
-            <h5 className="text-sm font-medium uppercase xsm:text-base text-white">
+          <div className="p-3 text-center">
+            <h5 className="text-sm font-medium uppercase text-white sm:text-base">
               Formato
             </h5>
           </div>
-          <div className="p-2.5 text-center xl:px-20">
-            <h5 className="text-sm font-medium uppercase xsm:text-base text-white">
+          <div className="p-3 text-center">
+            <h5 className="text-sm font-medium uppercase text-white sm:text-base">
               AVG
             </h5>
           </div>
@@ -69,75 +73,112 @@ const TableTournament = () => {
         {tournamentData.map((tournament, index) => (
           <div
             key={index}
-            className="grid grid-cols-3 sm:grid-cols-4 border-b border-gray-700 dark:border-strokedark"
+            className="grid min-w-[600px] grid-cols-4 border-b border-gray-700 last:rounded-b-lg"
           >
-            {/* Dropdown para Categorías */}
-            <div className="flex items-center gap-3 p-2.5 xl:p-5">
+            {/* Categoría */}
+            <div className="flex items-center justify-center p-3">
               <select
                 value={tournament.category}
-                onChange={(e) =>
-                  handleChange(index, "category", e.target.value)
-                }
-                className="bg-gray-800 dark:bg-boxdark border border-gray-700 dark:border-strokedark rounded p-1 text-white"
+                onChange={(e) => handleChange(index, "category", e.target.value)}
+                className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
               >
                 {options.category.map((option, i) => (
-                  <option key={i} value={option} className="text-white">
+                  <option key={i} value={option}>
                     {option}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Dropdown para Rondas */}
-            <div className="flex items-center justify-center p-2.5 xl:p-5">
+            {/* Rondas */}
+            <div className="flex items-center justify-center p-3">
               <select
                 value={tournament.rounds}
-                onChange={(e) =>
-                  handleChange(index, "rounds", e.target.value)
-                }
-                className="bg-gray-800 dark:bg-boxdark border border-gray-700 dark:border-strokedark rounded p-1 text-white"
+                onChange={(e) => handleChange(index, "rounds", e.target.value)}
+                className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
               >
                 {options.rounds.map((option, i) => (
-                  <option key={i} value={option} className="text-white">
+                  <option key={i} value={option}>
                     {option}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Dropdown para Formato */}
-            <div className="flex items-center justify-center p-2.5 xl:p-5">
+            {/* Formato */}
+            <div className="flex items-center justify-center p-3">
               <select
                 value={tournament.mode}
-                onChange={(e) =>
-                  handleChange(index, "mode", e.target.value)
-                }
-                className="bg-gray-800 dark:bg-boxdark border border-gray-700 dark:border-strokedark rounded p-1 text-white"
+                onChange={(e) => handleChange(index, "mode", e.target.value)}
+                className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
               >
                 {options.mode.map((option, i) => (
-                  <option key={i} value={option} className="text-white">
+                  <option key={i} value={option}>
                     {option}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Campo AVG (puedes cambiarlo a un dropdown si es necesario) */}
-            <div className="flex items-center justify-center p-2.5 xl:p-5">
-              <p className="text-white">{tournament.avg_mode}</p>
+            {/* AVG */}
+            <div className="flex items-center justify-center p-3">
+              <select
+                value={tournament.avg_mode}
+                onChange={(e) => handleChange(index, "avg_mode", e.target.value)}
+                className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
+              >
+                {options.avg_modes.map((option, i) => (
+                  <option key={i} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         ))}
+      </div>
 
-        {/* Botón agregar */}
-        <div className="flex flex-col items-center justify-center">
-          <button
-            className="mt-10 px-8 py-3 bg-blue-500 text-white text-lg rounded shadow-md hover:bg-blue-600"
-            onClick={handleAddRow}
+      {/* Botones de acción */}
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+        <button
+          onClick={handleAddRow}
+          className="flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
           >
-            +
+            <path
+              fillRule="evenodd"
+              d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+          <span className="ml-2">Añadir categoría</span>
+        </button>
+
+        {tournamentData.length > 1 && (
+          <button
+            onClick={() => handleRemoveRow(tournamentData.length - 1)}
+            className="flex items-center rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <span className="ml-2">Eliminar última</span>
           </button>
-        </div>
+        )}
       </div>
     </div>
   );
