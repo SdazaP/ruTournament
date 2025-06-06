@@ -39,7 +39,7 @@ const Tournaments = () => {
       </div>
       {/* boton de nuevo torneo */}
       <div className="flex items-center justify-center mt-8">
-      <Link to="/creation">
+      <Link to="/dashboard/new-tournament">
         <button className="px-8 py-3 bg-blue-500 text-white text-lg rounded shadow-md hover:bg-blue-600">
           Nuevo torneo +
         </button>

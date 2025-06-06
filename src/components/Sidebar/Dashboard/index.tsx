@@ -70,7 +70,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     >
       {/* <!-- SIDEBAR HEADER --> */}
       <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
-        <NavLink to="/">
+        <NavLink to="/dashboard">
           <img src={Logo} alt="Logo" />
         </NavLink>
 
@@ -111,9 +111,33 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Tournaments --> */}
               <li>
                 <NavLink
-                  to="/tournaments"
+                  to="/dashboard"
                   className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes('tournaments') && 'bg-graydark dark:bg-meta-4'
+                    pathname === '/dashboard' && 'bg-graydark dark:bg-meta-4'
+                  }`}
+                >
+                  <svg
+                    className="fill-current"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 18 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M9.00002 2.025L2.70002 7.125V15.3H6.30002V10.8H11.7V15.3H15.3V7.125L9.00002 2.025ZM9.00002 4.275L13.5 7.65V13.5H12.6V9H5.40002V13.5H4.50002V7.65L9.00002 4.275Z"
+                      fill=""
+                    />
+                  </svg>
+                  Inicio
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/dashboard/tournaments"
+                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    pathname.includes('tournaments') &&
+                    'bg-graydark dark:bg-meta-4'
                   }`}
                 >
                   <svg
@@ -148,9 +172,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Nuevo Torneo --> */}
               <li>
                 <NavLink
-                  to="/new-tournament"
+                  to="new-tournament"
                   className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes('new-tournament') && 'bg-graydark dark:bg-meta-4'
+                    pathname.includes('new-tournament') &&
+                    'bg-graydark dark:bg-meta-4'
                   }`}
                 >
                   <svg

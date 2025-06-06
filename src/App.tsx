@@ -5,21 +5,11 @@ import Loader from './common/Loader';
 import PageTitle from './components/PageTitle';
 import SignIn from './pages/Authentication/SignIn';
 import SignUp from './pages/Authentication/SignUp';
-import Calendar from './pages/Calendar';
-/* import Chart from './pages/Chart';
-import ECommerce from './pages/Dashboard/ECommerce';
-import FormElements from './pages/Form/FormElements';
-import FormLayout from './pages/Form/FormLayout';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import Tables from './pages/Tables';
-import Alerts from './pages/UiElements/Alerts';
-import Buttons from './pages/UiElements/Buttons';
-import DefaultLayout from './layout/DefaultLayout'; */
 import TournamentCreation from './pages/NewTournament/TournamentCreation';
 import DashboardLayout from './layout/DashboardLayout';
 import DashboardTournament from './layout/DashboardTournament';
 import Tournaments from './pages/Dashboard/Tournaments';
+import WelcomePage from './pages/Dashboard/WelcomePage';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -37,111 +27,9 @@ function App() {
     <Loader />
   ) : (
     <Routes>
-      {/* Rutas dentro del DefaultLayout */}
-      {/* <Route
-        path="*"
-        element={
-          <DefaultLayout>
-            <Routes>
-              <Route
-                index
-                element={
-                  <>
-                    <PageTitle title="Dashboard Tournaments" />
-                    <ECommerce />
-                  </>
-                }
-              />
-              <Route
-                path="/calendar"
-                element={
-                  <>
-                    <PageTitle title="Calendar" />
-                    <Calendar />
-                  </>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <>
-                    <PageTitle title="Profile" />
-                    <Profile />
-                  </>
-                }
-              />
-              <Route
-                path="/forms/form-elements"
-                element={
-                  <>
-                    <PageTitle title="Form Elements" />
-                    <FormElements />
-                  </>
-                }
-              />
-              <Route
-                path="/forms/form-layout"
-                element={
-                  <>
-                    <PageTitle title="Form Layout" />
-                    <FormLayout />
-                  </>
-                }
-              />
-              <Route
-                path="/tables"
-                element={
-                  <>
-                    <PageTitle title="Tables" />
-                    <Tables />
-                  </>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <>
-                    <PageTitle title="Settings" />
-                    <Settings />
-                  </>
-                }
-              />
-              <Route
-                path="/chart"
-                element={
-                  <>
-                    <PageTitle title="Basic Chart" />
-                    <Chart />
-                  </>
-                }
-              />
-              <Route
-                path="/ui/alerts"
-                element={
-                  <>
-                    <PageTitle title="Alerts" />
-                    <Alerts />
-                  </>
-                }
-              />
-              <Route
-                path="/ui/buttons"
-                element={
-                  <>
-                    <PageTitle title="Buttons" />
-                    <Buttons />
-                  </>
-                }
-              />
-            </Routes>
-          </DefaultLayout>
-        }
-      /> */}
-
       {/* DashboardLayout */}
-
       <Route
-        path="*"
+        path="/dashboard/*"
         element={
           <>
             <PageTitle title="Dashboard Tournamenmts" />
@@ -152,16 +40,26 @@ function App() {
                   element={
                     <>
                       <PageTitle title="Dashboard Tournaments" />
+                      <WelcomePage />
+                    </>
+                  }
+                />
+                <Route
+                  path="tournaments"
+                  index
+                  element={
+                    <>
+                      <PageTitle title="Tournaments" />
                       <Tournaments />
                     </>
                   }
                 />
                 <Route
-                  path="/calendar"
+                  path="new-tournament"
                   element={
                     <>
-                      <PageTitle title="Tournament Calendar" />
-                      <Calendar />
+                      <PageTitle title="Tournament Creation" />
+                      <TournamentCreation />
                     </>
                   }
                 />
@@ -171,7 +69,7 @@ function App() {
         }
       />
       <Route
-        path="/tournament"
+        path="/dashboard/tournament/*"
         element={
           <>
             <PageTitle title="Dashboard Tournamenmt" />
@@ -193,15 +91,7 @@ function App() {
       />
 
       {/* Rutas fuera del DefaultLayout */}
-      <Route
-        path="/creation"
-        element={
-          <>
-            <PageTitle title="Tournament Creation" />
-            <TournamentCreation />
-          </>
-        }
-      />
+
       <Route
         path="/auth/signin"
         element={
