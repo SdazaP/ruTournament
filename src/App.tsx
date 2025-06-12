@@ -10,6 +10,10 @@ import DashboardLayout from './layout/DashboardLayout';
 import DashboardTournament from './layout/DashboardTournament';
 import Tournaments from './pages/Dashboard/Tournaments';
 import WelcomePage from './pages/Dashboard/WelcomePage';
+import TournamentWelcome from './pages/Tournament/TournamentWelcome';
+import Participants from './pages/Tournament/Participants';
+import Categories from './pages/Tournament/Categories';
+import ResultsWCA from './pages/Tournament/ResultsWCA';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -80,7 +84,34 @@ function App() {
                   element={
                     <>
                       <PageTitle title="Dashboard Tournament" />
-                      <Tournaments />
+                      <TournamentWelcome />
+                    </>
+                  }
+                />
+                <Route
+                  path='competitors'
+                  element={
+                    <>
+                      <PageTitle title="Competitors Tournament" />
+                      <Participants />
+                    </>
+                  }
+                />
+                <Route
+                  path='categories'
+                  element={
+                    <>
+                      <PageTitle title="Competitors Tournament" />
+                      <Categories />
+                    </>
+                  }
+                />
+                <Route
+                  path='results/categorie1'
+                  element={
+                    <>
+                      <PageTitle title="Competitors Tournament" />
+                      <ResultsWCA />
                     </>
                   }
                 />
