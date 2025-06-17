@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import TournamentBracket from './TournamentBracket';
 
 // Definición de tipos
 type Competitor = {
