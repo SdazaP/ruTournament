@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 const WelcomePage = () => {
   return (
-    <div className="min-h-screen dark:bg-gray-800 bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="text-center mb-12">
         <h1 className="text-4xl font-extrabold dark:text-white text-gray-900 mb-4">

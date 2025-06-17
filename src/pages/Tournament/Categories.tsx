@@ -207,7 +207,7 @@ const Categories = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-800 text-white p-4 sm:p-6">
+    <div className="min-h-screen text-white p-4 sm:p-6">
       <h2 className="text-2xl font-bold mb-6">Categorías del Torneo</h2>
 
       {/* Formulario para agregar nueva categoría */}

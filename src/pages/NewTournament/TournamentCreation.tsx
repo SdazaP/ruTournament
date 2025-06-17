@@ -10,7 +10,7 @@ export default function TournamentWelcome() {
     switch (currentStep) {
       case 1:
         return (
-          <div className="flex items-center justify-center min-h-screen w-full bg-gray-800 p-4 md:p-10">
+          <div className="flex items-center justify-center w-full p-4 md:p-10">
             <div className="w-full max-w-6xl h-full flex flex-col items-center justify-center">
               <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-10 text-white text-center">
                 Bienvenido
@@ -58,7 +58,7 @@ export default function TournamentWelcome() {
         );
       case 2:
         return (
-          <div className="flex items-center justify-center min-h-screen w-full bg-gray-800 p-4 md:p-10">
+          <div className="flex items-center justify-center w-full  p-4 md:p-10">
             <div className="w-full max-w-6xl h-full flex flex-col items-center justify-center">
               <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 my-4">
                 <div className="w-20 h-20 md:w-32 md:h-32 bg-gray-700 rounded-full flex items-center justify-center text-lg text-white">
@@ -93,7 +93,7 @@ export default function TournamentWelcome() {
         );
       case 3:
         return (
-          <div className="flex items-center justify-center min-h-screen w-full bg-gray-800 p-4 md:p-10">
+          <div className="flex items-center justify-center w-full p-4 md:p-10">
             <div className="w-full max-w-6xl h-full flex flex-col items-center justify-center">
               <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 my-4">
                 <div className="w-20 h-20 md:w-32 md:h-32 bg-gray-700 rounded-full flex items-center justify-center text-lg text-white">
