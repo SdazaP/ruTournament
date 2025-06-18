@@ -78,7 +78,7 @@ const TournamentWelcome = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-800 text-white p-2 max-w-7xl mx-auto">
+    <div className="min-h-screen text-white p-2 max-w-7xl mx-auto">
       {/* Encabezado en 3 columnas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10 mt-8">
         {/* Columna 1: Logo con funcionalidad de carga */}
