@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck } from 'react-icons/fa';
 
 type Category = {
   id: number;
@@ -15,7 +16,6 @@ type Category = {
 };
 
 const Categories = () => {
-  // Estado para las categorías
   const [categories, setCategories] = useState<Category[]>([
     {
       id: 1,
@@ -66,7 +66,6 @@ const Categories = () => {
     },
   ]);
 
-  // Estado para nueva categoría
   const [newCategory, setNewCategory] = useState({
     name: '',
     icon: '',
@@ -77,10 +76,9 @@ const Categories = () => {
     rounds: [{ roundNumber: 1, format: 'ao5' as 'ao3' | 'ao5' }],
   });
 
-  // Iconos disponibles
+  const [editMode, setEditMode] = useState(false);
   const icons = ['3x3', '4x4', 'OH', '2x2', 'Pyr', 'Mega', 'Sq1', 'Skewb'];
 
-  // Agregar nueva categoría
   const handleAddCategory = () => {
     if (newCategory.name.trim() === '') return;
 
@@ -99,7 +97,6 @@ const Categories = () => {
     }
 
     setCategories([...categories, categoryToAdd]);
-
     setNewCategory({
       name: '',
       icon: '',
@@ -111,12 +108,10 @@ const Categories = () => {
     });
   };
 
-  // Eliminar categoría
   const handleDeleteCategory = (id: number) => {
     setCategories(categories.filter((category) => category.id !== id));
   };
 
-  // Actualizar horario
   const handleUpdateSchedule = (
     id: number,
     field: 'startTime' | 'endTime',
@@ -132,7 +127,6 @@ const Categories = () => {
     );
   };
 
-  // Actualizar formato de categoría
   const handleUpdateFormat = (id: number, format: 'WCA' | 'RedBull') => {
     setCategories(
       categories.map((category) => {
@@ -150,7 +144,6 @@ const Categories = () => {
     );
   };
 
-  // Agregar ronda
   const handleAddRound = (id: number) => {
     setCategories(
       categories.map((category) => {
@@ -170,7 +163,6 @@ const Categories = () => {
     );
   };
 
-  // Eliminar ronda
   const handleDeleteRound = (id: number, roundNumber: number) => {
     setCategories(
       categories.map((category) => {
@@ -185,7 +177,6 @@ const Categories = () => {
     );
   };
 
-  // Actualizar formato de ronda
   const handleUpdateRoundFormat = (
     id: number,
     roundNumber: number,
@@ -206,136 +197,154 @@ const Categories = () => {
     );
   };
 
+  const toggleEditMode = () => {
+    setEditMode(!editMode);
+  };
+
   return (
     <div className="min-h-screen text-white p-4 sm:p-6">
-      <h2 className="text-2xl font-bold mb-6">Categorías del Torneo</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Categorías del Torneo</h2>
+        <button
+          onClick={toggleEditMode}
+          className={`px-4 py-2 rounded-lg transition-colors ${
+            editMode
+              ? 'bg-red-600 hover:bg-red-700'
+              : 'bg-blue-600 hover:bg-blue-700'
+          }`}
+        >
+          {editMode ? 'Desactivar Edición' : 'Activar Edición'}
+        </button>
+      </div>
 
-      {/* Formulario para agregar nueva categoría */}
-      <div className="flex flex-col gap-3 mb-6">
-        <div className="flex flex-col md:flex-row gap-3">
-          <input
-            type="text"
-            placeholder="Nombre categoría"
-            value={newCategory.name}
-            onChange={(e) =>
-              setNewCategory({ ...newCategory, name: e.target.value })
-            }
-            className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-
-          <select
-            value={newCategory.icon}
-            onChange={(e) =>
-              setNewCategory({ ...newCategory, icon: e.target.value })
-            }
-            className="flex-1 md:max-w-[200px] bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="">Seleccionar icono...</option>
-            {icons.map((icon, index) => (
-              <option key={index} value={icon}>
-                {icon}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={newCategory.format}
-            onChange={(e) =>
-              setNewCategory({
-                ...newCategory,
-                format: e.target.value as 'WCA' | 'RedBull',
-              })
-            }
-            className="flex-1 md:max-w-[150px] bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="WCA">Formato WCA</option>
-            <option value="RedBull">Formato RedBull</option>
-          </select>
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="flex-1 flex items-center gap-2">
+      {/* Formulario para agregar nueva categoría (solo visible en modo edición) */}
+      {editMode && (
+        <div className="flex flex-col gap-3 mb-6">
+          <div className="flex flex-col md:flex-row gap-3">
             <input
-              type="time"
-              value={newCategory.startTime}
+              type="text"
+              placeholder="Nombre categoría"
+              value={newCategory.name}
               onChange={(e) =>
-                setNewCategory({ ...newCategory, startTime: e.target.value })
+                setNewCategory({ ...newCategory, name: e.target.value })
               }
               className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
-            <span className="text-gray-300">a</span>
-            <input
-              type="time"
-              value={newCategory.endTime}
+
+            <select
+              value={newCategory.icon}
               onChange={(e) =>
-                setNewCategory({ ...newCategory, endTime: e.target.value })
+                setNewCategory({ ...newCategory, icon: e.target.value })
               }
-              className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
+              className="flex-1 md:max-w-[200px] bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="">Seleccionar icono...</option>
+              {icons.map((icon, index) => (
+                <option key={index} value={icon}>
+                  {icon}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={newCategory.format}
+              onChange={(e) =>
+                setNewCategory({
+                  ...newCategory,
+                  format: e.target.value as 'WCA' | 'RedBull',
+                })
+              }
+              className="flex-1 md:max-w-[150px] bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="WCA">Formato WCA</option>
+              <option value="RedBull">Formato RedBull</option>
+            </select>
           </div>
 
-          {newCategory.format === 'WCA' && (
-            <div className="flex-1 flex flex-col gap-2">
-              {newCategory.rounds.map((round, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <span className="text-sm">Ronda {round.roundNumber}:</span>
-                  <select
-                    value={round.format}
-                    onChange={(e) => {
-                      const newRounds = [...newCategory.rounds];
-                      newRounds[index].format = e.target.value as 'ao3' | 'ao5';
-                      setNewCategory({ ...newCategory, rounds: newRounds });
-                    }}
-                    className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm"
-                  >
-                    <option value="ao5">AO5</option>
-                    <option value="ao3">AO3</option>
-                  </select>
-                  {index === newCategory.rounds.length - 1 && (
-                    <button
-                      onClick={() =>
-                        setNewCategory({
-                          ...newCategory,
-                          rounds: [
-                            ...newCategory.rounds,
-                            {
-                              roundNumber: round.roundNumber + 1,
-                              format: 'ao5',
-                            },
-                          ],
-                        })
-                      }
-                      className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded"
-                    >
-                      +
-                    </button>
-                  )}
-                  {newCategory.rounds.length > 1 && (
-                    <button
-                      onClick={() => {
-                        const newRounds = newCategory.rounds.filter(
-                          (_, i) => i !== index,
-                        );
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="flex-1 flex items-center gap-2">
+              <input
+                type="time"
+                value={newCategory.startTime}
+                onChange={(e) =>
+                  setNewCategory({ ...newCategory, startTime: e.target.value })
+                }
+                className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <span className="text-gray-300">a</span>
+              <input
+                type="time"
+                value={newCategory.endTime}
+                onChange={(e) =>
+                  setNewCategory({ ...newCategory, endTime: e.target.value })
+                }
+                className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+
+            {newCategory.format === 'WCA' && (
+              <div className="flex-1 flex flex-col gap-2">
+                {newCategory.rounds.map((round, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <span className="text-sm">Ronda {round.roundNumber}:</span>
+                    <select
+                      value={round.format}
+                      onChange={(e) => {
+                        const newRounds = [...newCategory.rounds];
+                        newRounds[index].format = e.target.value as 'ao3' | 'ao5';
                         setNewCategory({ ...newCategory, rounds: newRounds });
                       }}
-                      className="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded"
+                      className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm"
                     >
-                      ×
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                      <option value="ao5">AO5</option>
+                      <option value="ao3">AO3</option>
+                    </select>
+                    {index === newCategory.rounds.length - 1 && (
+                      <button
+                        onClick={() =>
+                          setNewCategory({
+                            ...newCategory,
+                            rounds: [
+                              ...newCategory.rounds,
+                              {
+                                roundNumber: round.roundNumber + 1,
+                                format: 'ao5',
+                              },
+                            ],
+                          })
+                        }
+                        className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded"
+                      >
+                        +
+                      </button>
+                    )}
+                    {newCategory.rounds.length > 1 && (
+                      <button
+                        onClick={() => {
+                          const newRounds = newCategory.rounds.filter(
+                            (_, i) => i !== index,
+                          );
+                          setNewCategory({ ...newCategory, rounds: newRounds });
+                        }}
+                        className="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
 
-          <button
-            onClick={handleAddCategory}
-            className="flex-1 md:flex-none md:w-[150px] bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors"
-          >
-            Agregar
-          </button>
+            <button
+              onClick={handleAddCategory}
+              className="flex-1 md:flex-none md:w-[150px] bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors"
+            >
+              Agregar
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Lista de categorías */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -356,12 +365,14 @@ const Categories = () => {
                   </span>
                 </div>
               </div>
-              <button
-                onClick={() => handleDeleteCategory(category.id)}
-                className="text-gray-400 hover:text-red-400"
-              >
-                ×
-              </button>
+              {editMode && (
+                <button
+                  onClick={() => handleDeleteCategory(category.id)}
+                  className="text-gray-400 hover:text-red-400"
+                >
+                  ×
+                </button>
+              )}
             </div>
 
             <div className="space-y-3">
@@ -380,7 +391,10 @@ const Categories = () => {
                         e.target.value,
                       )
                     }
-                    className="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm"
+                    className={`flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm ${
+                      !editMode ? 'cursor-not-allowed opacity-50' : ''
+                    }`}
+                    disabled={!editMode}
                   />
                   <span>a</span>
                   <input
@@ -393,38 +407,43 @@ const Categories = () => {
                         e.target.value,
                       )
                     }
-                    className="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm"
+                    className={`flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm ${
+                      !editMode ? 'cursor-not-allowed opacity-50' : ''
+                    }`}
+                    disabled={!editMode}
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="text-xs text-gray-400 block mb-1">
-                  Formato
-                </label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleUpdateFormat(category.id, 'WCA')}
-                    className={`px-3 py-1 rounded text-sm ${
-                      category.format === 'WCA'
-                        ? 'bg-blue-600'
-                        : 'bg-gray-700 hover:bg-gray-600'
-                    }`}
-                  >
-                    WCA
-                  </button>
-                  <button
-                    onClick={() => handleUpdateFormat(category.id, 'RedBull')}
-                    className={`px-3 py-1 rounded text-sm ${
-                      category.format === 'RedBull'
-                        ? 'bg-blue-600'
-                        : 'bg-gray-700 hover:bg-gray-600'
-                    }`}
-                  >
-                    RedBull
-                  </button>
+              {editMode && (
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">
+                    Formato
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleUpdateFormat(category.id, 'WCA')}
+                      className={`px-3 py-1 rounded text-sm ${
+                        category.format === 'WCA'
+                          ? 'bg-blue-600'
+                          : 'bg-gray-700 hover:bg-gray-600'
+                      }`}
+                    >
+                      WCA
+                    </button>
+                    <button
+                      onClick={() => handleUpdateFormat(category.id, 'RedBull')}
+                      className={`px-3 py-1 rounded text-sm ${
+                        category.format === 'RedBull'
+                          ? 'bg-blue-600'
+                          : 'bg-gray-700 hover:bg-gray-600'
+                      }`}
+                    >
+                      RedBull
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {category.format === 'WCA' && category.rounds && (
                 <div>
@@ -449,12 +468,15 @@ const Categories = () => {
                               e.target.value as 'ao3' | 'ao5',
                             )
                           }
-                          className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm"
+                          className={`bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm ${
+                            !editMode ? 'cursor-not-allowed opacity-50' : ''
+                          }`}
+                          disabled={!editMode}
                         >
                           <option value="ao5">AO5</option>
                           <option value="ao3">AO3</option>
                         </select>
-                        {category.rounds && category.rounds.length > 1 && (
+                        {editMode && category.rounds && category.rounds.length > 1 && (
                           <button
                             onClick={() =>
                               handleDeleteRound(category.id, round.roundNumber)
@@ -466,12 +488,14 @@ const Categories = () => {
                         )}
                       </div>
                     ))}
-                    <button
-                      onClick={() => handleAddRound(category.id)}
-                      className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded"
-                    >
-                      + Añadir ronda
-                    </button>
+                    {editMode && (
+                      <button
+                        onClick={() => handleAddRound(category.id)}
+                        className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded"
+                      >
+                        + Añadir ronda
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -489,7 +513,6 @@ const Categories = () => {
         ))}
       </div>
 
-      {/* Mensaje cuando no hay categorías */}
       {categories.length === 0 && (
         <div className="text-center py-8 text-gray-400">
           No hay categorías registradas aún
