@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { FaEdit, FaSave, FaTimes, FaTrash, FaInfoCircle } from 'react-icons/fa';
+import { MdOutlineTimer, MdLeaderboard, MdCategory, MdPeople } from 'react-icons/md';
+import { BsTrophyFill, BsGraphUp } from 'react-icons/bs';
 
 type Participant = {
   id: number;
@@ -209,26 +212,36 @@ const ResultsWCA = () => {
     <div className="text-white p-4 md:p-6 lg:p-8">
       {/* Encabezado y controles */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-        <h2 className="text-xl sm:text-2xl font-bold">Resultados</h2>
+        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <MdLeaderboard className="text-blue-400" /> Resultados
+        </h2>
 
         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
           {/* Botón de edición */}
           <button
             onClick={() => setEditMode(!editMode)}
-            className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+            className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-2 ${
               editMode
                 ? 'bg-yellow-600 hover:bg-yellow-700'
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {editMode ? 'Desactivar Edición' : 'Activar Edición'}
+            {editMode ? (
+              <>
+                <FaTimes /> Desactivar Edición
+              </>
+            ) : (
+              <>
+                <FaEdit /> Activar Edición
+              </>
+            )}
           </button>
 
           {/* Selectores */}
           <div className="flex flex-col md:flex-row gap-3 flex-1">
             <div className="flex-1 min-w-[150px]">
-              <label className="block text-xs sm:text-sm text-gray-400 mb-1">
-                Categoría
+              <label className="block text-xs sm:text-sm text-gray-400 mb-1 flex items-center gap-1">
+                <MdCategory size={14} /> Categoría
               </label>
               <select
                 value={selectedCategory}
@@ -249,8 +262,8 @@ const ResultsWCA = () => {
             </div>
 
             <div className="flex-1 min-w-[150px]">
-              <label className="block text-xs sm:text-sm text-gray-400 mb-1">
-                Ronda
+              <label className="block text-xs sm:text-sm text-gray-400 mb-1 flex items-center gap-1">
+                <MdOutlineTimer size={14} /> Ronda
               </label>
               <select
                 value={selectedRound}
@@ -274,22 +287,24 @@ const ResultsWCA = () => {
 
       {/* Controles de edición activa */}
       {editMode && editingParticipant && (
-        <div className="flex gap-3 mb-4 p-3 bg-gray-700 rounded-lg">
-          <span className="font-medium">
-            Editando: {editingParticipant.name}
+        <div className="flex flex-wrap gap-3 mb-4 p-3 bg-gray-700 rounded-lg items-center">
+          <span className="font-medium flex items-center gap-2">
+            <FaInfoCircle className="text-yellow-400" /> Editando: {editingParticipant.name}
           </span>
-          <button
-            onClick={saveChanges}
-            className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm"
-          >
-            Guardar
-          </button>
-          <button
-            onClick={cancelEditing}
-            className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm"
-          >
-            Cancelar
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={saveChanges}
+              className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm flex items-center gap-2"
+            >
+              <FaSave /> Guardar
+            </button>
+            <button
+              onClick={cancelEditing}
+              className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm flex items-center gap-2"
+            >
+              <FaTimes /> Cancelar
+            </button>
+          </div>
         </div>
       )}
 
@@ -309,14 +324,14 @@ const ResultsWCA = () => {
                   <div className="flex justify-between items-center mb-2">
                     <h3 className="font-medium truncate">{participant.name}</h3>
                     <div className="flex gap-2">
-                      <span className="text-xs bg-blue-600 px-2 py-1 rounded">
-                        Best:{' '}
+                      <span className="text-xs bg-blue-600 px-2 py-1 rounded flex items-center gap-1">
+                        <BsTrophyFill size={10} />{' '}
                         {participant.best > 0
                           ? participant.best.toFixed(2)
                           : '-'}
                       </span>
-                      <span className="text-xs bg-green-600 px-2 py-1 rounded">
-                        Avg:{' '}
+                      <span className="text-xs bg-green-600 px-2 py-1 rounded flex items-center gap-1">
+                        <BsGraphUp size={10} />{' '}
                         {participant.average > 0
                           ? participant.average.toFixed(2)
                           : '-'}
@@ -335,8 +350,8 @@ const ResultsWCA = () => {
                       .slice(0, currentRound.format === 'ao5' ? 5 : 3)
                       .map((time, index) => (
                         <div key={index} className="flex flex-col items-center">
-                          <label className="text-xs text-gray-400">
-                            T{index + 1}
+                          <label className="text-xs text-gray-400 flex items-center gap-1">
+                            <MdOutlineTimer size={10} /> T{index + 1}
                           </label>
                           {renderTimeCell(participant, time, index)}
                         </div>
@@ -350,27 +365,47 @@ const ResultsWCA = () => {
             <table className="w-full bg-gray-750 rounded-lg overflow-hidden">
               <thead>
                 <tr className="bg-gray-700">
-                  <th className="px-3 py-2 text-left w-1/4">Participante</th>
-                  {currentRound.format === 'ao5' && (
-                    <>
-                      <th className="px-1 py-2 text-center">T1</th>
-                      <th className="px-1 py-2 text-center">T2</th>
-                      <th className="px-1 py-2 text-center">T3</th>
-                      <th className="px-1 py-2 text-center">T4</th>
-                      <th className="px-1 py-2 text-center">T5</th>
-                    </>
-                  )}
-                  {currentRound.format === 'ao3' && (
-                    <>
-                      <th className="px-1 py-2 text-center">T1</th>
-                      <th className="px-1 py-2 text-center">T2</th>
-                      <th className="px-1 py-2 text-center">T3</th>
-                    </>
-                  )}
-                  <th className="px-2 py-2 text-center">Best</th>
-                  <th className="px-2 py-2 text-center">Avg</th>
+                  {/* Columna Participante */}
+                  <th className="px-4 py-3 text-left min-w-[180px] w-1/4">
+                    <div className="flex items-center gap-2">
+                      <MdPeople className="text-blue-400" />
+                      <span>Participante</span>
+                    </div>
+                  </th>
+                  
+                  {/* Columnas de tiempos */}
+                  {Array.from({ 
+                    length: currentRound.format === 'ao5' ? 5 : 3 
+                  }).map((_, index) => (
+                    <th 
+                      key={`time-header-${index}`} 
+                      className="px-2 py-3 text-center min-w-[80px]"
+                    >
+                      <div className="flex flex-col items-center justify-center">
+                        <MdOutlineTimer className="text-gray-300 mb-1" />
+                        <span className="text-xs font-normal">T{index + 1}</span>
+                      </div>
+                    </th>
+                  ))}
+                  
+                  {/* Columna Best */}
+                  <th className="px-3 py-3 text-center min-w-[100px]">
+                    <div className="flex flex-col items-center justify-center">
+                      <BsTrophyFill className="text-yellow-400 mb-1" />
+                      <span className="text-xs font-normal">Best</span>
+                    </div>
+                  </th>
+                  
+                  {/* Columna Avg */}
+                  <th className="px-3 py-3 text-center min-w-[100px]">
+                    <div className="flex flex-col items-center justify-center">
+                      <BsGraphUp className="text-green-400 mb-1" />
+                      <span className="text-xs font-normal">Avg</span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
+              
               <tbody>
                 {currentRound.participants.map((participant) => (
                   <tr
@@ -379,23 +414,28 @@ const ResultsWCA = () => {
                       editMode ? 'hover:bg-gray-700/50' : ''
                     }`}
                   >
-                    <td className="px-3 py-2 truncate max-w-[180px]">
+                    {/* Nombre del participante */}
+                    <td className="px-4 py-3 truncate max-w-[180px] font-medium">
                       {participant.name}
                     </td>
+                    
+                    {/* Tiempos */}
                     {participant.times
                       .slice(0, currentRound.format === 'ao5' ? 5 : 3)
                       .map((time, index) => (
-                        <td key={index} className="px-1 py-2">
+                        <td key={index} className="px-2 py-3">
                           {renderTimeCell(participant, time, index)}
                         </td>
                       ))}
-                    <td className="px-2 py-2 text-center font-medium text-blue-400">
+                    
+                    {/* Mejor tiempo */}
+                    <td className="px-3 py-3 text-center font-medium text-blue-400">
                       {participant.best > 0 ? participant.best.toFixed(2) : '-'}
                     </td>
-                    <td className="px-2 py-2 text-center font-medium text-green-400">
-                      {participant.average > 0
-                        ? participant.average.toFixed(2)
-                        : '-'}
+                    
+                    {/* Promedio */}
+                    <td className="px-3 py-3 text-center font-medium text-green-400">
+                      {participant.average > 0 ? participant.average.toFixed(2) : '-'}
                     </td>
                   </tr>
                 ))}
@@ -404,16 +444,16 @@ const ResultsWCA = () => {
           )}
         </div>
       ) : (
-        /* Mensaje cuando no hay datos */
-        <div className="text-center py-8 text-gray-400">
+        <div className="text-center py-8 text-gray-400 flex flex-col items-center gap-2">
+          <FaInfoCircle size={24} />
           No hay datos disponibles para mostrar
         </div>
       )}
 
       {/* Notificación del modo edición */}
       {editMode && !editingParticipant && (
-        <div className="fixed bottom-4 right-4 bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg animate-fade-in">
-          Modo edición activado
+        <div className="fixed bottom-4 right-4 bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg animate-fade-in flex items-center gap-2">
+          <FaEdit /> Modo edición activado
         </div>
       )}
     </div>

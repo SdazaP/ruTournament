@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { FaTrophy, FaMedal, FaEdit, FaSave, FaTimes, FaCrown, FaUser } from 'react-icons/fa';
+import { MdSportsScore, MdOutlineTimer, MdCategory } from 'react-icons/md';
+import { GiBoxingGlove, GiLaurelsTrophy } from 'react-icons/gi';
 
 type Competitor = {
   id: number;
@@ -157,13 +160,19 @@ const ResultsRB = () => {
   };
 
   return (
-    <div className=" text-white p-4 md:p-6 lg:p-8">
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Resultados Red Bull</h2>
+    <div className="text-white p-4 md:p-6 lg:p-8">
+      {/* Encabezado */}
+      <div className="flex items-center gap-3 mb-6">
+        <GiLaurelsTrophy className="text-red-500 text-2xl" />
+        <h2 className="text-xl sm:text-2xl font-bold">Resultados Red Bull</h2>
+      </div>
 
       {/* Selectores */}
-      <div className="flex flex-col md:flex-row gap-3 mb-4 sm:mb-6">
+      <div className="flex flex-col md:flex-row gap-3 mb-6">
         <div className="flex-1 min-w-[150px]">
-          <label className="block text-xs sm:text-sm text-gray-400 mb-1">Categoría</label>
+          <label className="block text-xs sm:text-sm text-gray-400 mb-1 flex items-center gap-2">
+            <MdCategory className="text-blue-400" /> Categoría
+          </label>
           <select
             value={selectedCategory}
             onChange={(e) => {
@@ -180,7 +189,9 @@ const ResultsRB = () => {
         </div>
 
         <div className="flex-1 min-w-[150px]">
-          <label className="block text-xs sm:text-sm text-gray-400 mb-1">Ronda</label>
+          <label className="block text-xs sm:text-sm text-gray-400 mb-1 flex items-center gap-2">
+             Ronda
+          </label>
           <select
             value={selectedRound}
             onChange={(e) => {
@@ -200,7 +211,7 @@ const ResultsRB = () => {
 
       {/* Lista de enfrentamientos */}
       {currentRound && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {currentRound.matches.map((match) => (
             <div
               key={match.id}
@@ -208,28 +219,48 @@ const ResultsRB = () => {
                 setSelectedMatch(match);
                 setIsEditing(true);
               }}
-              className={`bg-gray-750 rounded-lg p-4 py-8 cursor-pointer hover:bg-gray-700 transition-colors ${
-                match.winner ? 'border-t-4 border-blue-500' : ''
+              className={`bg-gray-750 rounded-lg p-4 cursor-pointer hover:bg-gray-700 transition-colors ${
+                match.winner ? 'border-t-4 border-red-500' : ''
               }`}
             >
               <div className="flex justify-between items-center">
-                <div className={`text-left p-4 rounded-lg ${
-                  match.winner === match.competitor1.id ? 'bg-blue-900/50' : 'bg-gray-700'
+                {/* Competidor 1 */}
+                <div className={`text-left p-3 rounded-lg flex-1 ${
+                  match.winner === match.competitor1.id 
+                    ? 'bg-gradient-to-r from-red-900/30 to-transparent' 
+                    : 'bg-gray-700'
                 }`}>
-                  <div className="font-medium">{match.competitor1.name}</div>
-                  <div className="text-xs text-blue-400">
+                  <div className="font-medium flex items-center gap-2">
+                    {match.winner === match.competitor1.id && <FaCrown className="text-yellow-400" />}
+                    <FaUser className="text-blue-400" />
+                    {match.competitor1.name}
+                  </div>
+                  <div className="text-xs text-blue-400 flex items-center gap-1 mt-1">
+                    <FaTrophy className="text-yellow-400" />
                     Victorias: {match.competitor1.wins}/3
                   </div>
                 </div>
 
-                <div className="mx-2 text-gray-400 font-bold">VS</div>
+                {/* VS */}
+                <div className="mx-2 flex flex-col items-center">
+                  <GiBoxingGlove className="text-red-500 text-xl" />
+                  <span className="text-xs text-gray-400">VS</span>
+                </div>
 
-                <div className={`text-right p-4 rounded-lg ${
-                  match.winner === match.competitor2.id ? 'bg-blue-900/50' : 'bg-gray-700'
+                {/* Competidor 2 */}
+                <div className={`text-right p-3 rounded-lg flex-1 ${
+                  match.winner === match.competitor2.id 
+                    ? 'bg-gradient-to-l from-red-900/30 to-transparent' 
+                    : 'bg-gray-700'
                 }`}>
-                  <div className="font-medium">{match.competitor2.name}</div>
-                  <div className="text-xs text-blue-400">
+                  <div className="font-medium flex items-center gap-2 justify-end">
+                    {match.competitor2.name}
+                    <FaUser className="text-blue-400" />
+                    {match.winner === match.competitor2.id && <FaCrown className="text-yellow-400" />}
+                  </div>
+                  <div className="text-xs text-blue-400 flex items-center gap-1 justify-end mt-1">
                     Victorias: {match.competitor2.wins}/3
+                    <FaTrophy className="text-yellow-400" />
                   </div>
                 </div>
               </div>
@@ -242,22 +273,29 @@ const ResultsRB = () => {
       {isEditing && selectedMatch && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-xl font-bold mb-4 text-center">
-              Editar enfrentamiento - {currentRound?.name}
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                <MdSportsScore className="text-red-500" />
+                Editar enfrentamiento
+              </h3>
+              <span className="text-sm bg-red-900/50 px-2 py-1 rounded flex items-center gap-1">
+                {currentRound?.name}
+              </span>
+            </div>
 
             <div className="flex flex-col gap-6">
               {/* Competidores en lados opuestos */}
               <div className="flex justify-between">
                 {/* Competidor 1 - Izquierda */}
                 <div className="w-2/5">
-                  <div className={`font-medium mb-2 text-center p-2 rounded-lg ${
+                  <div className={`font-medium mb-2 text-center p-2 rounded-lg flex flex-col items-center ${
                     selectedMatch.winner === selectedMatch.competitor1.id 
-                      ? 'bg-green-900/50' 
+                      ? 'bg-gradient-to-b from-green-900/50 to-transparent border border-green-500' 
                       : selectedMatch.winner === selectedMatch.competitor2.id 
-                        ? 'bg-red-900/50' 
+                        ? 'bg-gradient-to-b from-red-900/50 to-transparent border border-red-500' 
                         : 'bg-gray-700'
                   }`}>
+                    <FaUser className="text-blue-400 mb-1" />
                     {selectedMatch.competitor1.name}
                   </div>
                   
@@ -287,30 +325,35 @@ const ResultsRB = () => {
                             step="0.01"
                             min="0"
                           />
-                          <span className="text-xs text-gray-400">T{index + 1}</span>
+                          <span className="text-xs text-gray-400 flex items-center gap-1">
+                            <MdOutlineTimer size={12} /> T{index + 1}
+                          </span>
                         </div>
                       );
                     })}
                   </div>
-                  <div className="text-center text-sm text-blue-400 mt-2">
+                  <div className="text-center text-sm text-blue-400 mt-2 flex items-center justify-center gap-1">
+                    <FaMedal className="text-yellow-400" />
                     Victorias: {selectedMatch.competitor1.wins}/3
                   </div>
                 </div>
 
                 {/* VS - Centro */}
-                <div className="flex items-center justify-center mx-2">
-                  <div className="text-xl font-bold">VS</div>
+                <div className="flex flex-col items-center justify-center mx-2">
+                  <GiBoxingGlove className="text-red-500 text-2xl" />
+                  <div className="text-xs text-gray-400 mt-1">VS</div>
                 </div>
 
                 {/* Competidor 2 - Derecha */}
                 <div className="w-2/5">
-                  <div className={`font-medium mb-2 text-center p-2 rounded-lg ${
+                  <div className={`font-medium mb-2 text-center p-2 rounded-lg flex flex-col items-center ${
                     selectedMatch.winner === selectedMatch.competitor2.id 
-                      ? 'bg-green-900/50' 
+                      ? 'bg-gradient-to-b from-green-900/50 to-transparent border border-green-500' 
                       : selectedMatch.winner === selectedMatch.competitor1.id 
-                        ? 'bg-red-900/50' 
+                        ? 'bg-gradient-to-b from-red-900/50 to-transparent border border-red-500' 
                         : 'bg-gray-700'
                   }`}>
+                    <FaUser className="text-blue-400 mb-1" />
                     {selectedMatch.competitor2.name}
                   </div>
                   
@@ -321,6 +364,9 @@ const ResultsRB = () => {
                       const isWin = time > 0 && competitor1Time > 0 && time < competitor1Time;
                       return (
                         <div key={index} className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400 flex items-center gap-1">
+                            <MdOutlineTimer size={12} /> T{index + 1}
+                          </span>
                           <input
                             type="number"
                             value={time || ''}
@@ -340,26 +386,35 @@ const ResultsRB = () => {
                             step="0.01"
                             min="0"
                           />
-                          <span className="text-xs text-gray-400">T{index + 1}</span>
                         </div>
                       );
                     })}
                   </div>
-                  <div className="text-center text-sm text-blue-400 mt-2">
+                  <div className="text-center text-sm text-blue-400 mt-2 flex items-center justify-center gap-1">
+                    <FaMedal className="text-yellow-400" />
                     Victorias: {selectedMatch.competitor2.wins}/3
                   </div>
                 </div>
               </div>
 
               {/* Ganador */}
-              <div className="mt-4 p-3 bg-gray-750 rounded text-center">
-                <span className="font-medium">Ganador: </span>
-                <span className="text-green-400">
-                  {selectedMatch.winner === selectedMatch.competitor1.id
-                    ? selectedMatch.competitor1.name
-                    : selectedMatch.winner === selectedMatch.competitor2.id
-                    ? selectedMatch.competitor2.name
-                    : 'Sin determinar (necesita 2 victorias)'}
+              <div className="mt-4 p-3 bg-gray-750 rounded-lg text-center flex flex-col items-center">
+                <div className="flex items-center gap-2 mb-1">
+                  <FaTrophy className="text-yellow-400" />
+                  <span className="font-medium">Ganador:</span>
+                </div>
+                <span className="text-green-400 flex items-center gap-2">
+                  {selectedMatch.winner === selectedMatch.competitor1.id ? (
+                    <>
+                      <FaCrown /> {selectedMatch.competitor1.name}
+                    </>
+                  ) : selectedMatch.winner === selectedMatch.competitor2.id ? (
+                    <>
+                      <FaCrown /> {selectedMatch.competitor2.name}
+                    </>
+                  ) : (
+                    'Sin determinar (necesita 2 victorias)'
+                  )}
                 </span>
               </div>
 
@@ -367,15 +422,15 @@ const ResultsRB = () => {
               <div className="flex justify-center gap-3 mt-4">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center gap-2"
                 >
-                  Cancelar
+                  <FaTimes /> Cancelar
                 </button>
                 <button
                   onClick={handleSaveMatch}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2"
                 >
-                  Confirmar
+                  <FaSave /> Confirmar
                 </button>
               </div>
             </div>
@@ -384,7 +439,8 @@ const ResultsRB = () => {
       )}
 
       {!currentRound && (
-        <div className="text-center py-8 text-gray-400">
+        <div className="text-center py-8 text-gray-400 flex flex-col items-center gap-2">
+          <GiLaurelsTrophy className="text-3xl text-gray-500" />
           No hay datos disponibles para mostrar
         </div>
       )}
