@@ -17,6 +17,7 @@ import ResultsWCA from './pages/Tournament/ResultsWCA';
 import ResultsRB from './pages/Tournament/ResultsRB';
 import ResultsViewRB from './pages/Tournament/Results/ResultsViewRB';
 import ResultsViewWCA from './pages/Tournament/Results/ResultsViewWCA';
+import HomePage from './pages/HomePage';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -72,6 +73,15 @@ function App() {
                 />
               </Routes>
             </DashboardLayout>
+          </>
+        }
+      />
+      <Route
+        path='/'
+        element={
+          <>
+            <PageTitle title='ruTournament'/>
+            <HomePage/>
           </>
         }
       />
