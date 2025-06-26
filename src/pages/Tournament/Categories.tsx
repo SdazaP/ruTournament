@@ -1,71 +1,30 @@
-import React, { useState } from 'react';
-import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft } from 'react-icons/fa';
+import { getTournaments, setTournaments } from '../../utils/localStorage';
+
+type Round = {
+  roundNumber: number;
+  format: 'ao3' | 'ao5';
+};
 
 type Category = {
-  id: number;
+  id: string;
   name: string;
   icon: string;
   startTime: string;
   endTime: string;
   participants: number;
   format: 'WCA' | 'RedBull';
-  rounds?: {
-    roundNumber: number;
-    format: 'ao3' | 'ao5';
-  }[];
+  rounds?: Round[];
 };
 
 const Categories = () => {
-  const [categories, setCategories] = useState<Category[]>([
-    {
-      id: 1,
-      name: '3x3',
-      icon: '3x3',
-      startTime: '09:00',
-      endTime: '10:30',
-      participants: 15,
-      format: 'WCA',
-      rounds: [
-        { roundNumber: 1, format: 'ao5' },
-        { roundNumber: 2, format: 'ao5' },
-      ],
-    },
-    {
-      id: 2,
-      name: '4x4',
-      icon: '4x4',
-      startTime: '11:00',
-      endTime: '12:30',
-      participants: 8,
-      format: 'RedBull',
-    },
-    {
-      id: 3,
-      name: '3x3 OH',
-      icon: 'OH',
-      startTime: '14:00',
-      endTime: '15:30',
-      participants: 12,
-      format: 'WCA',
-      rounds: [
-        { roundNumber: 1, format: 'ao5' },
-      ],
-    },
-    {
-      id: 4,
-      name: '2x2',
-      icon: '2x2',
-      startTime: '16:00',
-      endTime: '17:00',
-      participants: 10,
-      format: 'WCA',
-      rounds: [
-        { roundNumber: 1, format: 'ao3' },
-        { roundNumber: 2, format: 'ao5' },
-      ],
-    },
-  ]);
-
+  const { id: tournamentId } = useParams();
+  const navigate = useNavigate();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tournament, setTournament] = useState<any>(null);
+  
   const [newCategory, setNewCategory] = useState({
     name: '',
     icon: '',
@@ -79,24 +38,79 @@ const Categories = () => {
   const [editMode, setEditMode] = useState(false);
   const icons = ['3x3', '4x4', 'OH', '2x2', 'Pyr', 'Mega', 'Sq1', 'Skewb'];
 
-  const handleAddCategory = () => {
-    if (newCategory.name.trim() === '') return;
+  // Cargar datos del torneo
+  useEffect(() => {
+    if (tournamentId) {
+      const tournaments = getTournaments();
+      const currentTournament = tournaments.find(t => t.id === tournamentId);
+      
+      if (currentTournament) {
+        setTournament(currentTournament);
+        // Convertir las categorías del torneo al formato que espera el componente
+        const formattedCategories = currentTournament.categories?.map((cat: any) => ({
+          id: cat.id,
+          name: cat.name,
+          icon: cat.name.substring(0, 3), // Usar las primeras 3 letras como icono por defecto
+          startTime: '10:00', // Valor por defecto
+          endTime: '11:00', // Valor por defecto
+          participants: currentTournament.competitors?.filter((comp: any) => 
+            comp.categories.includes(cat.id)
+          ).length || 0,
+          format: cat.format === 'wca' ? 'WCA' : 'RedBull',
+          rounds: cat.rounds?.map((round: any, index: number) => ({
+            roundNumber: index + 1,
+            format: round.format === 'ao5' ? 'ao5' : 'ao3'
+          }))
+        })) || [];
+        
+        setCategories(formattedCategories);
+      }
+    }
+  }, [tournamentId]);
 
-    const categoryToAdd: Category = {
-      id: Date.now(),
+  const handleAddCategory = () => {
+    if (newCategory.name.trim() === '' || !tournamentId) return;
+
+    const categoryToAdd: any = {
+      id: Date.now().toString(),
       name: newCategory.name,
+      format: newCategory.format.toLowerCase(), // Guardar en minúsculas
+    };
+
+    if (newCategory.format === 'WCA') {
+      categoryToAdd.rounds = newCategory.rounds?.map(round => ({
+        num: round.roundNumber,
+        format: round.format,
+        results: []
+      }));
+    }
+
+    // Actualizar localStorage
+    const tournaments = getTournaments();
+    const updatedTournaments = tournaments.map(t => {
+      if (t.id === tournamentId) {
+        return {
+          ...t,
+          categories: [...(t.categories || []), categoryToAdd]
+        };
+      }
+      return t;
+    });
+    
+    setTournaments(updatedTournaments);
+    
+    // Actualizar estado local
+    const formattedCategory: Category = {
+      ...categoryToAdd,
       icon: newCategory.icon || newCategory.name.substring(0, 3),
       startTime: newCategory.startTime,
       endTime: newCategory.endTime,
       participants: 0,
       format: newCategory.format,
+      rounds: newCategory.rounds
     };
-
-    if (newCategory.format === 'WCA') {
-      categoryToAdd.rounds = [...newCategory.rounds];
-    }
-
-    setCategories([...categories, categoryToAdd]);
+    
+    setCategories([...categories, formattedCategory]);
     setNewCategory({
       name: '',
       icon: '',
@@ -108,15 +122,30 @@ const Categories = () => {
     });
   };
 
-  const handleDeleteCategory = (id: number) => {
-    setCategories(categories.filter((category) => category.id !== id));
+  const handleDeleteCategory = (id: string) => {
+    if (!tournamentId) return;
+    
+    // Actualizar localStorage
+    const tournaments = getTournaments();
+    const updatedTournaments = tournaments.map(t => {
+      if (t.id === tournamentId) {
+        return {
+          ...t,
+          categories: t.categories.filter((cat: any) => cat.id !== id),
+          competitors: t.competitors?.map((comp: any) => ({
+            ...comp,
+            categories: comp.categories.filter((catId: string) => catId !== id)
+          }))
+        };
+      }
+      return t;
+    });
+    
+    setTournaments(updatedTournaments);
+    setCategories(categories.filter(category => category.id !== id));
   };
 
-  const handleUpdateSchedule = (
-    id: number,
-    field: 'startTime' | 'endTime',
-    value: string,
-  ) => {
+  const handleUpdateSchedule = (id: string, field: 'startTime' | 'endTime', value: string) => {
     setCategories(
       categories.map((category) => {
         if (category.id === id) {
@@ -127,7 +156,35 @@ const Categories = () => {
     );
   };
 
-  const handleUpdateFormat = (id: number, format: 'WCA' | 'RedBull') => {
+  const handleUpdateFormat = (id: string, format: 'WCA' | 'RedBull') => {
+    if (!tournamentId) return;
+    
+    // Actualizar localStorage
+    const tournaments = getTournaments();
+    const updatedTournaments = tournaments.map(t => {
+      if (t.id === tournamentId) {
+        return {
+          ...t,
+          categories: t.categories.map((cat: any) => {
+            if (cat.id === id) {
+              const updatedCat = { 
+                ...cat, 
+                format: format.toLowerCase(),
+                ...(format === 'WCA' && !cat.rounds ? { rounds: [{ num: 1, format: 'ao5' }] } : {}),
+                ...(format === 'RedBull' ? { rounds: undefined } : {})
+              };
+              return updatedCat;
+            }
+            return cat;
+          })
+        };
+      }
+      return t;
+    });
+    
+    setTournaments(updatedTournaments);
+    
+    // Actualizar estado local
     setCategories(
       categories.map((category) => {
         if (category.id === id) {
@@ -144,7 +201,37 @@ const Categories = () => {
     );
   };
 
-  const handleAddRound = (id: number) => {
+  const handleAddRound = (id: string) => {
+    if (!tournamentId) return;
+    
+    // Actualizar localStorage
+    const tournaments = getTournaments();
+    const updatedTournaments = tournaments.map(t => {
+      if (t.id === tournamentId) {
+        return {
+          ...t,
+          categories: t.categories.map((cat: any) => {
+            if (cat.id === id && cat.format === 'wca') {
+              const lastRound = cat.rounds?.[cat.rounds.length - 1];
+              const newRoundNumber = lastRound ? lastRound.num + 1 : 1;
+              return {
+                ...cat,
+                rounds: [
+                  ...(cat.rounds || []),
+                  { num: newRoundNumber, format: 'ao5' },
+                ],
+              };
+            }
+            return cat;
+          })
+        };
+      }
+      return t;
+    });
+    
+    setTournaments(updatedTournaments);
+    
+    // Actualizar estado local
     setCategories(
       categories.map((category) => {
         if (category.id === id && category.format === 'WCA') {
@@ -163,7 +250,32 @@ const Categories = () => {
     );
   };
 
-  const handleDeleteRound = (id: number, roundNumber: number) => {
+  const handleDeleteRound = (id: string, roundNumber: number) => {
+    if (!tournamentId) return;
+    
+    // Actualizar localStorage
+    const tournaments = getTournaments();
+    const updatedTournaments = tournaments.map(t => {
+      if (t.id === tournamentId) {
+        return {
+          ...t,
+          categories: t.categories.map((cat: any) => {
+            if (cat.id === id && cat.format === 'wca' && cat.rounds) {
+              return {
+                ...cat,
+                rounds: cat.rounds.filter((round: any) => round.num !== roundNumber)
+              };
+            }
+            return cat;
+          })
+        };
+      }
+      return t;
+    });
+    
+    setTournaments(updatedTournaments);
+    
+    // Actualizar estado local
     setCategories(
       categories.map((category) => {
         if (category.id === id && category.format === 'WCA' && category.rounds) {
@@ -178,10 +290,37 @@ const Categories = () => {
   };
 
   const handleUpdateRoundFormat = (
-    id: number,
+    id: string,
     roundNumber: number,
     format: 'ao3' | 'ao5',
   ) => {
+    if (!tournamentId) return;
+    
+    // Actualizar localStorage
+    const tournaments = getTournaments();
+    const updatedTournaments = tournaments.map(t => {
+      if (t.id === tournamentId) {
+        return {
+          ...t,
+          categories: t.categories.map((cat: any) => {
+            if (cat.id === id && cat.format === 'wca' && cat.rounds) {
+              return {
+                ...cat,
+                rounds: cat.rounds.map((round: any) => 
+                  round.num === roundNumber ? { ...round, format } : round
+                )
+              };
+            }
+            return cat;
+          })
+        };
+      }
+      return t;
+    });
+    
+    setTournaments(updatedTournaments);
+    
+    // Actualizar estado local
     setCategories(
       categories.map((category) => {
         if (category.id === id && category.format === 'WCA' && category.rounds) {
@@ -204,7 +343,9 @@ const Categories = () => {
   return (
     <div className="min-h-screen text-white p-4 sm:p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Categorías del Torneo</h2>
+        <h2 className="text-2xl font-bold">
+          Categorías {tournament ? `- ${tournament.name}` : ''}
+        </h2>
         <button
           onClick={toggleEditMode}
           className={`px-4 py-2 rounded-lg transition-colors ${
