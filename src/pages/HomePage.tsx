@@ -33,7 +33,7 @@ const HomePage = () => {
 
       <div className="mt-16 text-center text-bodydark2">
         <p className="mb-2">© {new Date().getFullYear()} ruTournaments</p>
-        <p className="text-sm">Sistema de gestión de torneos competitivos</p>
+        <p className="text-sm">Sistema de gestión de torneos competitivos de cubo rubik</p>
       </div>
     </div>
   );

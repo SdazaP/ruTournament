@@ -40,7 +40,7 @@ function App() {
         path="/dashboard/*"
         element={
           <>
-            <PageTitle title="Dashboard Tournamenmts" />
+            <PageTitle title="Dashboard Tournaments" />
             <DashboardLayout>
               <Routes>
                 <Route
@@ -54,7 +54,6 @@ function App() {
                 />
                 <Route
                   path="tournaments"
-                  index
                   element={
                     <>
                       <PageTitle title="Tournaments" />
@@ -76,6 +75,7 @@ function App() {
           </>
         }
       />
+      
       <Route
         path='/'
         element={
@@ -85,18 +85,20 @@ function App() {
           </>
         }
       />
+
+      {/* Rutas de torneos específicos */}
       <Route
-        path="/dashboard/tournament/*"
+        path="/dashboard/tournament/:id/*"
         element={
           <>
-            <PageTitle title="Dashboard Tournamenmt" />
+            <PageTitle title="Tournament Details" />
             <DashboardTournament>
               <Routes>
                 <Route
                   index
                   element={
                     <>
-                      <PageTitle title="Dashboard Tournament" />
+                      <PageTitle title="Tournament Overview" />
                       <TournamentWelcome />
                     </>
                   }
@@ -105,7 +107,7 @@ function App() {
                   path='competitors'
                   element={
                     <>
-                      <PageTitle title="Competitors Tournament" />
+                      <PageTitle title="Tournament Competitors" />
                       <Participants />
                     </>
                   }
@@ -114,7 +116,7 @@ function App() {
                   path='categories'
                   element={
                     <>
-                      <PageTitle title="Competitors Tournament" />
+                      <PageTitle title="Tournament Categories" />
                       <Categories />
                     </>
                   }
@@ -123,7 +125,7 @@ function App() {
                   path='results/WCA'
                   element={
                     <>
-                      <PageTitle title="Competitors Tournament" />
+                      <PageTitle title="WCA Results" />
                       <ResultsWCA />
                     </>
                   }
@@ -132,7 +134,7 @@ function App() {
                   path='results/RB'
                   element={
                     <>
-                      <PageTitle title="Competitors Tournament" />
+                      <PageTitle title="Red Bull Results" />
                       <ResultsRB />
                     </>
                   }
@@ -141,7 +143,7 @@ function App() {
                   path='view/resultsRB'
                   element={
                     <>
-                      <PageTitle title="Competitors Tournament" />
+                      <PageTitle title="View Red Bull Results" />
                       <ResultsViewRB />
                     </>
                   }
@@ -150,20 +152,18 @@ function App() {
                   path='view/resultsWCA'
                   element={
                     <>
-                      <PageTitle title="Competitors Tournament" />
+                      <PageTitle title="View WCA Results" />
                       <ResultsViewWCA />
                     </>
                   }
                 />
               </Routes>
-              
             </DashboardTournament>
           </>
         }
       />
 
-      {/* Rutas fuera del DefaultLayout */}
-
+      {/* Rutas de autenticación */}
       <Route
         path="/auth/signin"
         element={
