@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import {
+  getTournaments,
+  setTournaments,
+  addResult,
+} from '../../utils/localStorage';
 import { FaEdit, FaSave, FaTimes, FaTrash, FaInfoCircle } from 'react-icons/fa';
-import { MdOutlineTimer, MdLeaderboard, MdCategory, MdPeople } from 'react-icons/md';
+import {
+  MdOutlineTimer,
+  MdLeaderboard,
+  MdCategory,
+  MdPeople,
+} from 'react-icons/md';
 import { BsTrophyFill, BsGraphUp } from 'react-icons/bs';
 
 type Participant = {
-  id: number;
+  id: string;
   name: string;
   times: number[];
   best: number;
@@ -24,83 +35,16 @@ type Category = {
 };
 
 const ResultsWCA = () => {
-  // Datos y estado
-  const [categories, setCategories] = useState<Category[]>([
-    {
-      id: 1,
-      name: '3x3',
-      rounds: [
-        {
-          roundNumber: 1,
-          format: 'ao5',
-          participants: [
-            {
-              id: 1,
-              name: 'Participante 1',
-              times: [15.2, 14.8, 16.1, 7.45, 11.82],
-              best: 7.45,
-              average: 13.94,
-            },
-            {
-              id: 2,
-              name: 'Participante 2',
-              times: [10.5, 12.3, 11.2, 8.9, 11.45],
-              best: 8.9,
-              average: 11.05,
-            },
-          ],
-        },
-        {
-          roundNumber: 2,
-          format: 'ao3',
-          participants: [
-            {
-              id: 1,
-              name: 'Participante 1',
-              times: [10.5, 12.3, 11.2],
-              best: 10.5,
-              average: 11.33,
-            },
-            {
-              id: 2,
-              name: 'Participante 2',
-              times: [15.2, 14.8, 16.1],
-              best: 14.8,
-              average: 15.37,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: '2x2',
-      rounds: [
-        {
-          roundNumber: 1,
-          format: 'ao5',
-          participants: [
-            {
-              id: 3,
-              name: 'Participante 3',
-              times: [3.2, 4.1, 2.9, 3.8, 4.5],
-              best: 2.9,
-              average: 3.7,
-            },
-          ],
-        },
-      ],
-    },
-  ]);
-
-  const [selectedCategory, setSelectedCategory] = useState<number>(1);
+  const { id, categoryName } = useParams();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedRound, setSelectedRound] = useState<number>(1);
   const [isMobileView, setIsMobileView] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null);
+  const [editingParticipant, setEditingParticipant] =
+    useState<Participant | null>(null);
   const [tempTimes, setTempTimes] = useState<number[]>([]);
 
-  // Efectos
   useEffect(() => {
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
     handleResize();
@@ -108,13 +52,76 @@ const ResultsWCA = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Datos actuales
+  useEffect(() => {
+    const tournaments = getTournaments();
+    const tournament = tournaments.find((t) => t.id === id);
+    if (!tournament) {
+      console.warn('Torneo no encontrado con ID:', id);
+      return;
+    }
+
+    const selectedCategories = tournament.categories.map((cat) => {
+      const categoryRounds = (cat.rounds || [])
+        .filter((round) => round.num && round.format) // Agregado
+        .map((round) => {
+          const participants = tournament.competitors
+            .filter((comp) => (comp.categories || []).includes(cat.id))
+            .map((comp) => {
+              const result = (round.results || []).find(
+                (r) => r.idCompetitor === comp.id,
+              );
+              const times = result?.times || [];
+              const best = times.length ? Math.min(...times) : 0;
+              const average = result?.media ? parseFloat(result.media) : 0;
+
+              return {
+                id: comp.id, // <- ya no lo conviertes a número
+                name: comp.name,
+                times,
+                best,
+                average,
+              };
+            });
+
+          return {
+            roundNumber: round.num,
+            format: round.format,
+            participants,
+          };
+        });
+
+      return {
+        id: cat.id,
+        name: cat.name,
+        rounds: categoryRounds,
+      };
+    });
+
+    setCategories(selectedCategories);
+
+    if (categoryName) {
+      const found = selectedCategories.find(
+        (c) => c.name.toLowerCase() === categoryName.toLowerCase(),
+      );
+      if (found) {
+        setSelectedCategory(found.id);
+        setSelectedRound(1);
+        return;
+      }
+    }
+
+    // Si no se encontró por nombre, selecciona la primera disponible
+    if (selectedCategories.length > 0) {
+      setSelectedCategory(selectedCategories[0].id);
+      setSelectedRound(1);
+    }
+  }, [id, categoryName]);
+
   const currentCategory = categories.find((c) => c.id === selectedCategory);
   const currentRound = currentCategory?.rounds.find(
     (r) => r.roundNumber === selectedRound,
   );
 
-  // Funciones de ayuda
   const calculateStats = (times: number[], format: 'ao3' | 'ao5') => {
     const validTimes = times.filter((t) => t > 0);
     const best = validTimes.length > 0 ? Math.min(...validTimes) : 0;
@@ -130,7 +137,6 @@ const ResultsWCA = () => {
     return { best, average };
   };
 
-  // Manejo de edición
   const startEditing = (participant: Participant) => {
     setEditingParticipant(participant);
     setTempTimes([...participant.times]);
@@ -143,19 +149,19 @@ const ResultsWCA = () => {
   };
 
   const saveChanges = () => {
-    if (!editingParticipant || !currentRound) return;
+    if (!editingParticipant || !currentRound || !id || !selectedCategory)
+      return;
 
     const { best, average } = calculateStats(tempTimes, currentRound.format);
 
+    // Actualiza el estado local
     setCategories((prev) =>
       prev.map((cat) => {
         if (cat.id !== selectedCategory) return cat;
-
         return {
           ...cat,
           rounds: cat.rounds.map((round) => {
             if (round.roundNumber !== selectedRound) return round;
-
             return {
               ...round,
               participants: round.participants.map((p) => {
@@ -168,6 +174,17 @@ const ResultsWCA = () => {
       }),
     );
 
+    // Usar el ID real de la categoría (selectedCategory ya es el correcto)
+    addResult(
+      id,
+      selectedCategory, // ID de categoría
+      selectedRound, // número de ronda
+      {
+        idCompetitor: editingParticipant.id.toString(),
+        times: tempTimes,
+      },
+    );
+
     cancelEditing();
   };
 
@@ -176,7 +193,6 @@ const ResultsWCA = () => {
     setTempTimes([]);
   };
 
-  // Renderizado condicional
   const renderTimeCell = (
     participant: Participant,
     time: number,
@@ -246,7 +262,7 @@ const ResultsWCA = () => {
               <select
                 value={selectedCategory}
                 onChange={(e) => {
-                  setSelectedCategory(parseInt(e.target.value));
+                  setSelectedCategory(e.target.value);
                   setSelectedRound(1);
                   cancelEditing();
                 }}
@@ -289,7 +305,8 @@ const ResultsWCA = () => {
       {editMode && editingParticipant && (
         <div className="flex flex-wrap gap-3 mb-4 p-3 bg-gray-700 rounded-lg items-center">
           <span className="font-medium flex items-center gap-2">
-            <FaInfoCircle className="text-yellow-400" /> Editando: {editingParticipant.name}
+            <FaInfoCircle className="text-yellow-400" /> Editando:{' '}
+            {editingParticipant.name}
           </span>
           <div className="flex gap-2">
             <button
@@ -314,51 +331,61 @@ const ResultsWCA = () => {
           {isMobileView ? (
             // Vista móvil - Tarjetas
             <div className="space-y-3">
-              {currentRound.participants.map((participant) => (
-                <div
-                  key={participant.id}
-                  className={`bg-gray-750 rounded-lg p-3 ${
-                    editMode ? 'border border-gray-600' : ''
-                  }`}
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-medium truncate">{participant.name}</h3>
-                    <div className="flex gap-2">
-                      <span className="text-xs bg-blue-600 px-2 py-1 rounded flex items-center gap-1">
-                        <BsTrophyFill size={10} />{' '}
-                        {participant.best > 0
-                          ? participant.best.toFixed(2)
-                          : '-'}
-                      </span>
-                      <span className="text-xs bg-green-600 px-2 py-1 rounded flex items-center gap-1">
-                        <BsGraphUp size={10} />{' '}
-                        {participant.average > 0
-                          ? participant.average.toFixed(2)
-                          : '-'}
-                      </span>
+              {[...currentRound.participants]
+                .sort((a, b) => a.average - b.average)
+                .map((participant) => (
+                  <div
+                    key={participant.id}
+                    className={`bg-gray-750 rounded-lg p-3 ${
+                      editMode ? 'border border-gray-600' : ''
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-medium truncate">
+                        {participant.name}
+                      </h3>
+                      <div className="flex gap-2">
+                        <span className="text-xs bg-blue-600 px-2 py-1 rounded flex items-center gap-1">
+                          <BsTrophyFill size={10} />{' '}
+                          {participant.best > 0
+                            ? participant.best.toFixed(2)
+                            : '-'}
+                        </span>
+                        <span className="text-xs bg-green-600 px-2 py-1 rounded flex items-center gap-1">
+                          <BsGraphUp size={10} />{' '}
+                          {participant.average > 0
+                            ? participant.average.toFixed(2)
+                            : '-'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`grid ${
+                        currentRound.format === 'ao5'
+                          ? 'grid-cols-5'
+                          : 'grid-cols-3'
+                      } gap-2`}
+                    >
+                      {Array.from({
+                        length: currentRound.format === 'ao5' ? 5 : 3,
+                      }).map((_, index) => {
+                        const time = participant.times[index] ?? 0;
+                        return (
+                          <div
+                            key={index}
+                            className="flex flex-col items-center"
+                          >
+                            <label className="text-xs text-gray-400 flex items-center gap-1">
+                              <MdOutlineTimer size={10} /> T{index + 1}
+                            </label>
+                            {renderTimeCell(participant, time, index)}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-
-                  <div
-                    className={`grid ${
-                      currentRound.format === 'ao5'
-                        ? 'grid-cols-5'
-                        : 'grid-cols-3'
-                    } gap-2`}
-                  >
-                    {participant.times
-                      .slice(0, currentRound.format === 'ao5' ? 5 : 3)
-                      .map((time, index) => (
-                        <div key={index} className="flex flex-col items-center">
-                          <label className="text-xs text-gray-400 flex items-center gap-1">
-                            <MdOutlineTimer size={10} /> T{index + 1}
-                          </label>
-                          {renderTimeCell(participant, time, index)}
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           ) : (
             // Vista de escritorio - Tabla
@@ -372,22 +399,24 @@ const ResultsWCA = () => {
                       <span>Participante</span>
                     </div>
                   </th>
-                  
+
                   {/* Columnas de tiempos */}
-                  {Array.from({ 
-                    length: currentRound.format === 'ao5' ? 5 : 3 
+                  {Array.from({
+                    length: currentRound.format === 'ao5' ? 5 : 3,
                   }).map((_, index) => (
-                    <th 
-                      key={`time-header-${index}`} 
+                    <th
+                      key={`time-header-${index}`}
                       className="px-2 py-3 text-center min-w-[80px]"
                     >
                       <div className="flex flex-col items-center justify-center">
                         <MdOutlineTimer className="text-gray-300 mb-1" />
-                        <span className="text-xs font-normal">T{index + 1}</span>
+                        <span className="text-xs font-normal">
+                          T{index + 1}
+                        </span>
                       </div>
                     </th>
                   ))}
-                  
+
                   {/* Columna Best */}
                   <th className="px-3 py-3 text-center min-w-[100px]">
                     <div className="flex flex-col items-center justify-center">
@@ -395,7 +424,7 @@ const ResultsWCA = () => {
                       <span className="text-xs font-normal">Best</span>
                     </div>
                   </th>
-                  
+
                   {/* Columna Avg */}
                   <th className="px-3 py-3 text-center min-w-[100px]">
                     <div className="flex flex-col items-center justify-center">
@@ -405,40 +434,49 @@ const ResultsWCA = () => {
                   </th>
                 </tr>
               </thead>
-              
+
               <tbody>
-                {currentRound.participants.map((participant) => (
-                  <tr
-                    key={participant.id}
-                    className={`border-b border-gray-700 ${
-                      editMode ? 'hover:bg-gray-700/50' : ''
-                    }`}
-                  >
-                    {/* Nombre del participante */}
-                    <td className="px-4 py-3 truncate max-w-[180px] font-medium">
-                      {participant.name}
-                    </td>
-                    
-                    {/* Tiempos */}
-                    {participant.times
-                      .slice(0, currentRound.format === 'ao5' ? 5 : 3)
-                      .map((time, index) => (
-                        <td key={index} className="px-2 py-3">
-                          {renderTimeCell(participant, time, index)}
-                        </td>
-                      ))}
-                    
-                    {/* Mejor tiempo */}
-                    <td className="px-3 py-3 text-center font-medium text-blue-400">
-                      {participant.best > 0 ? participant.best.toFixed(2) : '-'}
-                    </td>
-                    
-                    {/* Promedio */}
-                    <td className="px-3 py-3 text-center font-medium text-green-400">
-                      {participant.average > 0 ? participant.average.toFixed(2) : '-'}
-                    </td>
-                  </tr>
-                ))}
+                {[...currentRound.participants]
+                  .sort((a, b) => a.average - b.average)
+                  .map((participant) => (
+                    <tr
+                      key={participant.id}
+                      className={`border-b border-gray-700 ${
+                        editMode ? 'hover:bg-gray-700/50' : ''
+                      }`}
+                    >
+                      {/* Nombre del participante */}
+                      <td className="px-4 py-3 truncate max-w-[180px] font-medium">
+                        {participant.name}
+                      </td>
+
+                      {/* Tiempos */}
+                      {Array.from({
+                        length: currentRound.format === 'ao5' ? 5 : 3,
+                      }).map((_, index) => {
+                        const time = participant.times[index] ?? 0;
+                        return (
+                          <td key={index} className="px-2 py-3">
+                            {renderTimeCell(participant, time, index)}
+                          </td>
+                        );
+                      })}
+
+                      {/* Mejor tiempo */}
+                      <td className="px-3 py-3 text-center font-medium text-blue-400">
+                        {participant.best > 0
+                          ? participant.best.toFixed(2)
+                          : '-'}
+                      </td>
+
+                      {/* Promedio */}
+                      <td className="px-3 py-3 text-center font-medium text-green-400">
+                        {participant.average > 0
+                          ? participant.average.toFixed(2)
+                          : '-'}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           )}
