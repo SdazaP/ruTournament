@@ -1,22 +1,24 @@
-import React, { useState } from 'react';
-import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft } from 'react-icons/fa';
+import { getTournaments, setTournaments } from '../../utils/localStorage';
 
 type Participant = {
-  id: number;
+  id: string;
   name: string;
   categories: string[];
 };
 
 const Participants = () => {
-  const [participants, setParticipants] = useState<Participant[]>([
-    { id: 1, name: 'Juan Pérez', categories: ['3x3', '4x4'] },
-    { id: 2, name: 'María García', categories: ['3x3 OH'] },
-    { id: 3, name: 'Carlos López', categories: ['4x4', 'Pyraminx'] },
-  ]);
-
+  const { id: tournamentId } = useParams();
+  const navigate = useNavigate();
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [tournament, setTournament] = useState<any>(null);
+  const [categories, setCategories] = useState<string[]>([]);
+  
   const [newParticipant, setNewParticipant] = useState({
     name: '',
-    category: '3x3'
+    category: ''
   });
 
   const [editMode, setEditMode] = useState(false);
@@ -24,72 +26,191 @@ const Participants = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
 
-  const categories = ['3x3', '4x4', '3x3 OH', '2x2', 'Pyraminx', 'Megaminx', 'Skewb'];
+  // Cargar datos del torneo
+  useEffect(() => {
+    if (tournamentId) {
+      const tournaments = getTournaments();
+      const currentTournament = tournaments.find(t => t.id === tournamentId);
+      
+      if (currentTournament) {
+        setTournament(currentTournament);
+        setParticipants(currentTournament.competitors || []);
+        
+        // Obtener categorías disponibles del torneo
+        const tournamentCategories = currentTournament.categories?.map((cat: any) => cat.name) || [];
+        setCategories(tournamentCategories);
+        
+        // Establecer primera categoría como predeterminada
+        if (tournamentCategories.length > 0) {
+          setNewParticipant(prev => ({...prev, category: tournamentCategories[0]}));
+        }
+      }
+    }
+  }, [tournamentId]);
 
   // Filtrar participantes
   const filteredParticipants = participants.filter(participant => {
     const matchesSearch = participant.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === '' || participant.categories.includes(categoryFilter);
+    const matchesCategory = categoryFilter === '' || participant.categories.some(catId => {
+      const cat = tournament?.categories?.find((c: any) => c.id === catId);
+      return cat?.name === categoryFilter;
+    });
     return matchesSearch && matchesCategory;
   });
 
   const handleAdd = () => {
-    if (newParticipant.name.trim() === '') return;
+    if (newParticipant.name.trim() === '' || !newParticipant.category || !tournamentId) return;
     
-    setParticipants([
-      ...participants,
-      {
-        id: Date.now(),
-        name: newParticipant.name,
-        categories: [newParticipant.category]
+    // Encontrar el ID de la categoría seleccionada
+    const selectedCategory = tournament.categories.find((cat: any) => cat.name === newParticipant.category);
+    if (!selectedCategory) return;
+    
+    const newParticipantObj = {
+      id: Date.now().toString(),
+      name: newParticipant.name,
+      categories: [selectedCategory.id]
+    };
+    
+    // Actualizar localStorage
+    const tournaments = getTournaments();
+    const updatedTournaments = tournaments.map(t => {
+      if (t.id === tournamentId) {
+        return {
+          ...t,
+          competitors: [...(t.competitors || []), newParticipantObj]
+        };
       }
-    ]);
+      return t;
+    });
     
-    setNewParticipant({ name: '', category: '3x3' });
+    setTournaments(updatedTournaments);
+    setParticipants([...participants, newParticipantObj]);
+    setNewParticipant({ name: '', category: categories[0] || '' });
   };
 
-  const handleDelete = (id: number) => {
-    setParticipants(participants.filter(participant => participant.id !== id));
+  const handleDelete = (id: string) => {
+    if (!tournamentId) return;
+    
+    // Actualizar localStorage
+    const tournaments = getTournaments();
+    const updatedTournaments = tournaments.map(t => {
+      if (t.id === tournamentId) {
+        return {
+          ...t,
+          competitors: t.competitors.filter((p: any) => p.id !== id)
+        };
+      }
+      return t;
+    });
+    
+    setTournaments(updatedTournaments);
+    setParticipants(participants.filter(p => p.id !== id));
     setParticipantToDelete(null);
   };
 
-  const handleAddCategory = (id: number, category: string) => {
-    if (!editMode) return;
+  const handleAddCategory = (participantId: string, categoryName: string) => {
+    if (!editMode || !tournamentId) return;
     
-    setParticipants(participants.map(participant => {
-      if (participant.id === id && !participant.categories.includes(category)) {
-        return { ...participant, categories: [...participant.categories, category] };
-      }
-      return participant;
-    }));
-  };
-
-  const handleRemoveCategory = (id: number, category: string) => {
-    if (!editMode) return;
+    // Encontrar el ID de la categoría seleccionada
+    const selectedCategory = tournament.categories.find((cat: any) => cat.name === categoryName);
+    if (!selectedCategory) return;
     
-    setParticipants(participants.map(participant => {
-      if (participant.id === id) {
-        return { 
-          ...participant, 
-          categories: participant.categories.filter(c => c !== category) 
+    // Actualizar localStorage
+    const tournaments = getTournaments();
+    const updatedTournaments = tournaments.map(t => {
+      if (t.id === tournamentId) {
+        return {
+          ...t,
+          competitors: t.competitors.map((p: any) => {
+            if (p.id === participantId && !p.categories.includes(selectedCategory.id)) {
+              return { ...p, categories: [...p.categories, selectedCategory.id] };
+            }
+            return p;
+          })
         };
       }
-      return participant;
+      return t;
+    });
+    
+    setTournaments(updatedTournaments);
+    setParticipants(participants.map(p => {
+      if (p.id === participantId && !p.categories.includes(selectedCategory.id)) {
+        return { ...p, categories: [...p.categories, selectedCategory.id] };
+      }
+      return p;
     }));
   };
 
-  const handleNameChange = (id: number, newName: string) => {
-    if (!editMode) return;
+  const handleRemoveCategory = (participantId: string, categoryId: string) => {
+    if (!editMode || !tournamentId) return;
     
-    setParticipants(participants.map(participant => 
-      participant.id === id ? { ...participant, name: newName } : participant
+    // Actualizar localStorage
+    const tournaments = getTournaments();
+    const updatedTournaments = tournaments.map(t => {
+      if (t.id === tournamentId) {
+        return {
+          ...t,
+          competitors: t.competitors.map((p: any) => {
+            if (p.id === participantId) {
+              return { 
+                ...p, 
+                categories: p.categories.filter((c: string) => c !== categoryId) 
+              };
+            }
+            return p;
+          })
+        };
+      }
+      return t;
+    });
+    
+    setTournaments(updatedTournaments);
+    setParticipants(participants.map(p => {
+      if (p.id === participantId) {
+        return { ...p, categories: p.categories.filter(c => c !== categoryId) };
+      }
+      return p;
+    }));
+  };
+
+  const handleNameChange = (participantId: string, newName: string) => {
+    if (!editMode || !tournamentId) return;
+    
+    // Actualizar localStorage
+    const tournaments = getTournaments();
+    const updatedTournaments = tournaments.map(t => {
+      if (t.id === tournamentId) {
+        return {
+          ...t,
+          competitors: t.competitors.map((p: any) => {
+            if (p.id === participantId) {
+              return { ...p, name: newName };
+            }
+            return p;
+          })
+        };
+      }
+      return t;
+    });
+    
+    setTournaments(updatedTournaments);
+    setParticipants(participants.map(p => 
+      p.id === participantId ? { ...p, name: newName } : p
     ));
+  };
+
+  const getCategoryName = (categoryId: string) => {
+    const category = tournament?.categories?.find((c: any) => c.id === categoryId);
+    return category?.name || categoryId;
   };
 
   return (
     <div className="min-h-screen text-white p-4 sm:p-6 relative">
+
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Participantes</h2>
+        <h2 className="text-2xl font-bold">
+          Participantes {tournament ? `de "${tournament.name}` : ''}"
+        </h2>
         <button
           onClick={() => setEditMode(!editMode)}
           className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
@@ -135,32 +256,34 @@ const Participants = () => {
       </div>
 
       {/* Formulario para agregar nuevo participante */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <input
-          type="text"
-          placeholder="Nombre del participante"
-          value={newParticipant.name}
-          onChange={(e) => setNewParticipant({...newParticipant, name: e.target.value})}
-          className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-        
-        <select
-          value={newParticipant.category}
-          onChange={(e) => setNewParticipant({...newParticipant, category: e.target.value})}
-          className="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        >
-          {categories.map((category, index) => (
-            <option key={index} value={category}>{category}</option>
-          ))}
-        </select>
-        
-        <button
-          onClick={handleAdd}
-          className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
-        >
-          <FaCheck /> Agregar
-        </button>
-      </div>
+      {categories.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <input
+            type="text"
+            placeholder="Nombre del participante"
+            value={newParticipant.name}
+            onChange={(e) => setNewParticipant({...newParticipant, name: e.target.value})}
+            className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          
+          <select
+            value={newParticipant.category}
+            onChange={(e) => setNewParticipant({...newParticipant, category: e.target.value})}
+            className="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          >
+            {categories.map((category, index) => (
+              <option key={index} value={category}>{category}</option>
+            ))}
+          </select>
+          
+          <button
+            onClick={handleAdd}
+            className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+          >
+            <FaCheck /> Agregar
+          </button>
+        </div>
+      )}
 
       {/* Tabla de participantes */}
       <div className="overflow-x-auto rounded-lg border border-gray-700 mb-8">
@@ -190,12 +313,12 @@ const Participants = () => {
                   </td>
                   <td className="p-3">
                     <div className="flex flex-wrap gap-2 mb-2">
-                      {participant.categories.map((category) => (
-                        <div key={category} className="flex items-center bg-gray-700 rounded-full px-3 py-1">
-                          <span className="text-sm">{category}</span>
+                      {participant.categories.map((categoryId) => (
+                        <div key={categoryId} className="flex items-center bg-gray-700 rounded-full px-3 py-1">
+                          <span className="text-sm">{getCategoryName(categoryId)}</span>
                           {editMode && (
                             <button 
-                              onClick={() => handleRemoveCategory(participant.id, category)}
+                              onClick={() => handleRemoveCategory(participant.id, categoryId)}
                               className="ml-2 text-gray-400 hover:text-red-400 text-xs"
                               title="Eliminar categoría"
                             >
@@ -218,7 +341,10 @@ const Participants = () => {
                       >
                         <option value="">Añadir categoría...</option>
                         {categories
-                          .filter(cat => !participant.categories.includes(cat))
+                          .filter(catName => {
+                            const cat = tournament.categories.find((c: any) => c.name === catName);
+                            return cat && !participant.categories.includes(cat.id);
+                          })
                           .map((category, index) => (
                             <option key={index} value={category}>{category}</option>
                           ))}
