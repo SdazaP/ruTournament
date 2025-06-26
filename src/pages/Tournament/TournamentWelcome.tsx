@@ -1,79 +1,107 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import {
   FaEdit,
   FaCalendarAlt,
   FaMapMarkerAlt,
   FaUpload,
   FaTimes,
+  FaSave,
 } from 'react-icons/fa';
 import { MdCategory, MdPeople } from 'react-icons/md';
+import { getTournaments, setTournaments } from '../../utils/localStorage';
 
 type Tournament = {
+  id: string;
   name: string;
   description: string;
-  startDate: string;
-  endDate: string;
+  date: string;
   location: string;
-  logo: string | null;
-  status: 'Activo' | 'Próximamente' | 'Finalizado';
+  status: 'activo' | 'finalizado' | 'proximamente';
+  logo?: string;
+  categories: {
+    id: string;
+    name: string;
+    format: string;
+    rounds: any[];
+  }[];
+  competitors: {
+    id: string;
+    name: string;
+    categories: string[];
+  }[];
 };
 
 type Participant = {
-  id: number;
+  id: string;
   name: string;
   category: string;
+  categoryId: string;
 };
 
 type Category = {
+  id: string;
   name: string;
-  icon: string;
   participants: number;
 };
 
 const TournamentWelcome = () => {
-  // Estado del torneo
-  const [tournament, setTournament] = useState<Tournament>({
-    name: 'Torneo Nacional de Cubos 2023',
-    description: 'El mayor evento de speedcubing del año',
-    startDate: '2023-11-15',
-    endDate: '2023-11-17',
-    location: 'Centro de Convenciones, Ciudad',
-    logo: null,
-    status: 'Próximamente',
-  });
-
-  // Participantes
-  const [participants, setParticipants] = useState<Participant[]>([
-    { id: 1, name: 'Juan Pérez', category: '3x3' },
-    { id: 2, name: 'María García', category: '3x3 OH' },
-    { id: 3, name: 'Carlos López', category: '4x4' },
-    { id: 4, name: 'Ana Martínez', category: '3x3' },
-    { id: 5, name: 'Luis Rodríguez', category: '2x2' },
-  ]);
-
-  // Categorías
-  const [categories, setCategories] = useState<Category[]>([
-    { name: '3x3', icon: '3x3', participants: 2 },
-    { name: '4x4', icon: '4x4', participants: 1 },
-    { name: '3x3 OH', icon: 'OH', participants: 1 },
-    { name: '2x2', icon: '2x2', participants: 1 },
-    { name: 'Pyraminx', icon: 'Pyr', participants: 0 },
-  ]);
-
-  // Estado del modo edición
+  const { id } = useParams();
+  const [tournament, setTournament] = useState<Tournament | null>(null);
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [editMode, setEditMode] = useState(false);
-  const [editingParticipant, setEditingParticipant] =
-    useState<Participant | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Cargar datos del torneo
+  useEffect(() => {
+    if (id) {
+      const tournaments = getTournaments();
+      const foundTournament = tournaments.find(t => t.id === id);
+      
+      if (foundTournament) {
+        setTournamentData(foundTournament);
+      }
+      setLoading(false);
+    }
+  }, [id]);
+
+  const setTournamentData = (tournamentData: Tournament) => {
+    setTournament(tournamentData);
+    
+    // Procesar participantes
+    const processedParticipants = tournamentData.competitors.map(comp => {
+      const firstCategoryId = comp.categories.length > 0 ? comp.categories[0] : '';
+      const categoryName = tournamentData.categories.find(cat => cat.id === firstCategoryId)?.name || 'Sin categoría';
+      
+      return {
+        id: comp.id,
+        name: comp.name,
+        category: categoryName,
+        categoryId: firstCategoryId
+      };
+    });
+    setParticipants(processedParticipants);
+    
+    // Procesar categorías
+    const processedCategories = tournamentData.categories.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      participants: tournamentData.competitors.filter(comp => 
+        comp.categories.includes(cat.id)
+      ).length
+    }));
+    setCategories(processedCategories);
+  };
 
   // Manejar cambio de logo
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!editMode) return;
+    if (!editMode || !tournament) return;
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        if (event.target?.result) {
+        if (event.target?.result && tournament) {
           setTournament({
             ...tournament,
             logo: event.target.result as string,
@@ -86,36 +114,84 @@ const TournamentWelcome = () => {
 
   // Manejar cambios en los campos del torneo
   const handleTournamentChange = (field: keyof Tournament, value: string) => {
-    if (!editMode) return;
+    if (!editMode || !tournament) return;
     setTournament({
       ...tournament,
       [field]: value,
     });
   };
 
+  // Guardar cambios en el torneo
+  const saveChanges = () => {
+    if (!tournament) return;
+    
+    const allTournaments = getTournaments();
+    const updatedTournaments = allTournaments.map(t => 
+      t.id === tournament.id ? tournament : t
+    );
+    
+    setTournaments(updatedTournaments);
+    setEditMode(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen text-white p-6 mx-auto flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!tournament) {
+    return (
+      <div className="min-h-screen text-white p-6 mx-auto flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Torneo no encontrado</h1>
+          <p className="text-gray-400">El torneo solicitado no existe o no se pudo cargar.</p>
+          <Link 
+            to="/dashboard/tournaments" 
+            className="mt-4 inline-block px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700"
+          >
+            Volver a torneos
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen text-white p-6 mx-auto">
-      {/* Encabezado con botón de edición */}
+      {/* Encabezado con botones */}
       <div className="flex justify-between items-center mt-6 mb-4">
         <h1 className="text-3xl font-bold">Panel del Torneo</h1>
-        <button
-          onClick={() => setEditMode(!editMode)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-            editMode
-              ? 'bg-yellow-600 hover:bg-yellow-700'
-              : 'bg-blue-600 hover:bg-blue-700'
-          }`}
-        >
-          {editMode ? (
-            <>
-              <FaTimes /> Salir de edición
-            </>
-          ) : (
-            <>
-              <FaEdit /> Modo edición
-            </>
+        <div className="flex items-center gap-2">
+          {editMode && (
+            <button
+              onClick={saveChanges}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700"
+            >
+              <FaSave /> Guardar
+            </button>
           )}
-        </button>
+          <button
+            onClick={() => setEditMode(!editMode)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              editMode
+                ? 'bg-yellow-600 hover:bg-yellow-700'
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            {editMode ? (
+              <>
+                <FaTimes /> Cancelar
+              </>
+            ) : (
+              <>
+                <FaEdit /> Editar
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Notificación del modo edición */}
@@ -125,9 +201,9 @@ const TournamentWelcome = () => {
         </div>
       )}
 
-      {/* Encabezado en 3 columnas */}
+      {/* Sección principal en 3 columnas */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-        {/* Columna 1: Logo con funcionalidad de carga */}
+        {/* Columna 1: Logo */}
         <div className="flex flex-col items-center justify-center">
           <div
             className={`relative group w-40 h-40 mb-4 ${
@@ -187,7 +263,6 @@ const TournamentWelcome = () => {
                 className={`w-full bg-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
                   !editMode ? 'cursor-not-allowed opacity-70' : ''
                 }`}
-                placeholder="Ej: Torneo Nacional de Cubos 2023"
                 disabled={!editMode}
               />
             </div>
@@ -203,12 +278,8 @@ const TournamentWelcome = () => {
                 className={`w-full bg-gray-700 rounded-lg px-4 py-3 h-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
                   !editMode ? 'cursor-not-allowed opacity-70' : ''
                 }`}
-                placeholder="Describe el propósito y detalles del torneo..."
                 disabled={!editMode}
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Máximo 500 caracteres
-              </p>
             </div>
           </div>
         </div>
@@ -227,7 +298,7 @@ const TournamentWelcome = () => {
                 Estado del Evento
               </label>
               <div className="flex flex-wrap gap-3">
-                {['Activo', 'Próximamente', 'Finalizado'].map((status) => {
+                {['activo', 'proximamente', 'finalizado'].map((status) => {
                   const isCurrent = tournament.status === status;
                   return (
                     <button
@@ -246,47 +317,30 @@ const TournamentWelcome = () => {
                       }`}
                       disabled={!editMode}
                     >
-                      {status}
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Fecha de Inicio
-                </label>
-                <input
-                  type="date"
-                  value={tournament.startDate}
-                  onChange={(e) =>
-                    handleTournamentChange('startDate', e.target.value)
-                  }
-                  className={`w-full bg-gray-700 border border-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition [color-scheme:dark] ${
-                    !editMode ? 'cursor-not-allowed opacity-70' : ''
-                  }`}
-                  disabled={!editMode}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Fecha de Fin
-                </label>
-                <input
-                  type="date"
-                  value={tournament.endDate}
-                  onChange={(e) =>
-                    handleTournamentChange('endDate', e.target.value)
-                  }
-                  className={`w-full bg-gray-700 border border-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition [color-scheme:dark] ${
-                    !editMode ? 'cursor-not-allowed opacity-70' : ''
-                  }`}
-                  disabled={!editMode}
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
+                <FaCalendarAlt /> Fecha
+              </label>
+              <input
+                type="date"
+                value={tournament.date}
+                onChange={(e) =>
+                  handleTournamentChange('date', e.target.value)
+                }
+                className={`w-full bg-gray-700 border border-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition [color-scheme:dark] ${
+                  !editMode ? 'cursor-not-allowed opacity-70' : ''
+                }`}
+                disabled={!editMode}
+              />
             </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
                 <FaMapMarkerAlt /> Ubicación
@@ -300,7 +354,6 @@ const TournamentWelcome = () => {
                 className={`w-full bg-gray-700 border border-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
                   !editMode ? 'cursor-not-allowed opacity-70' : ''
                 }`}
-                placeholder="Ej: Centro de Convenciones, Bogotá"
                 disabled={!editMode}
               />
             </div>
@@ -308,57 +361,52 @@ const TournamentWelcome = () => {
         </div>
       </div>
 
-      {/* Sección de categorías y participantes en 2 columnas */}
+      {/* Sección de categorías y participantes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Columna de categorías */}
+        {/* Categorías */}
         <div className="bg-gray-800 rounded-xl p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold flex items-center gap-2">
-              <MdCategory /> Categorías
+              <MdCategory /> Categorías ({categories.length})
             </h2>
             <Link
-              to="categories"
+              to={`/dashboard/tournament/${id}/categories`}
               className="px-4 py-2 bg-blue-600 rounded-lg text-sm hover:bg-blue-700 flex items-center gap-2"
             >
-              + Añadir categoría
+              + Gestionar categorías
             </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-3 gap-4">
             {categories.map((category) => (
-              <div
-                key={category.name}
-                className={`flex flex-col items-center p-3 rounded-lg transition-colors ${
-                  editMode
-                    ? 'bg-gray-750 hover:bg-gray-700 cursor-pointer'
-                    : 'bg-gray-750'
-                }`}
+              <Link
+                key={category.id}
+                to={`/dashboard/tournament/${id}/categories/${category.id}`}
+                className={`flex flex-col items-center p-3 rounded-lg transition-colors hover:bg-gray-700 bg-gray-750`}
               >
                 <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center mb-2 text-sm">
-                  {category.icon}
+                  {category.name.substring(0, 2)}
                 </div>
                 <span className="text-sm font-medium">{category.name}</span>
                 <span className="text-xs text-gray-400 mt-1">
                   {category.participants}{' '}
-                  {category.participants === 1
-                    ? 'participante'
-                    : 'participantes'}
+                  {category.participants === 1 ? 'participante' : 'participantes'}
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
 
-        {/* Columna de participantes */}
+        {/* Participantes */}
         <div className="bg-gray-800 rounded-xl p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
             <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 whitespace-nowrap">
-              <MdPeople className="text-lg sm:text-xl" /> Participantes
+              <MdPeople className="text-lg sm:text-xl" /> Participantes ({participants.length})
             </h2>
             <Link
-              to="competitors"
+              to={`/dashboard/tournament/${id}/competitors`}
               className="px-4 py-2 bg-blue-600 rounded-lg text-sm hover:bg-blue-700 flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
             >
-              + Añadir participante
+              + Gestionar participantes
             </Link>
           </div>
 
@@ -366,60 +414,30 @@ const TournamentWelcome = () => {
             <table className="w-full">
               <thead className="bg-gray-750">
                 <tr>
-                  <th className="py-3 px-4 text-left text-sm font-medium">
-                    Nombre
-                  </th>
-                  <th className="py-3 px-4 text-left text-sm font-medium">
-                    Categoría
-                  </th>
+                  <th className="py-3 px-4 text-left text-sm font-medium">Nombre</th>
+                  <th className="py-3 px-4 text-left text-sm font-medium">Categoría</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
-                {participants.map((participant) => (
+                {participants.slice(0, 5).map((participant) => (
                   <tr key={participant.id} className="hover:bg-gray-750">
                     <td className="py-3 px-4">
-                      {editingParticipant?.id === participant.id ? (
-                        <input
-                          type="text"
-                          value={editingParticipant.name}
-                          onChange={(e) =>
-                            setEditingParticipant({
-                              ...editingParticipant,
-                              name: e.target.value,
-                            })
-                          }
-                          className="w-full bg-gray-700 rounded px-2 py-1"
-                        />
-                      ) : (
-                        participant.name
-                      )}
+                      {participant.name}
                     </td>
                     <td className="py-3 px-4">
-                      {editingParticipant?.id === participant.id ? (
-                        <select
-                          value={editingParticipant.category}
-                          onChange={(e) =>
-                            setEditingParticipant({
-                              ...editingParticipant,
-                              category: e.target.value,
-                            })
-                          }
-                          className="bg-gray-700 rounded px-2 py-1 text-sm"
-                        >
-                          {categories.map((cat) => (
-                            <option key={cat.name} value={cat.name}>
-                              {cat.name}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className="inline-block bg-gray-700 rounded-full px-3 py-1 text-xs">
-                          {participant.category}
-                        </span>
-                      )}
+                      <span className="inline-block bg-gray-700 rounded-full px-3 py-1 text-xs">
+                        {participant.category}
+                      </span>
                     </td>
                   </tr>
                 ))}
+                {participants.length > 5 && (
+                  <tr>
+                    <td colSpan={2} className="py-3 px-4 text-center text-sm text-gray-400">
+                      + {participants.length - 5} participantes más
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
