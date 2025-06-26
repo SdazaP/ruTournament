@@ -1,39 +1,30 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-const TableCompetitors = () => {
-  // Opciones de categorías disponibles
-  const categories = ["3x3", "4x4", "3x3 OH", "2x2", "Pyraminx", "Megaminx", "Skewb", "Square-1"];
+interface CompetitorData {
+  name: string;
+  category: string;
+}
 
-  // Estado para almacenar la lista de competidores
-  const [competitors, setCompetitors] = useState([
-    { name: '', category: categories[0] }, // Fila inicial con categoría predeterminada
-  ]);
+interface TableCompetitorsProps {
+  competitors: CompetitorData[];
+  categories: string[];
+  onAddRow: () => void;
+  onChange: (index: number, field: keyof CompetitorData, value: string) => void;
+  onRemove: (index: number) => void;
+}
 
-  // Función para manejar cambios en los inputs
-  const handleInputChange = (index, field, value) => {
-    const updatedCompetitors = [...competitors];
-    updatedCompetitors[index][field] = value;
-    setCompetitors(updatedCompetitors);
-  };
-
-  // Función para agregar una nueva fila
-  const handleAddRow = () => {
-    setCompetitors([...competitors, { name: '', category: categories[0] }]);
-  };
-
-  // Función para eliminar una fila
-  const handleRemoveRow = (index) => {
-    if (competitors.length > 1) {
-      const updatedCompetitors = competitors.filter((_, i) => i !== index);
-      setCompetitors(updatedCompetitors);
-    }
-  };
-
+const TableCompetitors: React.FC<TableCompetitorsProps> = ({ 
+  competitors, 
+  categories, 
+  onAddRow, 
+  onChange, 
+  onRemove 
+}) => {
   return (
     <div className="w-full rounded-lg border border-gray-700 bg-gray-800 p-4 shadow sm:p-6">
       <div className="overflow-x-auto">
         {/* Encabezados de la tabla */}
-        <div className="grid min-w-[500px] grid-cols-2 rounded-t-lg bg-gray-800">
+        <div className="grid min-w-[500px] grid-cols-3 rounded-t-lg bg-gray-800">
           <div className="p-3 text-center">
             <h5 className="text-sm font-medium uppercase text-white sm:text-base">
               Competidores
@@ -44,13 +35,18 @@ const TableCompetitors = () => {
               Categorías
             </h5>
           </div>
+          <div className="p-3 text-center">
+            <h5 className="text-sm font-medium uppercase text-white sm:text-base">
+              Acciones
+            </h5>
+          </div>
         </div>
 
         {/* Filas de la tabla */}
         {competitors.map((competitor, index) => (
           <div 
             key={index} 
-            className="grid min-w-[500px] grid-cols-2 border-b border-gray-700 last:rounded-b-lg"
+            className="grid min-w-[500px] grid-cols-3 border-b border-gray-700 last:rounded-b-lg"
           >
             {/* Input para el nombre del competidor */}
             <div className="flex items-center justify-center p-3">
@@ -58,7 +54,7 @@ const TableCompetitors = () => {
                 type="text"
                 placeholder="Nombre del competidor"
                 value={competitor.name}
-                onChange={(e) => handleInputChange(index, 'name', e.target.value)}
+                onChange={(e) => onChange(index, 'name', e.target.value)}
                 className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
               />
             </div>
@@ -67,7 +63,7 @@ const TableCompetitors = () => {
             <div className="flex items-center justify-center p-3">
               <select
                 value={competitor.category}
-                onChange={(e) => handleInputChange(index, 'category', e.target.value)}
+                onChange={(e) => onChange(index, 'category', e.target.value)}
                 className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
               >
                 {categories.map((category, i) => (
@@ -77,6 +73,30 @@ const TableCompetitors = () => {
                 ))}
               </select>
             </div>
+
+            {/* Acciones */}
+            <div className="flex items-center justify-center p-3 space-x-2">
+              {competitors.length > 1 && (
+                <button
+                  onClick={() => onRemove(index)}
+                  className="p-1 text-red-500 hover:text-red-700"
+                  title="Eliminar competidor"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -84,7 +104,7 @@ const TableCompetitors = () => {
       {/* Botones de acción */}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
         <button
-          onClick={handleAddRow}
+          onClick={onAddRow}
           className="flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <svg
@@ -104,7 +124,7 @@ const TableCompetitors = () => {
 
         {competitors.length > 1 && (
           <button
-            onClick={() => handleRemoveRow(competitors.length - 1)}
+            onClick={() => onRemove(competitors.length - 1)}
             className="flex items-center rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             <svg

@@ -1,52 +1,37 @@
-import React, { useState } from "react";
+import React from "react";
 
-const TableTournament = () => {
-  const [tournamentData, setTournamentData] = useState([
-    {
-      category: "3x3",
-      rounds: "Final directa",
-      mode: "WCA",
-      avg_mode: "ao5",
-    },
-  ]);
+interface CategoryData {
+  category: string;
+  rounds: string;
+  mode: string;
+  avg_mode: string;
+}
 
+interface TableTournamentProps {
+  tournamentData: CategoryData[];
+  onAddRow: () => void;
+  onChange: (index: number, field: keyof CategoryData, value: string) => void;
+  onRemove: (index: number) => void;
+}
+
+const TableTournament: React.FC<TableTournamentProps> = ({ 
+  tournamentData, 
+  onAddRow, 
+  onChange, 
+  onRemove 
+}) => {
   const options = {
-    category: ["3x3", "4x4", "3x3 OH", "2x2", "Pyraminx", "Megaminx"],
+    category: ["3x3", "4x4", "3x3 OH", "2x2", "Pyraminx", "Megaminx", "Skewb", "Square-1"],
     rounds: ["Final directa", "Ronda única", "3 Rondas", "5 Rondas"],
     mode: ["WCA", "Red Bull", "Personalizado"],
     avg_modes: ["ao5", "mo3", "bo1", "bo3"],
-  };
-
-  const handleAddRow = () => {
-    setTournamentData([
-      ...tournamentData,
-      {
-        category: options.category[0],
-        rounds: options.rounds[0],
-        mode: options.mode[0],
-        avg_mode: options.avg_modes[0],
-      },
-    ]);
-  };
-
-  const handleChange = (index, field, value) => {
-    const updatedData = [...tournamentData];
-    updatedData[index][field] = value;
-    setTournamentData(updatedData);
-  };
-
-  const handleRemoveRow = (index) => {
-    if (tournamentData.length > 1) {
-      const updatedData = tournamentData.filter((_, i) => i !== index);
-      setTournamentData(updatedData);
-    }
   };
 
   return (
     <div className="w-full rounded-lg border border-gray-700 bg-gray-800 p-4 shadow sm:p-6">
       <div className="overflow-x-auto">
         {/* Encabezados de la tabla */}
-        <div className="grid min-w-[600px] grid-cols-4 rounded-t-lg bg-gray-800">
+        <div className="grid min-w-[600px] grid-cols-5 rounded-t-lg bg-gray-800">
           <div className="p-3 text-center">
             <h5 className="text-sm font-medium uppercase text-white sm:text-base">
               Categorías
@@ -67,19 +52,24 @@ const TableTournament = () => {
               AVG
             </h5>
           </div>
+          <div className="p-3 text-center">
+            <h5 className="text-sm font-medium uppercase text-white sm:text-base">
+              Acciones
+            </h5>
+          </div>
         </div>
 
         {/* Filas de la tabla */}
         {tournamentData.map((tournament, index) => (
           <div
             key={index}
-            className="grid min-w-[600px] grid-cols-4 border-b border-gray-700 last:rounded-b-lg"
+            className="grid min-w-[600px] grid-cols-5 border-b border-gray-700 last:rounded-b-lg"
           >
             {/* Categoría */}
             <div className="flex items-center justify-center p-3">
               <select
                 value={tournament.category}
-                onChange={(e) => handleChange(index, "category", e.target.value)}
+                onChange={(e) => onChange(index, "category", e.target.value)}
                 className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
               >
                 {options.category.map((option, i) => (
@@ -94,7 +84,7 @@ const TableTournament = () => {
             <div className="flex items-center justify-center p-3">
               <select
                 value={tournament.rounds}
-                onChange={(e) => handleChange(index, "rounds", e.target.value)}
+                onChange={(e) => onChange(index, "rounds", e.target.value)}
                 className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
               >
                 {options.rounds.map((option, i) => (
@@ -109,7 +99,7 @@ const TableTournament = () => {
             <div className="flex items-center justify-center p-3">
               <select
                 value={tournament.mode}
-                onChange={(e) => handleChange(index, "mode", e.target.value)}
+                onChange={(e) => onChange(index, "mode", e.target.value)}
                 className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
               >
                 {options.mode.map((option, i) => (
@@ -124,7 +114,7 @@ const TableTournament = () => {
             <div className="flex items-center justify-center p-3">
               <select
                 value={tournament.avg_mode}
-                onChange={(e) => handleChange(index, "avg_mode", e.target.value)}
+                onChange={(e) => onChange(index, "avg_mode", e.target.value)}
                 className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
               >
                 {options.avg_modes.map((option, i) => (
@@ -134,6 +124,30 @@ const TableTournament = () => {
                 ))}
               </select>
             </div>
+
+            {/* Acciones */}
+            <div className="flex items-center justify-center p-3 space-x-2">
+              {tournamentData.length > 1 && (
+                <button
+                  onClick={() => onRemove(index)}
+                  className="p-1 text-red-500 hover:text-red-700"
+                  title="Eliminar categoría"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -141,7 +155,7 @@ const TableTournament = () => {
       {/* Botones de acción */}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
         <button
-          onClick={handleAddRow}
+          onClick={onAddRow}
           className="flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <svg
@@ -161,7 +175,7 @@ const TableTournament = () => {
 
         {tournamentData.length > 1 && (
           <button
-            onClick={() => handleRemoveRow(tournamentData.length - 1)}
+            onClick={() => onRemove(tournamentData.length - 1)}
             className="flex items-center rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             <svg
