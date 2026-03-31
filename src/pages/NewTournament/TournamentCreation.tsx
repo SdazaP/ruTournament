@@ -143,8 +143,8 @@ export default function TournamentCreation() {
     // Agregar el torneo directamente a IndexedDB con Dexie
     await db.tournaments.add(tournament);
 
-    // Redirigir al dashboard
-    navigate('/dashboard');
+    // Redirigir al dashboard del nuevo torneo
+    navigate(`/dashboard/tournament/${tournamentId}`);
   };
 
   const steps = [
