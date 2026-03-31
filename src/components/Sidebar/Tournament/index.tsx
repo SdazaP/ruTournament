@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import SidebarLinkGroup from './SidebarLinkGroup';
 import Logo from '../../../images/logo/logo.png';
 
@@ -27,6 +27,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { pathname } = location;
+  const { id } = useParams();
 
   const trigger = useRef<any>(null);
   const sidebar = useRef<any>(null);
@@ -102,7 +103,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       {/* <!-- USER PROFILE IMAGE --> */}
       <div className="flex flex-col items-center py-4">
         <NavLink
-          to="/tournament"
+          to={`/dashboard/tournament/${id}`}
           className="rounded-full border-4 border-white p-1"
         >
           <img
@@ -129,9 +130,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Participantes --> */}
               <li>
                 <NavLink
-                  to="/dashboard/tournament"
+                  to={`/dashboard/tournament/${id}`}
                   className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname === '/dashboard' && 'bg-graydark dark:bg-meta-4'
+                    (pathname === `/dashboard/tournament/${id}` || pathname === `/dashboard/tournament/${id}/`) && 'bg-graydark dark:bg-meta-4'
                   }`}
                 >
                   <FiHome size={18} />

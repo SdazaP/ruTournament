@@ -174,10 +174,12 @@ const ResultsWCA = () => {
 
     let average = 0;
     if (format === 'ao3' && validTimes.length >= 3) {
-      average = validTimes.slice(0, 3).reduce((sum, t) => sum + t, 0) / 3;
+      const rawAvg = validTimes.slice(0, 3).reduce((sum, t) => sum + t, 0) / 3;
+      average = Math.floor(rawAvg * 100) / 100;
     } else if (format === 'ao5' && validTimes.length >= 5) {
       const sorted = [...validTimes].sort((a, b) => a - b);
-      average = sorted.slice(1, 4).reduce((sum, t) => sum + t, 0) / 3;
+      const rawAvg = sorted.slice(1, 4).reduce((sum, t) => sum + t, 0) / 3;
+      average = Math.floor(rawAvg * 100) / 100;
     }
 
     return { best, average };

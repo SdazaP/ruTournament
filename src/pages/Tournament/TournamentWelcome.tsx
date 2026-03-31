@@ -365,7 +365,11 @@ const TournamentWelcome = () => {
             </h2>
             <Link
               to={`/dashboard/tournament/${id}/categories`}
-              className="px-4 py-2 bg-blue-600 rounded-lg text-sm hover:bg-blue-700 flex items-center gap-2"
+              className={`px-4 py-2 bg-blue-600 rounded-lg text-sm transition-all flex items-center gap-2 ${
+                editMode 
+                  ? 'opacity-50 pointer-events-none cursor-not-allowed grayscale' 
+                  : 'hover:bg-blue-700'
+              }`}
             >
               + Gestionar categorías
             </Link>
@@ -375,7 +379,11 @@ const TournamentWelcome = () => {
               <Link
                 key={category.id}
                 to={`/dashboard/tournament/${id}/categories/${category.id}`}
-                className={`flex flex-col items-center p-3 rounded-lg transition-colors hover:bg-gray-700 bg-gray-750`}
+                className={`flex flex-col items-center p-3 rounded-lg transition-colors bg-gray-750 ${
+                  editMode 
+                    ? 'opacity-50 pointer-events-none cursor-not-allowed' 
+                    : 'hover:bg-gray-700'
+                }`}
               >
                 <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center mb-2 text-sm">
                   {category.name.substring(0, 2)}
@@ -398,7 +406,11 @@ const TournamentWelcome = () => {
             </h2>
             <Link
               to={`/dashboard/tournament/${id}/competitors`}
-              className="px-4 py-2 bg-blue-600 rounded-lg text-sm hover:bg-blue-700 flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start"
+              className={`px-4 py-2 bg-blue-600 rounded-lg text-sm transition-all flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start ${
+                editMode 
+                  ? 'opacity-50 pointer-events-none cursor-not-allowed grayscale' 
+                  : 'hover:bg-blue-700'
+              }`}
             >
               + Gestionar participantes
             </Link>
