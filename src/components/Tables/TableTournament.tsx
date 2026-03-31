@@ -73,11 +73,14 @@ const TableTournament: React.FC<TableTournamentProps> = ({
                 onChange={(e) => onChange(index, "category", e.target.value)}
                 className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all cursor-pointer"
               >
-                {options.category.map((option, i) => (
-                  <option key={i} value={option}>
-                    {option}
-                  </option>
-                ))}
+                {options.category.map((option, i) => {
+                  const isUsed = tournamentData.some((t, tIndex) => tIndex !== index && t.category === option);
+                  return (
+                    <option key={i} value={option} disabled={isUsed}>
+                      {option} {isUsed ? "(Ya agregada)" : ""}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
@@ -150,7 +153,12 @@ const TableTournament: React.FC<TableTournamentProps> = ({
       <div className="mt-4 flex flex-wrap items-center justify-end gap-3 p-2">
         <button
           onClick={onAddRow}
-          className="flex items-center gap-2 rounded-lg bg-blue-500/10 border border-blue-500/30 px-4 py-2 text-sm text-blue-400 font-medium hover:bg-blue-600 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+          disabled={tournamentData.length >= options.category.length}
+          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            tournamentData.length >= options.category.length
+              ? 'bg-gray-700 text-gray-500 cursor-not-allowed border border-gray-600'
+              : 'bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-600 hover:text-white'
+          }`}
         >
           <FaPlus />
           Añadir Categoría

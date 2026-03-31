@@ -445,15 +445,24 @@ const Categories = () => {
       {editMode && (
         <div className="flex flex-col gap-3 mb-6">
           <div className="flex flex-col md:flex-row gap-3">
-            <input
-              type="text"
-              placeholder="Nombre categoría"
-              value={newCategory.name}
-              onChange={(e) =>
-                setNewCategory({ ...newCategory, name: e.target.value })
-              }
-              className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            />
+            <div className="flex-1 flex flex-col">
+              <input
+                type="text"
+                placeholder="Nombre categoría"
+                value={newCategory.name}
+                onChange={(e) =>
+                  setNewCategory({ ...newCategory, name: e.target.value })
+                }
+                className={`w-full bg-gray-700 border ${
+                  categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) 
+                    ? 'border-red-500' 
+                    : 'border-gray-600'
+                } rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500`}
+              />
+              {categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) && (
+                <span className="text-red-500 text-xs mt-1">Esa categoría ya existe</span>
+              )}
+            </div>
 
             <select
               value={newCategory.icon}
@@ -543,12 +552,19 @@ const Categories = () => {
               </div>
             )}
 
-            <button
-              onClick={handleAddCategory}
-              className="flex-1 md:flex-none md:w-[150px] bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors"
-            >
-              Agregar
-            </button>
+            <div className="flex-1 md:flex-none flex flex-col justify-start">
+              <button
+                onClick={handleAddCategory}
+                disabled={categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) || newCategory.name.trim() === ''}
+                className={`w-full md:w-[150px] px-4 py-2 rounded-lg transition-colors ${
+                  categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) || newCategory.name.trim() === ''
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                Agregar
+              </button>
+            </div>
           </div>
         </div>
       )}

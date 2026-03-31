@@ -244,7 +244,12 @@ export default function TournamentCreation() {
             <div className="w-full overflow-hidden rounded-lg">
               <TableTournament 
                 tournamentData={categories}
-                onAddRow={() => handleAddCategory({ category: "3x3", rounds: "Final directa", mode: "WCA", avg_mode: "ao5" })}
+                onAddRow={() => {
+                  const options = ["3x3", "4x4", "3x3 OH", "2x2", "Pyraminx", "Megaminx", "Skewb", "Square-1"];
+                  const used = categories.map(c => c.category);
+                  const nextAvail = options.find(opt => !used.includes(opt)) || options[0];
+                  handleAddCategory({ category: nextAvail, rounds: "Final directa", mode: "WCA", avg_mode: "ao5" });
+                }}
                 onChange={handleUpdateCategory}
                 onRemove={handleRemoveCategory}
               />
