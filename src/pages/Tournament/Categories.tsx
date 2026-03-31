@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft } from 'react-icons/fa';
-import { getTournaments, setTournaments } from '../../utils/localStorage';
+import {
+  FaSearch,
+  FaTrash,
+  FaEdit,
+  FaTimes,
+  FaCheck,
+  FaArrowLeft,
+} from 'react-icons/fa';
+import { db } from '../../common/db';
 
 type Round = {
   roundNumber: number;
   format: 'ao3' | 'ao5';
+  competitorsToAdvance: number | 'all';
+  isFinal: boolean;
 };
 
 type Category = {
@@ -24,7 +33,7 @@ const Categories = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [tournament, setTournament] = useState<any>(null);
-  
+
   const [newCategory, setNewCategory] = useState({
     name: '',
     icon: '',
@@ -32,7 +41,12 @@ const Categories = () => {
     endTime: '11:00',
     participants: 0,
     format: 'WCA' as 'WCA' | 'RedBull',
-    rounds: [{ roundNumber: 1, format: 'ao5' as 'ao3' | 'ao5' }],
+    rounds: [{ 
+      roundNumber: 1, 
+      format: 'ao5' as 'ao3' | 'ao5',
+      competitorsToAdvance: 'all',
+      isFinal: false 
+    }],
   });
 
   const [editMode, setEditMode] = useState(false);
@@ -41,64 +55,62 @@ const Categories = () => {
   // Cargar datos del torneo
   useEffect(() => {
     if (tournamentId) {
-      const tournaments = getTournaments();
-      const currentTournament = tournaments.find(t => t.id === tournamentId);
-      
-      if (currentTournament) {
-        setTournament(currentTournament);
-        // Convertir las categorías del torneo al formato que espera el componente
-        const formattedCategories = currentTournament.categories?.map((cat: any) => ({
-          id: cat.id,
-          name: cat.name,
-          icon: cat.name.substring(0, 3), // Usar las primeras 3 letras como icono por defecto
-          startTime: '10:00', // Valor por defecto
-          endTime: '11:00', // Valor por defecto
-          participants: currentTournament.competitors?.filter((comp: any) => 
-            comp.categories.includes(cat.id)
-          ).length || 0,
-          format: cat.format === 'wca' ? 'WCA' : 'RedBull',
-          rounds: cat.rounds?.map((round: any, index: number) => ({
-            roundNumber: index + 1,
-            format: round.format === 'ao5' ? 'ao5' : 'ao3'
-          }))
-        })) || [];
-        
-        setCategories(formattedCategories);
-      }
+      db.tournaments.get(tournamentId).then(currentTournament => {
+        if (currentTournament) {
+          setTournament(currentTournament);
+          // Convertir las categorías del torneo al formato que espera el componente
+          const formattedCategories =
+            currentTournament.categories?.map((cat: any) => ({
+              id: cat.id,
+              name: cat.name,
+              icon: cat.name.substring(0, 3),
+              startTime: '10:00',
+              endTime: '11:00',
+              participants:
+                currentTournament.competitors?.filter((comp: any) =>
+                  comp.categories.includes(cat.id),
+                ).length || 0,
+              format: cat.format === 'wca' ? 'WCA' : 'RedBull',
+              rounds: cat.rounds?.map((round: any, index: number, array: any[]) => ({
+                roundNumber: round.num || index + 1,
+                format: (round.format === 'ao5' ? 'ao5' : 'ao3') as 'ao5' | 'ao3',
+                competitorsToAdvance: round.competitorsToAdvance || 0,
+                isFinal: round.isFinal !== undefined ? round.isFinal : index === array.length - 1
+              })),
+            })) as Category[] || [];
+
+          setCategories(formattedCategories);
+        }
+      });
     }
   }, [tournamentId]);
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (newCategory.name.trim() === '' || !tournamentId) return;
 
     const categoryToAdd: any = {
       id: Date.now().toString(),
       name: newCategory.name,
-      format: newCategory.format.toLowerCase(), // Guardar en minúsculas
+      format: newCategory.format.toLowerCase(),
     };
 
     if (newCategory.format === 'WCA') {
-      categoryToAdd.rounds = newCategory.rounds?.map(round => ({
+      categoryToAdd.rounds = newCategory.rounds?.map((round, index, array) => ({
         num: round.roundNumber,
         format: round.format,
-        results: []
+        results: [],
+        competitorsToAdvance: 'all',
+        isFinal: index === array.length - 1
       }));
     }
 
-    // Actualizar localStorage
-    const tournaments = getTournaments();
-    const updatedTournaments = tournaments.map(t => {
-      if (t.id === tournamentId) {
-        return {
-          ...t,
-          categories: [...(t.categories || []), categoryToAdd]
-        };
-      }
-      return t;
-    });
-    
-    setTournaments(updatedTournaments);
-    
+    // Actualizar Dexie
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.categories = [...(currentTournament.categories || []), categoryToAdd] as any;
+      await db.tournaments.put(currentTournament as any);
+    }
+
     // Actualizar estado local
     const formattedCategory: Category = {
       ...categoryToAdd,
@@ -107,9 +119,12 @@ const Categories = () => {
       endTime: newCategory.endTime,
       participants: 0,
       format: newCategory.format,
-      rounds: newCategory.rounds
+      rounds: newCategory.rounds?.map(round => ({
+        ...round,
+        competitorsToAdvance: 'all'
+      })),
     };
-    
+
     setCategories([...categories, formattedCategory]);
     setNewCategory({
       name: '',
@@ -118,34 +133,39 @@ const Categories = () => {
       endTime: '11:00',
       participants: 0,
       format: 'WCA',
-      rounds: [{ roundNumber: 1, format: 'ao5' }],
+      rounds: [{ 
+        roundNumber: 1, 
+        format: 'ao5',
+        competitorsToAdvance: 'all',
+        isFinal: false 
+      }],
     });
   };
 
-  const handleDeleteCategory = (id: string) => {
+  const handleDeleteCategory = async (id: string) => {
     if (!tournamentId) return;
-    
-    // Actualizar localStorage
-    const tournaments = getTournaments();
-    const updatedTournaments = tournaments.map(t => {
-      if (t.id === tournamentId) {
-        return {
-          ...t,
-          categories: t.categories.filter((cat: any) => cat.id !== id),
-          competitors: t.competitors?.map((comp: any) => ({
-            ...comp,
-            categories: comp.categories.filter((catId: string) => catId !== id)
-          }))
-        };
+
+    // Actualizar Dexie
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.categories = currentTournament.categories.filter((cat: any) => cat.id !== id);
+      if (currentTournament.competitors) {
+        currentTournament.competitors = currentTournament.competitors.map((comp: any) => ({
+          ...comp,
+          categories: comp.categories.filter((catId: string) => catId !== id),
+        }));
       }
-      return t;
-    });
-    
-    setTournaments(updatedTournaments);
-    setCategories(categories.filter(category => category.id !== id));
+      await db.tournaments.put(currentTournament as any);
+    }
+
+    setCategories(categories.filter((category) => category.id !== id));
   };
 
-  const handleUpdateSchedule = (id: string, field: 'startTime' | 'endTime', value: string) => {
+  const handleUpdateSchedule = (
+    id: string,
+    field: 'startTime' | 'endTime',
+    value: string,
+  ) => {
     setCategories(
       categories.map((category) => {
         if (category.id === id) {
@@ -156,34 +176,36 @@ const Categories = () => {
     );
   };
 
-  const handleUpdateFormat = (id: string, format: 'WCA' | 'RedBull') => {
+  const handleUpdateFormat = async (id: string, format: 'WCA' | 'RedBull') => {
     if (!tournamentId) return;
-    
-    // Actualizar localStorage
-    const tournaments = getTournaments();
-    const updatedTournaments = tournaments.map(t => {
-      if (t.id === tournamentId) {
-        return {
-          ...t,
-          categories: t.categories.map((cat: any) => {
-            if (cat.id === id) {
-              const updatedCat = { 
-                ...cat, 
-                format: format.toLowerCase(),
-                ...(format === 'WCA' && !cat.rounds ? { rounds: [{ num: 1, format: 'ao5' }] } : {}),
-                ...(format === 'RedBull' ? { rounds: undefined } : {})
-              };
-              return updatedCat;
-            }
-            return cat;
-          })
-        };
-      }
-      return t;
-    });
-    
-    setTournaments(updatedTournaments);
-    
+
+    // Actualizar Dexie
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.categories = currentTournament.categories.map((cat: any) => {
+        if (cat.id === id) {
+          return {
+            ...cat,
+            format: format.toLowerCase(),
+            ...(format === 'WCA' && !cat.rounds
+              ? { 
+                  rounds: [{ 
+                    num: 1, 
+                    format: 'ao5',
+                    results: [],
+                    competitorsToAdvance: 'all',
+                    isFinal: true 
+                  }] 
+                }
+              : {}),
+            ...(format === 'RedBull' ? { rounds: undefined } : {}),
+          };
+        }
+        return cat;
+      }) as any;
+      await db.tournaments.put(currentTournament as any);
+    }
+
     // Actualizar estado local
     setCategories(
       categories.map((category) => {
@@ -192,7 +214,12 @@ const Categories = () => {
           if (format === 'RedBull') {
             delete updatedCategory.rounds;
           } else if (!updatedCategory.rounds) {
-            updatedCategory.rounds = [{ roundNumber: 1, format: 'ao5' }];
+            updatedCategory.rounds = [{ 
+              roundNumber: 1, 
+              format: 'ao5',
+              competitorsToAdvance: 'all',
+              isFinal: true 
+            }];
           }
           return updatedCategory;
         }
@@ -201,47 +228,106 @@ const Categories = () => {
     );
   };
 
-  const handleAddRound = (id: string) => {
+  const handleUpdateCompetitorsToAdvance = async (
+    id: string,
+    roundNumber: number,
+    value: number | 'all'
+  ) => {
     if (!tournamentId) return;
-    
-    // Actualizar localStorage
-    const tournaments = getTournaments();
-    const updatedTournaments = tournaments.map(t => {
-      if (t.id === tournamentId) {
-        return {
-          ...t,
-          categories: t.categories.map((cat: any) => {
-            if (cat.id === id && cat.format === 'wca') {
-              const lastRound = cat.rounds?.[cat.rounds.length - 1];
-              const newRoundNumber = lastRound ? lastRound.num + 1 : 1;
-              return {
-                ...cat,
-                rounds: [
-                  ...(cat.rounds || []),
-                  { num: newRoundNumber, format: 'ao5' },
-                ],
-              };
-            }
-            return cat;
-          })
-        };
-      }
-      return t;
-    });
-    
-    setTournaments(updatedTournaments);
-    
+
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.categories = currentTournament.categories.map((cat: any) => {
+        if (cat.id === id && cat.rounds) {
+          return {
+            ...cat,
+            rounds: cat.rounds.map((round: any) => 
+              round.num === roundNumber 
+                ? { ...round, competitorsToAdvance: value } 
+                : round
+            ),
+          };
+        }
+        return cat;
+      }) as any;
+      await db.tournaments.put(currentTournament as any);
+    }
+
     // Actualizar estado local
+    setCategories(
+      categories.map((category) => {
+        if (category.id === id && category.rounds) {
+          return {
+            ...category,
+            rounds: category.rounds.map((round) =>
+              round.roundNumber === roundNumber
+                ? { ...round, competitorsToAdvance: value }
+                : round
+            ),
+          };
+        }
+        return category;
+      })
+    );
+  };
+
+  const handleAddRound = async (id: string) => {
+    if (!tournamentId) return;
+
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.categories = currentTournament.categories.map((cat: any) => {
+        if (cat.id === id && cat.format === 'wca') {
+          const lastRound = cat.rounds?.[cat.rounds.length - 1];
+          const newRoundNumber = lastRound ? lastRound.num + 1 : 1;
+          const isFinal = true;
+
+          const updatedRounds = cat.rounds?.map((round: any) => ({
+            ...round,
+            isFinal: false
+          })) || [];
+
+          return {
+            ...cat,
+            rounds: [
+              ...updatedRounds,
+              {
+                num: newRoundNumber,
+                format: 'ao5',
+                competitorsToAdvance: 0,
+                isFinal,
+                results: []
+              },
+            ],
+          };
+        }
+        return cat;
+      }) as any;
+      await db.tournaments.put(currentTournament as any);
+    }
+
     setCategories(
       categories.map((category) => {
         if (category.id === id && category.format === 'WCA') {
           const lastRound = category.rounds?.[category.rounds.length - 1];
           const newRoundNumber = lastRound ? lastRound.roundNumber + 1 : 1;
+          const isFinal = true;
+
+          const updatedRounds = category.rounds?.map(round => ({
+            ...round,
+            isFinal: false
+          })) || [];
+
           return {
             ...category,
             rounds: [
-              ...(category.rounds || []),
-              { roundNumber: newRoundNumber, format: 'ao5' },
+              ...updatedRounds,
+              {
+                roundNumber: newRoundNumber,
+                format: 'ao5',
+                competitorsToAdvance: 0,
+                isFinal,
+              },
             ],
           };
         }
@@ -250,31 +336,31 @@ const Categories = () => {
     );
   };
 
-  const handleDeleteRound = (id: string, roundNumber: number) => {
+  const handleDeleteRound = async (id: string, roundNumber: number) => {
     if (!tournamentId) return;
-    
-    // Actualizar localStorage
-    const tournaments = getTournaments();
-    const updatedTournaments = tournaments.map(t => {
-      if (t.id === tournamentId) {
-        return {
-          ...t,
-          categories: t.categories.map((cat: any) => {
-            if (cat.id === id && cat.format === 'wca' && cat.rounds) {
-              return {
-                ...cat,
-                rounds: cat.rounds.filter((round: any) => round.num !== roundNumber)
-              };
-            }
-            return cat;
-          })
-        };
-      }
-      return t;
-    });
-    
-    setTournaments(updatedTournaments);
-    
+
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.categories = currentTournament.categories.map((cat: any) => {
+        if (cat.id === id && cat.format === 'wca' && cat.rounds) {
+          const filteredRounds = cat.rounds.filter(
+            (round: any) => round.num !== roundNumber,
+          );
+          
+          if (filteredRounds.length > 0) {
+            filteredRounds[filteredRounds.length - 1].isFinal = true;
+          }
+          
+          return {
+            ...cat,
+            rounds: filteredRounds
+          };
+        }
+        return cat;
+      }) as any;
+      await db.tournaments.put(currentTournament as any);
+    }
+
     // Actualizar estado local
     setCategories(
       categories.map((category) => {
@@ -282,6 +368,11 @@ const Categories = () => {
           const filteredRounds = category.rounds.filter(
             (round) => round.roundNumber !== roundNumber,
           );
+          
+          if (filteredRounds.length > 0) {
+            filteredRounds[filteredRounds.length - 1].isFinal = true;
+          }
+          
           return { ...category, rounds: filteredRounds };
         }
         return category;
@@ -289,37 +380,29 @@ const Categories = () => {
     );
   };
 
-  const handleUpdateRoundFormat = (
+  const handleUpdateRoundFormat = async (
     id: string,
     roundNumber: number,
     format: 'ao3' | 'ao5',
   ) => {
     if (!tournamentId) return;
-    
-    // Actualizar localStorage
-    const tournaments = getTournaments();
-    const updatedTournaments = tournaments.map(t => {
-      if (t.id === tournamentId) {
-        return {
-          ...t,
-          categories: t.categories.map((cat: any) => {
-            if (cat.id === id && cat.format === 'wca' && cat.rounds) {
-              return {
-                ...cat,
-                rounds: cat.rounds.map((round: any) => 
-                  round.num === roundNumber ? { ...round, format } : round
-                )
-              };
-            }
-            return cat;
-          })
-        };
-      }
-      return t;
-    });
-    
-    setTournaments(updatedTournaments);
-    
+
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.categories = currentTournament.categories.map((cat: any) => {
+        if (cat.id === id && cat.format === 'wca' && cat.rounds) {
+          return {
+            ...cat,
+            rounds: cat.rounds.map((round: any) =>
+              round.num === roundNumber ? { ...round, format } : round,
+            ),
+          };
+        }
+        return cat;
+      }) as any;
+      await db.tournaments.put(currentTournament as any);
+    }
+
     // Actualizar estado local
     setCategories(
       categories.map((category) => {
@@ -432,7 +515,9 @@ const Categories = () => {
                       value={round.format}
                       onChange={(e) => {
                         const newRounds = [...newCategory.rounds];
-                        newRounds[index].format = e.target.value as 'ao3' | 'ao5';
+                        newRounds[index].format = e.target.value as
+                          | 'ao3'
+                          | 'ao5';
                         setNewCategory({ ...newCategory, rounds: newRounds });
                       }}
                       className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm"
@@ -440,25 +525,6 @@ const Categories = () => {
                       <option value="ao5">AO5</option>
                       <option value="ao3">AO3</option>
                     </select>
-                    {index === newCategory.rounds.length - 1 && (
-                      <button
-                        onClick={() =>
-                          setNewCategory({
-                            ...newCategory,
-                            rounds: [
-                              ...newCategory.rounds,
-                              {
-                                roundNumber: round.roundNumber + 1,
-                                format: 'ao5',
-                              },
-                            ],
-                          })
-                        }
-                        className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded"
-                      >
-                        +
-                      </button>
-                    )}
                     {newCategory.rounds.length > 1 && (
                       <button
                         onClick={() => {
@@ -595,37 +661,92 @@ const Categories = () => {
                     {category.rounds.map((round) => (
                       <div
                         key={round.roundNumber}
-                        className="flex items-center gap-2"
+                        className="flex flex-col gap-2 p-2 rounded"
                       >
-                        <span className="text-sm">
-                          Ronda {round.roundNumber}:
-                        </span>
-                        <select
-                          value={round.format}
-                          onChange={(e) =>
-                            handleUpdateRoundFormat(
-                              category.id,
-                              round.roundNumber,
-                              e.target.value as 'ao3' | 'ao5',
-                            )
-                          }
-                          className={`bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm ${
-                            !editMode ? 'cursor-not-allowed opacity-50' : ''
-                          }`}
-                          disabled={!editMode}
-                        >
-                          <option value="ao5">AO5</option>
-                          <option value="ao3">AO3</option>
-                        </select>
-                        {editMode && category.rounds && category.rounds.length > 1 && (
-                          <button
-                            onClick={() =>
-                              handleDeleteRound(category.id, round.roundNumber)
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">
+                            {round.isFinal
+                              ? 'Final'
+                              : `Ronda ${round.roundNumber}`}
+                            :
+                          </span>
+                          <select
+                            value={round.format}
+                            onChange={(e) =>
+                              handleUpdateRoundFormat(
+                                category.id,
+                                round.roundNumber,
+                                e.target.value as 'ao3' | 'ao5',
+                              )
                             }
-                            className="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded"
+                            className={`bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm ${
+                              !editMode ? 'cursor-not-allowed opacity-50' : ''
+                            }`}
+                            disabled={!editMode}
                           >
-                            ×
-                          </button>
+                            <option value="ao5">AO5</option>
+                            <option value="ao3">AO3</option>
+                          </select>
+                          {round.isFinal && (
+                            <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded">
+                              Final
+                            </span>
+                          )}
+                          {editMode &&
+                            category.rounds &&
+                            category.rounds.length > 1 && (
+                              <button
+                                onClick={() =>
+                                  handleDeleteRound(
+                                    category.id,
+                                    round.roundNumber,
+                                  )
+                                }
+                                className="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded ml-auto"
+                              >
+                                ×
+                              </button>
+                            )}
+                        </div>
+
+                        {/* Mostrar siempre la información de competidores que avanzan */}
+                        {!round.isFinal && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <span>Avanzan:</span>
+                            {editMode ? (
+                              <select
+                                value={round.competitorsToAdvance}
+                                onChange={(e) => {
+                                  const newValue =
+                                    e.target.value === 'all'
+                                      ? 'all'
+                                      : parseInt(e.target.value) || 0;
+                                  handleUpdateCompetitorsToAdvance(
+                                    category.id,
+                                    round.roundNumber,
+                                    newValue
+                                  );
+                                }}
+                                className="bg-gray-700 border border-gray-600 rounded px-2 py-1"
+                              >
+                                <option value="0">Ninguno</option>
+                                <option value="4">4 competidores</option>
+                                <option value="8">8 competidores</option>
+                                <option value="10">10 competidores</option>
+                                <option value="12">12 competidores</option>
+                                <option value="16">16 competidores</option>
+                                <option value="all">Todos</option>
+                              </select>
+                            ) : (
+                              <span className="bg-gray-700 px-2 py-1 rounded">
+                                {round.competitorsToAdvance === 'all'
+                                  ? 'Todos'
+                                  : round.competitorsToAdvance > 0
+                                  ? round.competitorsToAdvance
+                                  : 'Ninguno'}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     ))}

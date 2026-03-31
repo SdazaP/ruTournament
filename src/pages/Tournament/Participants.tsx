@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft } from 'react-icons/fa';
-import { getTournaments, setTournaments } from '../../utils/localStorage';
+import { db } from '../../common/db';
 
 type Participant = {
   id: string;
@@ -29,22 +29,21 @@ const Participants = () => {
   // Cargar datos del torneo
   useEffect(() => {
     if (tournamentId) {
-      const tournaments = getTournaments();
-      const currentTournament = tournaments.find(t => t.id === tournamentId);
-      
-      if (currentTournament) {
-        setTournament(currentTournament);
-        setParticipants(currentTournament.competitors || []);
-        
-        // Obtener categorías disponibles del torneo
-        const tournamentCategories = currentTournament.categories?.map((cat: any) => cat.name) || [];
-        setCategories(tournamentCategories);
-        
-        // Establecer primera categoría como predeterminada
-        if (tournamentCategories.length > 0) {
-          setNewParticipant(prev => ({...prev, category: tournamentCategories[0]}));
+      db.tournaments.get(tournamentId).then(currentTournament => {
+        if (currentTournament) {
+          setTournament(currentTournament);
+          setParticipants((currentTournament.competitors as Participant[]) || []);
+          
+          // Obtener categorías disponibles del torneo
+          const tournamentCategories = currentTournament.categories?.map((cat: any) => cat.name) || [];
+          setCategories(tournamentCategories);
+          
+          // Establecer primera categoría como predeterminada
+          if (tournamentCategories.length > 0) {
+            setNewParticipant(prev => ({...prev, category: tournamentCategories[0]}));
+          }
         }
-      }
+      });
     }
   }, [tournamentId]);
 
@@ -58,7 +57,7 @@ const Participants = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (newParticipant.name.trim() === '' || !newParticipant.category || !tournamentId) return;
     
     // Encontrar el ID de la categoría seleccionada
@@ -71,68 +70,50 @@ const Participants = () => {
       categories: [selectedCategory.id]
     };
     
-    // Actualizar localStorage
-    const tournaments = getTournaments();
-    const updatedTournaments = tournaments.map(t => {
-      if (t.id === tournamentId) {
-        return {
-          ...t,
-          competitors: [...(t.competitors || []), newParticipantObj]
-        };
-      }
-      return t;
-    });
+    // Actualizar Dexie
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.competitors = [...(currentTournament.competitors || []), newParticipantObj];
+      await db.tournaments.put(currentTournament as any);
+    }
     
-    setTournaments(updatedTournaments);
     setParticipants([...participants, newParticipantObj]);
     setNewParticipant({ name: '', category: categories[0] || '' });
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!tournamentId) return;
     
-    // Actualizar localStorage
-    const tournaments = getTournaments();
-    const updatedTournaments = tournaments.map(t => {
-      if (t.id === tournamentId) {
-        return {
-          ...t,
-          competitors: t.competitors.filter((p: any) => p.id !== id)
-        };
-      }
-      return t;
-    });
+    // Actualizar Dexie
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.competitors = (currentTournament.competitors || []).filter((p: any) => p.id !== id);
+      await db.tournaments.put(currentTournament as any);
+    }
     
-    setTournaments(updatedTournaments);
     setParticipants(participants.filter(p => p.id !== id));
     setParticipantToDelete(null);
   };
 
-  const handleAddCategory = (participantId: string, categoryName: string) => {
+  const handleAddCategory = async (participantId: string, categoryName: string) => {
     if (!editMode || !tournamentId) return;
     
     // Encontrar el ID de la categoría seleccionada
     const selectedCategory = tournament.categories.find((cat: any) => cat.name === categoryName);
     if (!selectedCategory) return;
     
-    // Actualizar localStorage
-    const tournaments = getTournaments();
-    const updatedTournaments = tournaments.map(t => {
-      if (t.id === tournamentId) {
-        return {
-          ...t,
-          competitors: t.competitors.map((p: any) => {
-            if (p.id === participantId && !p.categories.includes(selectedCategory.id)) {
-              return { ...p, categories: [...p.categories, selectedCategory.id] };
-            }
-            return p;
-          })
-        };
-      }
-      return t;
-    });
+    // Actualizar Dexie
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
+        if (p.id === participantId && !p.categories.includes(selectedCategory.id)) {
+          return { ...p, categories: [...p.categories, selectedCategory.id] };
+        }
+        return p;
+      });
+      await db.tournaments.put(currentTournament as any);
+    }
     
-    setTournaments(updatedTournaments);
     setParticipants(participants.map(p => {
       if (p.id === participantId && !p.categories.includes(selectedCategory.id)) {
         return { ...p, categories: [...p.categories, selectedCategory.id] };
@@ -141,59 +122,47 @@ const Participants = () => {
     }));
   };
 
-  const handleRemoveCategory = (participantId: string, categoryId: string) => {
+  const handleRemoveCategory = async (participantId: string, categoryId: string) => {
     if (!editMode || !tournamentId) return;
     
-    // Actualizar localStorage
-    const tournaments = getTournaments();
-    const updatedTournaments = tournaments.map(t => {
-      if (t.id === tournamentId) {
-        return {
-          ...t,
-          competitors: t.competitors.map((p: any) => {
-            if (p.id === participantId) {
-              return { 
-                ...p, 
-                categories: p.categories.filter((c: string) => c !== categoryId) 
-              };
-            }
-            return p;
-          })
-        };
-      }
-      return t;
-    });
+    // Actualizar Dexie
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
+        if (p.id === participantId) {
+          return { 
+            ...p, 
+            categories: p.categories.filter((c: string) => c !== categoryId) 
+          };
+        }
+        return p;
+      });
+      await db.tournaments.put(currentTournament as any);
+    }
     
-    setTournaments(updatedTournaments);
     setParticipants(participants.map(p => {
       if (p.id === participantId) {
-        return { ...p, categories: p.categories.filter(c => c !== categoryId) };
+        return { ...p, categories: p.categories.filter((c: string) => c !== categoryId) };
       }
       return p;
     }));
   };
 
-  const handleNameChange = (participantId: string, newName: string) => {
+  const handleNameChange = async (participantId: string, newName: string) => {
     if (!editMode || !tournamentId) return;
     
-    // Actualizar localStorage
-    const tournaments = getTournaments();
-    const updatedTournaments = tournaments.map(t => {
-      if (t.id === tournamentId) {
-        return {
-          ...t,
-          competitors: t.competitors.map((p: any) => {
-            if (p.id === participantId) {
-              return { ...p, name: newName };
-            }
-            return p;
-          })
-        };
-      }
-      return t;
-    });
+    // Actualizar Dexie
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
+        if (p.id === participantId) {
+          return { ...p, name: newName };
+        }
+        return p;
+      });
+      await db.tournaments.put(currentTournament as any);
+    }
     
-    setTournaments(updatedTournaments);
     setParticipants(participants.map(p => 
       p.id === participantId ? { ...p, name: newName } : p
     ));

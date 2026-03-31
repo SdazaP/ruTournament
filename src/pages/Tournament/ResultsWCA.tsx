@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import {
-  getTournaments,
-  setTournaments,
-  addResult,
-} from '../../utils/localStorage';
+import { db } from '../../common/db';
 import { FaEdit, FaSave, FaTimes, FaTrash, FaInfoCircle } from 'react-icons/fa';
 import {
   MdOutlineTimer,
@@ -29,7 +25,7 @@ type Round = {
 };
 
 type Category = {
-  id: number;
+  id: string;
   name: string;
   rounds: Round[];
 };
@@ -44,6 +40,14 @@ const ResultsWCA = () => {
   const [editingParticipant, setEditingParticipant] =
     useState<Participant | null>(null);
   const [tempTimes, setTempTimes] = useState<number[]>([]);
+  const [advancingCompetitors, setAdvancingCompetitors] = useState<
+    {
+      id: string;
+      name: string;
+      average: number;
+      best: number;
+    }[]
+  >([]);
 
   useEffect(() => {
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
@@ -53,19 +57,19 @@ const ResultsWCA = () => {
   }, []);
 
   useEffect(() => {
-    const tournaments = getTournaments();
-    const tournament = tournaments.find((t) => t.id === id);
-    if (!tournament) {
-      console.warn('Torneo no encontrado con ID:', id);
-      return;
-    }
+    if (!id) return;
+    db.tournaments.get(id).then(tournament => {
+      if (!tournament) {
+        console.warn('Torneo no encontrado con ID:', id);
+        return;
+      }
 
     const selectedCategories = tournament.categories.map((cat) => {
       const categoryRounds = (cat.rounds || [])
         .filter((round) => round.num && round.format) // Agregado
         .map((round) => {
           const participants = tournament.competitors
-            .filter((comp) => (comp.categories || []).includes(cat.id))
+            .filter((comp) => (comp.categories || []).includes(cat.id as string))
             .map((comp) => {
               const result = (round.results || []).find(
                 (r) => r.idCompetitor === comp.id,
@@ -75,8 +79,8 @@ const ResultsWCA = () => {
               const average = result?.media ? parseFloat(result.media) : 0;
 
               return {
-                id: comp.id, // <- ya no lo conviertes a número
-                name: comp.name,
+                id: comp.id as string, // <- ya no lo conviertes a número
+                name: comp.name as string,
                 times,
                 best,
                 average,
@@ -85,13 +89,13 @@ const ResultsWCA = () => {
 
           return {
             roundNumber: round.num,
-            format: round.format,
+            format: round.format as 'ao3' | 'ao5',
             participants,
           };
         });
 
       return {
-        id: cat.id,
+        id: cat.id as string,
         name: cat.name,
         rounds: categoryRounds,
       };
@@ -115,11 +119,53 @@ const ResultsWCA = () => {
       setSelectedCategory(selectedCategories[0].id);
       setSelectedRound(1);
     }
+    }); // END THEN
   }, [id, categoryName]);
 
-  const currentCategory = categories.find((c) => c.id === selectedCategory);
+  useEffect(() => {
+    if (!id || !selectedCategory || !selectedRound) return;
+    
+    db.tournaments.get(id).then(tournament => {
+      if (!tournament) return;
+      const category = tournament.categories.find((c: any) => c.id === selectedCategory);
+      if (!category) return;
+      const currentRoundObj = category.rounds.find((r: any) => r.num === selectedRound);
+      if (!currentRoundObj) return;
+
+      const participantsWithResults = (currentRoundObj.results || [])
+        .map((result: any) => {
+          const competitor = tournament.competitors.find(
+            (c: any) => c.id === result.idCompetitor,
+          );
+          return {
+            id: result.idCompetitor,
+            name: competitor?.name || '',
+            average: parseFloat(result.media) || 0,
+            best: Math.min(...result.times.filter((t: number) => t > 0)) || 0,
+          };
+        })
+        .sort((a: any, b: any) => a.average - b.average);
+
+      const nextRoundNum = selectedRound + 1;
+      const nextRound = category.rounds.find((r: any) => r.num === nextRoundNum);
+      
+      if (!nextRound) {
+        setAdvancingCompetitors([]);
+        return;
+      }
+      
+      const competitorsToAdvance =
+        String(currentRoundObj.competitorsToAdvance) === 'all' 
+          ? participantsWithResults.length 
+          : Number(currentRoundObj.competitorsToAdvance) || (currentRoundObj.format === 'ao5' ? 12 : 8);
+
+      setAdvancingCompetitors(participantsWithResults.slice(0, competitorsToAdvance));
+    });
+  }, [id, selectedCategory, selectedRound]);
+
+  const currentCategory = categories.find((c) => c.id.toString() === selectedCategory.toString());
   const currentRound = currentCategory?.rounds.find(
-    (r) => r.roundNumber === selectedRound,
+    (r) => Number(r.roundNumber) === Number(selectedRound),
   );
 
   const calculateStats = (times: number[], format: 'ao3' | 'ao5') => {
@@ -148,7 +194,7 @@ const ResultsWCA = () => {
     setTempTimes(newTimes);
   };
 
-  const saveChanges = () => {
+  const saveChanges = async () => {
     if (!editingParticipant || !currentRound || !id || !selectedCategory)
       return;
 
@@ -174,16 +220,29 @@ const ResultsWCA = () => {
       }),
     );
 
-    // Usar el ID real de la categoría (selectedCategory ya es el correcto)
-    addResult(
-      id,
-      selectedCategory, // ID de categoría
-      selectedRound, // número de ronda
-      {
-        idCompetitor: editingParticipant.id.toString(),
-        times: tempTimes,
-      },
-    );
+    // Actualiza Dexie
+    const currentTournament = await db.tournaments.get(id);
+    if (currentTournament) {
+       const category = currentTournament.categories.find((c: any) => c.id === selectedCategory);
+       if (category) {
+         const round = category.rounds.find((r: any) => r.num === selectedRound);
+         if (round) {
+           if (!round.results) round.results = [];
+           const existingIndex = round.results.findIndex((r: any) => r.idCompetitor === editingParticipant.id);
+           const updatedResult = {
+             idCompetitor: editingParticipant.id.toString(),
+             times: tempTimes,
+             media: average.toFixed(2),
+           };
+           if (existingIndex >= 0) {
+             round.results[existingIndex] = updatedResult as any;
+           } else {
+             round.results.push(updatedResult as any);
+           }
+           await db.tournaments.put(currentTournament as any);
+         }
+       }
+    }
 
     cancelEditing();
   };

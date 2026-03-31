@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import TableTournament from '../../components/Tables/TableTournament';
 import TableCompetitors from '../../components/Tables/TableCompetitors';
-import { newTournament, newCategory, newCompetitor, newCompetitorToCategory } from '../../utils/localStorage';
+import { db } from '../../common/db';
 
 type TournamentData = {
   name: string;
@@ -84,41 +84,41 @@ export default function TournamentWelcome() {
     }
   };
 
-  const handleFinalize = () => {
-    // Crear el torneo
+  const handleFinalize = async () => {
+    // Generar ID del torneo
     const tournamentId = Date.now().toString();
+
+    // Construir categorías
+    const builtCategories = categories.map((cat, index) => ({
+      id: Date.now().toString() + index, // IDs únicos
+      name: cat.category,
+      format: cat.mode,
+      rounds: [] // Las rondas se agregarán después
+    }));
+
+    // Construir competidores
+    const builtCompetitors = competitors
+      .filter(comp => comp.name.trim() !== '')
+      .map((comp, index) => {
+        const foundCategory = builtCategories.find(c => c.name === comp.category);
+        return {
+          id: Date.now().toString() + "c" + index,
+          name: comp.name,
+          categories: foundCategory ? [foundCategory.id] : []
+        };
+      });
+
+    // Crear el objeto torneo final
     const tournament = {
       ...tournamentData,
       id: tournamentId,
       date: new Date().toISOString().split('T')[0],
-      categories: [],
-      competitors: []
+      categories: builtCategories,
+      competitors: builtCompetitors
     };
     
-    // Agregar el torneo al localStorage
-    newTournament(tournament);
-
-    // Agregar categorías
-    categories.forEach(cat => {
-      newCategory(tournamentId, {
-        id: Date.now().toString(),
-        name: cat.category,
-        format: cat.mode,
-        rounds: [] // Las rondas se agregarán después
-      });
-    });
-
-    // Agregar competidores
-    competitors.forEach(comp => {
-      if (comp.name.trim()) {
-        const competitorId = Date.now().toString();
-        newCompetitor(tournamentId, {
-          id: competitorId,
-          name: comp.name,
-          categories: [categories.findIndex(c => c.category === comp.category) + 1].map(n => `c${n}`)
-        });
-      }
-    });
+    // Agregar el torneo directamente a IndexedDB con Dexie
+    await db.tournaments.add(tournament);
 
     // Redirigir al dashboard
     navigate('/dashboard');

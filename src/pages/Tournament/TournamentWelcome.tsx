@@ -9,7 +9,7 @@ import {
   FaSave,
 } from 'react-icons/fa';
 import { MdCategory, MdPeople } from 'react-icons/md';
-import { getTournaments, setTournaments } from '../../utils/localStorage';
+import { db } from '../../common/db';
 
 type Tournament = {
   id: string;
@@ -56,13 +56,12 @@ const TournamentWelcome = () => {
   // Cargar datos del torneo
   useEffect(() => {
     if (id) {
-      const tournaments = getTournaments();
-      const foundTournament = tournaments.find(t => t.id === id);
-      
-      if (foundTournament) {
-        setTournamentData(foundTournament);
-      }
-      setLoading(false);
+      db.tournaments.get(id).then(foundTournament => {
+        if (foundTournament) {
+          setTournamentData(foundTournament as unknown as Tournament);
+        }
+        setLoading(false);
+      });
     }
   }, [id]);
 
@@ -122,15 +121,10 @@ const TournamentWelcome = () => {
   };
 
   // Guardar cambios en el torneo
-  const saveChanges = () => {
+  const saveChanges = async () => {
     if (!tournament) return;
     
-    const allTournaments = getTournaments();
-    const updatedTournaments = allTournaments.map(t => 
-      t.id === tournament.id ? tournament : t
-    );
-    
-    setTournaments(updatedTournaments);
+    await db.tournaments.put(tournament as any);
     setEditMode(false);
   };
 

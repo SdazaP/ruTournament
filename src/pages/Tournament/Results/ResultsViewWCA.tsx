@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { db } from '../../../common/db';
 
 type Participant = {
-  id: number;
+  id: string;
   name: string;
   times: number[];
   best: number;
@@ -16,172 +18,115 @@ type Round = {
 };
 
 type Category = {
-  id: number;
+  id: string;
   name: string;
   rounds: Round[];
 };
 
 const ResultsViewWCA = () => {
-  // Datos de ejemplo (solo lectura)
-  const categories: Category[] = [
-    {
-      id: 1,
-      name: '3x3',
-      rounds: [
-        {
-          roundNumber: 1,
-          format: 'ao5',
-          participants: [
-            {
-              id: 1,
-              name: 'Feliks Zemdegs',
-              times: [5.21, 6.45, 5.89, 7.32, 6.01],
-              best: 5.21,
-              average: 6.12,
-              ranking: 1,
-            },
-            {
-              id: 2,
-              name: 'Max Park',
-              times: [6.12, 5.98, 7.45, 6.33, 6.78],
-              best: 5.98,
-              average: 6.41,
-              ranking: 2,
-            },
-            {
-              id: 3,
-              name: 'Tymon Kolasiński',
-              times: [6.45, 7.12, 6.89, 6.54, 7.01],
-              best: 6.45,
-              average: 6.81,
-              ranking: 3,
-            },
-            {
-              id: 4,
-              name: 'Tymon Kolasiński',
-              times: [6.45, 7.12, 6.89, 6.54, 7.01],
-              best: 6.30,
-              average: 6.90,
-              ranking: 4,
-            },
-            {
-              id: 5,
-              name: 'Tymon Kolasiński',
-              times: [6.45, 7.12, 6.89, 6.54, 7.01],
-              best: 6.30,
-              average: 6.90,
-              ranking: 5,
-            },
-          ],
-        },
-        {
-          roundNumber: 2,
-          format: 'ao5',
-          participants: [
-            {
-              id: 1,
-              name: 'Feliks Zemdegs',
-              times: [5.45, 6.12, 5.67, 6.89, 5.98],
-              best: 5.45,
-              average: 5.92,
-              ranking: 1,
-            },
-            {
-              id: 2,
-              name: 'Max Park',
-              times: [6.01, 6.45, 5.89, 6.78, 6.32],
-              best: 5.89,
-              average: 6.37,
-              ranking: 2,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: '2x2',
-      rounds: [
-        {
-          roundNumber: 1,
-          format: 'ao5',
-          participants: [
-            {
-              id: 4,
-              name: 'Martin Egdal',
-              times: [1.45, 1.89, 2.12, 1.67, 1.98],
-              best: 1.45,
-              average: 1.85,
-              ranking: 1,
-            },
-            {
-              id: 5,
-              name: 'Zayn Khanani',
-              times: [1.67, 2.01, 1.89, 1.78, 2.45],
-              best: 1.67,
-              average: 1.89,
-              ranking: 2,
-            },
-          ],
-        },
-      ],
-    },
-    {
-      id: 3,
-      name: '4x4',
-      rounds: [
-        {
-          roundNumber: 1,
-          format: 'ao5',
-          participants: [
-            {
-              id: 6,
-              name: 'Max Park',
-              times: [18.45, 21.12, 19.89, 20.54, 22.01],
-              best: 18.45,
-              average: 20.52,
-              ranking: 1,
-            },
-            {
-              id: 7,
-              name: 'Sebastian Weyer',
-              times: [22.45, 24.12, 20.89, 23.54, 21.01],
-              best: 20.89,
-              average: 22.33,
-              ranking: 2,
-            },
-          ],
-        },
-      ],
-    },
-  ];
-
-  const [selectedCategory, setSelectedCategory] = useState<number>(categories[0].id);
+  const { id, categoryName } = useParams();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedRound, setSelectedRound] = useState<number>(1);
   const [isMobileView, setIsMobileView] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Cargar datos del torneo
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
+    db.tournaments.get(id).then(tournament => {
+      if (!tournament) {
+        setLoading(false);
+        return;
+      }
+
+      const loadedCategories: Category[] = tournament.categories.map((category: any) => {
+        const rounds: Round[] = (category.rounds || []).map((round: any) => {
+          const participants: Participant[] = tournament.competitors
+            .filter((comp: any) => (comp.categories || []).includes(category.id as string))
+            .map((comp: any) => {
+              const result = (round.results || []).find((r: any) => r.idCompetitor === comp.id);
+              
+              // Calcular best y average
+              const times = result?.times || [];
+              const validTimes = times.filter((t: number) => t > 0);
+              const best = validTimes.length > 0 ? Math.min(...validTimes) : 0;
+              
+              let average = 0;
+              if (round.format === 'ao3' && validTimes.length >= 3) {
+                average = validTimes.slice(0, 3).reduce((sum: number, t: number) => sum + t, 0) / 3;
+              } else if (round.format === 'ao5' && validTimes.length >= 5) {
+                const sorted = [...validTimes].sort((a: number, b: number) => a - b);
+                average = sorted.slice(1, 4).reduce((sum: number, t: number) => sum + t, 0) / 3;
+              }
+
+              return {
+                id: comp.id as string,
+                name: comp.name as string,
+                times,
+                best,
+                average
+              };
+            });
+
+          return {
+            roundNumber: round.num,
+            format: round.format as 'ao3' | 'ao5',
+            participants: participants.sort((a, b) => a.average - b.average)
+              .map((p, i) => ({ ...p, ranking: i + 1 }))
+          };
+        });
+
+        return {
+          id: category.id as string,
+          name: category.name as string,
+          rounds
+        };
+      });
+
+      setCategories(loadedCategories);
+      
+      // Seleccionar categoría automáticamente
+      if (categoryName) {
+        const found = loadedCategories.find(
+          c => c.name.toLowerCase() === categoryName.toLowerCase()
+        );
+        if (found) {
+          setSelectedCategory(found.id);
+        }
+      } else if (loadedCategories.length > 0) {
+        setSelectedCategory(loadedCategories[0].id);
+      }
+      
+      setLoading(false);
+    });
+  }, [id, categoryName]);
 
   // Detectar tamaño de pantalla
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobileView(window.innerWidth < 768);
-    };
-
+    const handleResize = () => setIsMobileView(window.innerWidth < 768);
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Obtener datos actuales
-  const currentCategory = categories.find((c) => c.id === selectedCategory);
-  const currentRound = currentCategory?.rounds.find((r) => r.roundNumber === selectedRound);
+  const currentCategory = categories.find(c => c.id.toString() === selectedCategory.toString());
+  const currentRound = currentCategory?.rounds.find(r => Number(r.roundNumber) === Number(selectedRound));
+  const sortedParticipants = currentRound?.participants;
 
-  // Ordenar participantes por ranking si existe, sino por promedio
-  const sortedParticipants = currentRound?.participants.sort((a, b) => {
-    if (a.ranking !== undefined && b.ranking !== undefined) {
-      return a.ranking - b.ranking;
-    }
-    return a.average - b.average;
-  });
+  if (loading) {
+    return (
+      <div className="text-white p-8 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+        <p>Cargando resultados...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="text-white p-4 md:p-6 lg:p-8 min-h-screen">
@@ -201,7 +146,7 @@ const ResultsViewWCA = () => {
             <select
               value={selectedCategory}
               onChange={(e) => {
-                setSelectedCategory(parseInt(e.target.value));
+                setSelectedCategory(e.target.value);
                 setSelectedRound(1);
               }}
               className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
@@ -221,6 +166,7 @@ const ResultsViewWCA = () => {
               value={selectedRound}
               onChange={(e) => setSelectedRound(parseInt(e.target.value))}
               className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              disabled={!currentCategory}
             >
               {currentCategory?.rounds.map((round) => (
                 <option key={round.roundNumber} value={round.roundNumber}>
@@ -236,12 +182,12 @@ const ResultsViewWCA = () => {
 
       {/* Resultados */}
       <div className="max-w-6xl mx-auto">
-        {currentRound ? (
+        {currentRound && sortedParticipants ? (
           <div className="bg-gray-800 rounded-xl overflow-hidden shadow-lg">
             {isMobileView ? (
               // Vista móvil - Tarjetas
               <div className="space-y-3 p-3">
-                {sortedParticipants?.map((participant) => (
+                {sortedParticipants.map((participant) => (
                   <div 
                     key={participant.id} 
                     className={`bg-gray-750 rounded-lg p-4 border-l-4 ${
@@ -265,22 +211,23 @@ const ResultsViewWCA = () => {
                       </div>
                       <div className="flex gap-2">
                         <span className="text-xs bg-blue-600 px-2 py-1 rounded">
-                          Best: {participant.best.toFixed(2)}
+                          Best: {participant.best > 0 ? participant.best.toFixed(2) : 'DNF'}
                         </span>
                         <span className="text-xs bg-green-600 px-2 py-1 rounded">
-                          Avg: {participant.average.toFixed(2)}
+                          Avg: {participant.average > 0 ? participant.average.toFixed(2) : 'DNF'}
                         </span>
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className={`grid ${currentRound.format === 'ao5' ? 'grid-cols-5' : 'grid-cols-3'} gap-2`}>
                       {participant.times.map((time, index) => (
                         <div key={index} className="flex flex-col items-center">
                           <label className="text-xs text-gray-400">T{index + 1}</label>
                           <div className={`w-full text-center py-1 rounded text-sm ${
-                            time === participant.best ? 'bg-green-900/50 text-green-300' : 'bg-gray-700'
+                            time === participant.best && time > 0 ? 'bg-green-900/50 text-green-300' : 
+                            time <= 0 ? 'bg-red-900/50 text-red-300' : 'bg-gray-700'
                           }`}>
-                            {time.toFixed(2)}
+                            {time > 0 ? time.toFixed(2) : 'DNF'}
                           </div>
                         </div>
                       ))}
@@ -316,7 +263,7 @@ const ResultsViewWCA = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedParticipants?.map((participant) => (
+                  {sortedParticipants.map((participant) => (
                     <tr 
                       key={participant.id} 
                       className="border-b border-gray-700 hover:bg-gray-750/50 transition-colors"
@@ -337,17 +284,18 @@ const ResultsViewWCA = () => {
                         <td 
                           key={index} 
                           className={`px-2 py-3 text-center ${
-                            time === participant.best ? 'text-green-400 font-bold' : 'text-gray-300'
+                            time === participant.best && time > 0 ? 'text-green-400 font-bold' : 
+                            time <= 0 ? 'text-red-400' : 'text-gray-300'
                           }`}
                         >
-                          {time.toFixed(2)}
+                          {time > 0 ? time.toFixed(2) : 'DNF'}
                         </td>
                       ))}
                       <td className="px-3 py-3 text-center font-bold text-blue-400">
-                        {participant.best.toFixed(2)}
+                        {participant.best > 0 ? participant.best.toFixed(2) : 'DNF'}
                       </td>
                       <td className="px-3 py-3 text-center font-bold text-green-400">
-                        {participant.average.toFixed(2)}
+                        {participant.average > 0 ? participant.average.toFixed(2) : 'DNF'}
                       </td>
                     </tr>
                   ))}

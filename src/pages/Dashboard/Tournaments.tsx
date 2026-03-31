@@ -1,53 +1,10 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { getTournaments } from '../../utils/localStorage';
-
-type Tournament = {
-  id: string;
-  name: string;
-  description: string;
-  location: string;
-  status: string;
-  categories: {
-    id: string;
-    name: string;
-    format: string;
-    rounds: any[];
-  }[];
-  competitors: {
-    id: string;
-    name: string;
-    categories: string[];
-  }[];
-};
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../../common/db';
 
 const Tournaments = () => {
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadTournaments = () => {
-      try {
-        const storedTournaments = getTournaments();
-
-        // Transformamos los datos para adaptarlos al componente
-        const formattedTournaments = storedTournaments.map((t) => ({
-          ...t,
-          date: 'Fecha a definir', // Puedes añadir este campo si lo necesitas
-          competitorsCount: t.competitors?.length || 0,
-          categoriesList: t.categories?.map((c) => c.name) || [],
-        }));
-
-        setTournaments(storedTournaments); // Usamos los datos directos del storage
-      } catch (error) {
-        console.error('Error loading tournaments:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadTournaments();
-  }, []);
+  const tournaments = useLiveQuery(() => db.tournaments.toArray());
+  const loading = tournaments === undefined;
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
