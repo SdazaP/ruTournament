@@ -247,8 +247,8 @@ export default function TournamentCreation() {
                 onAddRow={() => {
                   const options = ["3x3", "4x4", "3x3 OH", "2x2", "Pyraminx", "Megaminx", "Skewb", "Square-1"];
                   const used = categories.map(c => c.category);
-                  const nextAvail = options.find(opt => !used.includes(opt)) || options[0];
-                  handleAddCategory({ category: nextAvail, rounds: "Final directa", mode: "WCA", avg_mode: "ao5" });
+                  const nextAvail = options.find(opt => !used.includes(opt));
+                  handleAddCategory({ category: nextAvail !== undefined ? nextAvail : "", rounds: "Final directa", mode: "WCA", avg_mode: "ao5" });
                 }}
                 onChange={handleUpdateCategory}
                 onRemove={handleRemoveCategory}

@@ -67,11 +67,19 @@ const TableTournament: React.FC<TableTournamentProps> = ({
             className="grid min-w-[600px] grid-cols-5 border-b border-gray-750 hover:bg-gray-750/30 transition-colors last:border-0"
           >
             {/* Categoría */}
-            <div className="flex items-center justify-center p-3">
+            <div className="flex flex-col items-center justify-center p-3 gap-2">
               <select
-                value={tournament.category}
-                onChange={(e) => onChange(index, "category", e.target.value)}
-                className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all cursor-pointer"
+                value={options.category.includes(tournament.category) ? tournament.category : "Otros"}
+                onChange={(e) => {
+                  if (e.target.value === "Otros") {
+                    onChange(index, "category", "");
+                  } else {
+                    onChange(index, "category", e.target.value);
+                  }
+                }}
+                className={`w-full rounded-md border bg-gray-700 p-2.5 text-sm text-white focus:outline-none transition-all cursor-pointer ${
+                  !options.category.includes(tournament.category) && tournamentData.some((t, tIndex) => tIndex !== index && t.category.toLowerCase() === tournament.category.trim().toLowerCase() && tournament.category.trim() !== '') ? "border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500" : "border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                }`}
               >
                 {options.category.map((option, i) => {
                   const isUsed = tournamentData.some((t, tIndex) => tIndex !== index && t.category === option);
@@ -81,7 +89,27 @@ const TableTournament: React.FC<TableTournamentProps> = ({
                     </option>
                   );
                 })}
+                <option value="Otros">Otros...</option>
               </select>
+              
+              {!options.category.includes(tournament.category) && (
+                <div className="w-full">
+                  <input
+                    type="text"
+                    placeholder="Escribe la categoría..."
+                    value={tournament.category}
+                    onChange={(e) => onChange(index, "category", e.target.value)}
+                    className={`w-full rounded-md border bg-gray-900 p-2.5 text-sm text-white focus:outline-none transition-all ${
+                      tournamentData.some((t, tIndex) => tIndex !== index && t.category.toLowerCase() === tournament.category.trim().toLowerCase() && tournament.category.trim() !== '') 
+                        ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
+                        : 'border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                    }`}
+                  />
+                  {tournamentData.some((t, tIndex) => tIndex !== index && t.category.toLowerCase() === tournament.category.trim().toLowerCase() && tournament.category.trim() !== '') && (
+                    <span className="text-red-500 text-xs text-left w-full block mt-1">Categoría duplicada</span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Rondas */}
@@ -153,9 +181,9 @@ const TableTournament: React.FC<TableTournamentProps> = ({
       <div className="mt-4 flex flex-wrap items-center justify-end gap-3 p-2">
         <button
           onClick={onAddRow}
-          disabled={tournamentData.length >= options.category.length}
+          disabled={tournamentData.length >= 10}
           className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            tournamentData.length >= options.category.length
+            tournamentData.length >= 10
               ? 'bg-gray-700 text-gray-500 cursor-not-allowed border border-gray-600'
               : 'bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:bg-blue-600 hover:text-white'
           }`}

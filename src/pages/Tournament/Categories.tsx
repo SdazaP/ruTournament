@@ -51,6 +51,7 @@ const Categories = () => {
 
   const [editMode, setEditMode] = useState(false);
   const icons = ['3x3', '4x4', 'OH', '2x2', 'Pyr', 'Mega', 'Sq1', 'Skewb'];
+  const PREDEFINED_CATEGORIES = ["3x3", "4x4", "3x3 OH", "2x2", "Pyraminx", "Megaminx", "Skewb", "Square-1"];
 
   // Cargar datos del torneo
   useEffect(() => {
@@ -445,22 +446,49 @@ const Categories = () => {
       {editMode && (
         <div className="flex flex-col gap-3 mb-6">
           <div className="flex flex-col md:flex-row gap-3">
-            <div className="flex-1 flex flex-col">
-              <input
-                type="text"
-                placeholder="Nombre categoría"
-                value={newCategory.name}
-                onChange={(e) =>
-                  setNewCategory({ ...newCategory, name: e.target.value })
-                }
+            <div className="flex-1 flex flex-col gap-2">
+              <select
+                value={PREDEFINED_CATEGORIES.includes(newCategory.name) ? newCategory.name : "Otros"}
+                onChange={(e) => {
+                  if (e.target.value === "Otros") {
+                    setNewCategory({ ...newCategory, name: "" });
+                  } else {
+                    setNewCategory({ ...newCategory, name: e.target.value });
+                  }
+                }}
                 className={`w-full bg-gray-700 border ${
-                  categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) 
-                    ? 'border-red-500' 
-                    : 'border-gray-600'
-                } rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-              />
-              {categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) && (
-                <span className="text-red-500 text-xs mt-1">Esa categoría ya existe</span>
+                  !PREDEFINED_CATEGORIES.includes(newCategory.name) && categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) 
+                    ? 'border-red-500 focus:ring-red-500' 
+                    : 'border-gray-600 focus:ring-blue-500'
+                } rounded-lg px-4 py-2 focus:outline-none focus:ring-1`}
+              >
+                {PREDEFINED_CATEGORIES.map(cat => (
+                  <option key={cat} value={cat} disabled={categories.some(c => c.name === cat)}>
+                    {cat} {categories.some(c => c.name === cat) ? "(Ya agregada)" : ""}
+                  </option>
+                ))}
+                <option value="Otros">Otros...</option>
+              </select>
+
+              {!PREDEFINED_CATEGORIES.includes(newCategory.name) && (
+                <div className="w-full">
+                  <input
+                    type="text"
+                    placeholder="Nombre personalizado..."
+                    value={newCategory.name}
+                    onChange={(e) =>
+                      setNewCategory({ ...newCategory, name: e.target.value })
+                    }
+                    className={`w-full bg-gray-900 border ${
+                      categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-600 focus:ring-blue-500'
+                    } rounded-lg px-4 py-2 focus:outline-none focus:ring-1`}
+                  />
+                  {categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) && newCategory.name.trim() !== '' && (
+                    <span className="text-red-500 text-xs mt-1 block">Esa categoría ya existe</span>
+                  )}
+                </div>
               )}
             </div>
 
@@ -555,15 +583,18 @@ const Categories = () => {
             <div className="flex-1 md:flex-none flex flex-col justify-start">
               <button
                 onClick={handleAddCategory}
-                disabled={categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) || newCategory.name.trim() === ''}
+                disabled={categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) || newCategory.name.trim() === '' || categories.length >= 10}
                 className={`w-full md:w-[150px] px-4 py-2 rounded-lg transition-colors ${
-                  categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) || newCategory.name.trim() === ''
+                  categories.length >= 10 || categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) || newCategory.name.trim() === ''
                     ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                     : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
                 Agregar
               </button>
+              {categories.length >= 10 && (
+                <span className="text-red-400 text-xs mt-1 text-center font-medium">Límite de 10 alcanzado</span>
+              )}
             </div>
           </div>
         </div>
