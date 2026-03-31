@@ -211,26 +211,29 @@ const ResultsViewWCA = () => {
                       </div>
                       <div className="flex gap-2">
                         <span className="text-xs bg-blue-600 px-2 py-1 rounded">
-                          Best: {participant.best > 0 ? participant.best.toFixed(2) : 'DNF'}
+                          Best: {participant.best > 0 ? participant.best.toFixed(2) : participant.times.some(t => t < 0) && participant.best <= 0 ? 'DNF' : '-'}
                         </span>
                         <span className="text-xs bg-green-600 px-2 py-1 rounded">
-                          Avg: {participant.average > 0 ? participant.average.toFixed(2) : 'DNF'}
+                          Avg: {participant.average > 0 ? participant.average.toFixed(2) : participant.times.length === (currentRound.format === 'ao5' ? 5 : 3) && participant.average <= 0 ? 'DNF' : '-'}
                         </span>
                       </div>
                     </div>
                     
                     <div className={`grid ${currentRound.format === 'ao5' ? 'grid-cols-5' : 'grid-cols-3'} gap-2`}>
-                      {participant.times.map((time, index) => (
-                        <div key={index} className="flex flex-col items-center">
-                          <label className="text-xs text-gray-400">T{index + 1}</label>
-                          <div className={`w-full text-center py-1 rounded text-sm ${
-                            time === participant.best && time > 0 ? 'bg-green-900/50 text-green-300' : 
-                            time <= 0 ? 'bg-red-900/50 text-red-300' : 'bg-gray-700'
-                          }`}>
-                            {time > 0 ? time.toFixed(2) : 'DNF'}
+                      {Array.from({ length: currentRound.format === 'ao5' ? 5 : 3 }).map((_, index) => {
+                        const time = participant.times[index] !== undefined ? participant.times[index] : 0;
+                        return (
+                          <div key={index} className="flex flex-col items-center">
+                            <label className="text-xs text-gray-400">T{index + 1}</label>
+                            <div className={`w-full text-center py-1 rounded text-sm ${
+                              time === participant.best && time > 0 ? 'bg-green-900/50 text-green-300' : 
+                              time < 0 ? 'bg-red-900/50 text-red-300' : 'bg-gray-700 text-gray-300'
+                            }`}>
+                              {time > 0 ? time.toFixed(2) : time < 0 ? 'DNF' : '-'}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -280,22 +283,25 @@ const ResultsViewWCA = () => {
                         ) : '-'}
                       </td>
                       <td className="px-4 py-3 font-medium">{participant.name}</td>
-                      {participant.times.map((time, index) => (
-                        <td 
-                          key={index} 
-                          className={`px-2 py-3 text-center ${
-                            time === participant.best && time > 0 ? 'text-green-400 font-bold' : 
-                            time <= 0 ? 'text-red-400' : 'text-gray-300'
-                          }`}
-                        >
-                          {time > 0 ? time.toFixed(2) : 'DNF'}
-                        </td>
-                      ))}
+                      {Array.from({ length: currentRound.format === 'ao5' ? 5 : 3 }).map((_, index) => {
+                        const time = participant.times[index] !== undefined ? participant.times[index] : 0;
+                        return (
+                          <td 
+                            key={index} 
+                            className={`px-2 py-3 text-center ${
+                              time === participant.best && time > 0 ? 'text-green-400 font-bold' : 
+                              time < 0 ? 'text-red-400' : 'text-gray-300'
+                            }`}
+                          >
+                            {time > 0 ? time.toFixed(2) : time < 0 ? 'DNF' : '-'}
+                          </td>
+                        );
+                      })}
                       <td className="px-3 py-3 text-center font-bold text-blue-400">
-                        {participant.best > 0 ? participant.best.toFixed(2) : 'DNF'}
+                        {participant.best > 0 ? participant.best.toFixed(2) : participant.times.some(t => t < 0) && participant.best <= 0 ? 'DNF' : '-'}
                       </td>
                       <td className="px-3 py-3 text-center font-bold text-green-400">
-                        {participant.average > 0 ? participant.average.toFixed(2) : 'DNF'}
+                        {participant.average > 0 ? participant.average.toFixed(2) : participant.times.length === (currentRound.format === 'ao5' ? 5 : 3) && participant.average <= 0 ? 'DNF' : '-'}
                       </td>
                     </tr>
                   ))}

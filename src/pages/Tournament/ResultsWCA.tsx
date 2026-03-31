@@ -280,7 +280,7 @@ const ResultsWCA = () => {
         }`}
         onClick={() => editMode && startEditing(participant)}
       >
-        {time > 0 ? time.toFixed(2) : '-'}
+        {time > 0 ? time.toFixed(2) : time < 0 ? 'DNF' : '-'}
       </div>
     );
   };
@@ -410,13 +410,13 @@ const ResultsWCA = () => {
                           <BsTrophyFill size={10} />{' '}
                           {participant.best > 0
                             ? participant.best.toFixed(2)
-                            : '-'}
+                            : participant.times.some(t => t < 0) && participant.best <= 0 ? 'DNF' : '-'}
                         </span>
                         <span className="text-xs bg-green-600 px-2 py-1 rounded flex items-center gap-1">
                           <BsGraphUp size={10} />{' '}
                           {participant.average > 0
                             ? participant.average.toFixed(2)
-                            : '-'}
+                            : participant.times.length === (currentRound.format === 'ao5' ? 5 : 3) && participant.average <= 0 ? 'DNF' : '-'}
                         </span>
                       </div>
                     </div>
@@ -527,14 +527,14 @@ const ResultsWCA = () => {
                       <td className="px-3 py-3 text-center font-medium text-blue-400">
                         {participant.best > 0
                           ? participant.best.toFixed(2)
-                          : '-'}
+                          : participant.times.some(t => t < 0) && participant.best <= 0 ? 'DNF' : '-'}
                       </td>
 
                       {/* Promedio */}
                       <td className="px-3 py-3 text-center font-medium text-green-400">
                         {participant.average > 0
                           ? participant.average.toFixed(2)
-                          : '-'}
+                          : participant.times.length === (currentRound.format === 'ao5' ? 5 : 3) && participant.average <= 0 ? 'DNF' : '-'}
                       </td>
                     </tr>
                   ))}
