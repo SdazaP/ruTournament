@@ -398,7 +398,7 @@ const TournamentWelcome = () => {
             {categories.map((category) => (
               <Link
                 key={category.id}
-                to={`/dashboard/tournament/${id}/categories/${category.id}`}
+                to={`/dashboard/tournament/${id}/view/resultsWCA/${category.id}`}
                 className={`flex flex-col items-center p-3 rounded-lg transition-colors bg-gray-750 ${
                   editMode 
                     ? 'opacity-50 pointer-events-none cursor-not-allowed' 

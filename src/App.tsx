@@ -147,7 +147,7 @@ function App() {
                   }
                 />
                 <Route
-                  path='view/resultsWCA'
+                  path='view/resultsWCA/:categoryId?'
                   element={
                     <>
                       <PageTitle title="View WCA Results" />

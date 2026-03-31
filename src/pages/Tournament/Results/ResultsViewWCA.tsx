@@ -24,7 +24,7 @@ type Category = {
 };
 
 const ResultsViewWCA = () => {
-  const { id, categoryName } = useParams();
+  const { id, categoryId } = useParams();
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedRound, setSelectedRound] = useState<number>(1);
@@ -91,9 +91,9 @@ const ResultsViewWCA = () => {
       setCategories(loadedCategories);
       
       // Seleccionar categoría automáticamente
-      if (categoryName) {
+      if (categoryId) {
         const found = loadedCategories.find(
-          c => c.name.toLowerCase() === categoryName.toLowerCase()
+          c => c.id.toString() === categoryId.toString()
         );
         if (found) {
           setSelectedCategory(found.id);
@@ -104,7 +104,7 @@ const ResultsViewWCA = () => {
       
       setLoading(false);
     });
-  }, [id, categoryName]);
+  }, [id, categoryId]);
 
   // Detectar tamaño de pantalla
   useEffect(() => {
