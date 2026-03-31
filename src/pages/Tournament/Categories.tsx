@@ -481,7 +481,7 @@ const Categories = () => {
               className="flex-1 md:max-w-[150px] bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="WCA">Formato WCA</option>
-              <option value="RedBull">Formato RedBull</option>
+              <option value="RedBull" disabled>RedBull (Próximamente)</option>
             </select>
           </div>
 
@@ -639,14 +639,15 @@ const Categories = () => {
                       WCA
                     </button>
                     <button
-                      onClick={() => handleUpdateFormat(category.id, 'RedBull')}
-                      className={`px-3 py-1 rounded text-sm ${
+                      disabled
+                      title="Próximamente"
+                      className={`px-3 py-1 rounded text-sm cursor-not-allowed opacity-50 ${
                         category.format === 'RedBull'
                           ? 'bg-blue-600'
-                          : 'bg-gray-700 hover:bg-gray-600'
+                          : 'bg-gray-700'
                       }`}
                     >
-                      RedBull
+                      RedBull (Próximamente)
                     </button>
                   </div>
                 </div>
