@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 
 import Loader from './common/Loader';
 import PageTitle from './components/PageTitle';
+import ScrollToTop from './components/ScrollToTop';
 import SignIn from './pages/Authentication/SignIn';
 import SignUp from './pages/Authentication/SignUp';
 import TournamentCreation from './pages/NewTournament/TournamentCreation';
@@ -21,11 +22,6 @@ import HomePage from './pages/HomePage';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 1000);
@@ -34,8 +30,10 @@ function App() {
   return loading ? (
     <Loader />
   ) : (
-    <Routes>
-      {/* DashboardLayout */}
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* DashboardLayout */}
       <Route
         path="/dashboard/*"
         element={
@@ -183,6 +181,7 @@ function App() {
         }
       />
     </Routes>
+    </>
   );
 }
 
