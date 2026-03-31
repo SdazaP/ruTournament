@@ -89,12 +89,32 @@ export default function TournamentCreation() {
     const tournamentId = Date.now().toString();
 
     // Construir categorías
-    const builtCategories = categories.map((cat, index) => ({
-      id: Date.now().toString() + index, // IDs únicos
-      name: cat.category,
-      format: cat.mode,
-      rounds: [] // Las rondas se agregarán después
-    }));
+    const builtCategories = categories.map((cat, index) => {
+      // Parsear cantidad de rondas
+      let numRounds = 1;
+      const roundsMatch = cat.rounds.match(/\d+/);
+      if (roundsMatch) {
+        numRounds = parseInt(roundsMatch[0], 10);
+      } else if (cat.rounds.includes("Ronda única") || cat.rounds.includes("Final directa")) {
+        numRounds = 1;
+      }
+
+      // Crear esqueleto de rondas
+      const roundsArr = Array.from({ length: numRounds }).map((_, i) => ({
+        num: i + 1,
+        format: cat.avg_mode,
+        results: [],
+        competitorsToAdvance: 0,
+        isFinal: i === numRounds - 1
+      }));
+
+      return {
+        id: Date.now().toString() + index, // IDs únicos
+        name: cat.category,
+        format: cat.mode.toLowerCase(),
+        rounds: roundsArr
+      };
+    });
 
     // Construir competidores
     const builtCompetitors = competitors
