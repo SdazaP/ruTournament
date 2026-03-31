@@ -9,11 +9,85 @@ import {
   MdPeople,
 } from 'react-icons/md';
 import { BsTrophyFill, BsGraphUp } from 'react-icons/bs';
+import { TimeRecord, Penalty } from '../../common/db';
+
+export const normalizeTime = (t: any): TimeRecord => {
+  if (t !== null && typeof t === 'object' && 'base' in t) {
+    return t as TimeRecord;
+  }
+  if (typeof t === 'number') {
+    return { base: t > 0 ? t : 0, penalty: t < 0 ? 'DNF' : '' };
+  }
+  return { base: 0, penalty: '' };
+};
+
+const getSolveValue = (t: TimeRecord) => {
+  if (t.penalty === 'DNF' || t.base <= 0) return -1;
+  return t.base + (t.penalty === '+2' ? 2 : 0);
+};
+
+export const calculateRulesStats = (times: TimeRecord[], format: 'ao3' | 'ao5') => {
+  const solves = times.map(t => getSolveValue(t));
+  const finishedSolves = solves.filter(s => s > 0);
+  const dnfsCount = solves.filter(s => s < 0).length;
+  
+  let best = -1;
+  if (finishedSolves.length > 0) best = Math.min(...finishedSolves);
+
+  // Consideramos todo digitado si hay bases > 0 o DNF directo
+  const allEntered = times.every(t => t.base > 0 || t.penalty === 'DNF');
+  if (!allEntered) return { best, average: 0 };
+
+  let average = 0;
+  if (format === 'ao3') {
+    if (dnfsCount > 0) average = -1;
+    else average = solves.reduce((a, b) => a + b, 0) / 3;
+  } else if (format === 'ao5') {
+    if (dnfsCount >= 2) average = -1;
+    else {
+      const valid = solves.filter(s => s > 0).sort((a, b) => a - b);
+      if (dnfsCount === 1) {
+        valid.shift();
+        average = valid.reduce((a, b) => a + b, 0) / 3;
+      } else {
+        valid.shift();
+        valid.pop();
+        average = valid.reduce((a, b) => a + b, 0) / 3;
+      }
+    }
+  }
+
+  return { 
+    best: best > 0 ? Math.floor(best * 100) / 100 : -1, 
+    average: average > 0 ? Math.floor(average * 100) / 100 : -1 
+  };
+};
+
+export const formatTimeDisplay = (t: any, isMobile: boolean = false): React.ReactNode => {
+  const time = normalizeTime(t);
+  if (time.base === 0 && time.penalty !== 'DNF') return '-';
+  
+  if (time.penalty === 'DNF') {
+    if (isMobile) {
+      return <span className="text-red-500 font-bold">DNF</span>;
+    }
+    return <span className="text-red-400">({time.base > 0 ? time.base.toFixed(2) : '-'}) DNF</span>;
+  }
+  
+  if (time.penalty === '+2') {
+    if (isMobile) {
+      return <span className="text-yellow-500 font-bold">{(time.base + 2).toFixed(2)}</span>;
+    }
+    return <span className="text-yellow-400">{time.base.toFixed(2)} +2 = {(time.base + 2).toFixed(2)}</span>;
+  }
+  
+  return time.base.toFixed(2);
+};
 
 type Participant = {
   id: string;
   name: string;
-  times: number[];
+  times: TimeRecord[];
   best: number;
   average: number;
 };
@@ -39,7 +113,7 @@ const ResultsWCA = () => {
   const [editMode, setEditMode] = useState(false);
   const [editingParticipant, setEditingParticipant] =
     useState<Participant | null>(null);
-  const [tempTimes, setTempTimes] = useState<number[]>([]);
+  const [tempTimes, setTempTimes] = useState<TimeRecord[]>([]);
   const [advancingCompetitors, setAdvancingCompetitors] = useState<
     {
       id: string;
@@ -74,9 +148,11 @@ const ResultsWCA = () => {
               const result = (round.results || []).find(
                 (r) => r.idCompetitor === comp.id,
               );
-              const times = result?.times || [];
-              const best = times.length ? Math.min(...times) : 0;
-              const average = result?.media ? parseFloat(result.media) : 0;
+              const rawTimes = result?.times || [];
+              const times = rawTimes.map(normalizeTime);
+              const calculated = calculateRulesStats(times, round.format as 'ao3'|'ao5');
+              const best = calculated.best;
+              const average = result?.media && parseFloat(result.media) || calculated.average;
 
               return {
                 id: comp.id as string, // <- ya no lo conviertes a número
@@ -137,11 +213,13 @@ const ResultsWCA = () => {
           const competitor = tournament.competitors.find(
             (c: any) => c.id === result.idCompetitor,
           );
+          const loadedTimes = result.times.map(normalizeTime);
+          const computed = calculateRulesStats(loadedTimes, currentRoundObj.format as 'ao3'|'ao5');
           return {
             id: result.idCompetitor,
             name: competitor?.name || '',
             average: parseFloat(result.media) || 0,
-            best: Math.min(...result.times.filter((t: number) => t > 0)) || 0,
+            best: computed.best > 0 ? computed.best : 0,
           };
         })
         .sort((a: any, b: any) => a.average - b.average);
@@ -168,22 +246,8 @@ const ResultsWCA = () => {
     (r) => Number(r.roundNumber) === Number(selectedRound),
   );
 
-  const calculateStats = (times: number[], format: 'ao3' | 'ao5') => {
-    const validTimes = times.filter((t) => t > 0);
-    const best = validTimes.length > 0 ? Math.min(...validTimes) : 0;
+  // Calculate stats original removido, ya usamos calculateRulesStats()
 
-    let average = 0;
-    if (format === 'ao3' && validTimes.length >= 3) {
-      const rawAvg = validTimes.slice(0, 3).reduce((sum, t) => sum + t, 0) / 3;
-      average = Math.floor(rawAvg * 100) / 100;
-    } else if (format === 'ao5' && validTimes.length >= 5) {
-      const sorted = [...validTimes].sort((a, b) => a - b);
-      const rawAvg = sorted.slice(1, 4).reduce((sum, t) => sum + t, 0) / 3;
-      average = Math.floor(rawAvg * 100) / 100;
-    }
-
-    return { best, average };
-  };
 
   const startEditing = (participant: Participant) => {
     setEditingParticipant(participant);
@@ -192,7 +256,14 @@ const ResultsWCA = () => {
 
   const handleTimeChange = (index: number, value: string) => {
     const newTimes = [...tempTimes];
-    newTimes[index] = parseFloat(value) || 0;
+    newTimes[index] = { ...newTimes[index], base: parseFloat(value) || 0 };
+    setTempTimes(newTimes);
+  };
+
+  const handlePenaltyChange = (index: number, penalty: Penalty) => {
+    const newTimes = [...tempTimes];
+    // Si la misma penalidad ya estaba activa, la apagamos
+    newTimes[index] = { ...newTimes[index], penalty: newTimes[index].penalty === penalty ? '' : penalty };
     setTempTimes(newTimes);
   };
 
@@ -200,7 +271,7 @@ const ResultsWCA = () => {
     if (!editingParticipant || !currentRound || !id || !selectedCategory)
       return;
 
-    const { best, average } = calculateStats(tempTimes, currentRound.format);
+    const { best, average } = calculateRulesStats(tempTimes, currentRound.format);
 
     // Actualiza el estado local
     setCategories((prev) =>
@@ -256,20 +327,36 @@ const ResultsWCA = () => {
 
   const renderTimeCell = (
     participant: Participant,
-    time: number,
+    originalTime: any,
     index: number,
   ) => {
     if (editMode && editingParticipant?.id === participant.id) {
+      const currentTime = tempTimes[index] || { base: 0, penalty: '' };
       return (
-        <input
-          type="number"
-          value={tempTimes[index] || ''}
-          onChange={(e) => handleTimeChange(index, e.target.value)}
-          className="w-full bg-gray-800 border border-blue-500 rounded px-1 py-1 text-center text-sm"
-          step="0.01"
-          min="0"
-          autoFocus
-        />
+        <div className="flex flex-col sm:flex-row items-center gap-1 w-full justify-center">
+          <input
+            type="number"
+            value={currentTime.base || ''}
+            onChange={(e) => handleTimeChange(index, e.target.value)}
+            className="w-16 bg-gray-800 border border-blue-500 rounded px-1 py-1 text-center text-sm"
+            step="0.01"
+            min="0"
+          />
+          <div className="flex sm:flex-col gap-1">
+            <button 
+              onClick={() => handlePenaltyChange(index, '+2')}
+              className={`text-[10px] sm:text-[9px] px-1 py-0.5 rounded ${currentTime.penalty === '+2' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-400'}`}
+            >
+              +2
+            </button>
+            <button 
+              onClick={() => handlePenaltyChange(index, 'DNF')}
+              className={`text-[10px] sm:text-[9px] px-1 py-0.5 rounded ${currentTime.penalty === 'DNF' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-400'}`}
+            >
+              DNF
+            </button>
+          </div>
+        </div>
       );
     }
 
@@ -280,7 +367,7 @@ const ResultsWCA = () => {
         }`}
         onClick={() => editMode && startEditing(participant)}
       >
-        {time > 0 ? time.toFixed(2) : time < 0 ? 'DNF' : '-'}
+        {formatTimeDisplay(originalTime, isMobileView)}
       </div>
     );
   };
@@ -362,6 +449,14 @@ const ResultsWCA = () => {
         </div>
       </div>
 
+      {/* Leyenda WCA */}
+      <div className="flex flex-wrap gap-4 text-xs sm:text-sm text-gray-400 bg-gray-800/80 p-3 rounded-lg mb-4 items-center justify-center">
+        <div className="flex items-center gap-1"><BsTrophyFill className="text-yellow-400" /> Best (Mejor)</div>
+        <div className="flex items-center gap-1"><BsGraphUp className="text-green-400" /> Average (Promedio)</div>
+        <div className="flex items-center gap-1"><span className="text-yellow-500 font-bold">+2</span> Penalización 2 seg</div>
+        <div className="flex items-center gap-1"><span className="text-red-500 font-bold">DNF</span> Did Not Finish</div>
+      </div>
+
       {/* Controles de edición activa */}
       {editMode && editingParticipant && (
         <div className="flex flex-wrap gap-3 mb-4 p-3 bg-gray-700 rounded-lg items-center">
@@ -410,13 +505,13 @@ const ResultsWCA = () => {
                           <BsTrophyFill size={10} />{' '}
                           {participant.best > 0
                             ? participant.best.toFixed(2)
-                            : participant.times.some(t => t < 0) && participant.best <= 0 ? 'DNF' : '-'}
+                            : participant.best === -1 ? 'DNF' : '-'}
                         </span>
                         <span className="text-xs bg-green-600 px-2 py-1 rounded flex items-center gap-1">
                           <BsGraphUp size={10} />{' '}
                           {participant.average > 0
                             ? participant.average.toFixed(2)
-                            : participant.times.length === (currentRound.format === 'ao5' ? 5 : 3) && participant.average <= 0 ? 'DNF' : '-'}
+                            : participant.average === -1 ? 'DNF' : '-'}
                         </span>
                       </div>
                     </div>
@@ -431,7 +526,7 @@ const ResultsWCA = () => {
                       {Array.from({
                         length: currentRound.format === 'ao5' ? 5 : 3,
                       }).map((_, index) => {
-                        const time = participant.times[index] ?? 0;
+                        const time = participant.times[index] || { base: 0, penalty: '' };
                         return (
                           <div
                             key={index}
@@ -515,7 +610,7 @@ const ResultsWCA = () => {
                       {Array.from({
                         length: currentRound.format === 'ao5' ? 5 : 3,
                       }).map((_, index) => {
-                        const time = participant.times[index] ?? 0;
+                        const time = participant.times[index] || { base: 0, penalty: '' };
                         return (
                           <td key={index} className="px-2 py-3">
                             {renderTimeCell(participant, time, index)}
@@ -527,14 +622,14 @@ const ResultsWCA = () => {
                       <td className="px-3 py-3 text-center font-medium text-blue-400">
                         {participant.best > 0
                           ? participant.best.toFixed(2)
-                          : participant.times.some(t => t < 0) && participant.best <= 0 ? 'DNF' : '-'}
+                          : participant.best === -1 ? 'DNF' : '-'}
                       </td>
 
                       {/* Promedio */}
                       <td className="px-3 py-3 text-center font-medium text-green-400">
                         {participant.average > 0
                           ? participant.average.toFixed(2)
-                          : participant.times.length === (currentRound.format === 'ao5' ? 5 : 3) && participant.average <= 0 ? 'DNF' : '-'}
+                          : participant.average === -1 ? 'DNF' : '-'}
                       </td>
                     </tr>
                   ))}

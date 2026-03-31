@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../../../common/db';
 
+import { BsTrophyFill, BsGraphUp } from 'react-icons/bs';
+import { calculateRulesStats, normalizeTime, formatTimeDisplay } from '../ResultsWCA';
+import { TimeRecord } from '../../../common/db';
+
 type Participant = {
   id: string;
   name: string;
-  times: number[];
+  times: TimeRecord[];
   best: number;
   average: number;
   ranking?: number;
@@ -51,18 +55,12 @@ const ResultsViewWCA = () => {
             .map((comp: any) => {
               const result = (round.results || []).find((r: any) => r.idCompetitor === comp.id);
               
-              // Calcular best y average
-              const times = result?.times || [];
-              const validTimes = times.filter((t: number) => t > 0);
-              const best = validTimes.length > 0 ? Math.min(...validTimes) : 0;
+              const rawTimes = result?.times || [];
+              const times = rawTimes.map(normalizeTime);
+              const computed = calculateRulesStats(times, round.format as 'ao3'|'ao5');
               
-              let average = 0;
-              if (round.format === 'ao3' && validTimes.length >= 3) {
-                average = validTimes.slice(0, 3).reduce((sum: number, t: number) => sum + t, 0) / 3;
-              } else if (round.format === 'ao5' && validTimes.length >= 5) {
-                const sorted = [...validTimes].sort((a: number, b: number) => a - b);
-                average = sorted.slice(1, 4).reduce((sum: number, t: number) => sum + t, 0) / 3;
-              }
+              const best = computed.best;
+              const average = result?.media ? parseFloat(result.media) : computed.average;
 
               return {
                 id: comp.id as string,
@@ -182,6 +180,14 @@ const ResultsViewWCA = () => {
 
       {/* Resultados */}
       <div className="max-w-6xl mx-auto">
+        {/* Leyenda WCA */}
+        <div className="flex flex-wrap gap-4 text-xs sm:text-sm text-gray-400 bg-gray-800 p-3 rounded-lg mb-4 items-center justify-center">
+          <div className="flex items-center gap-1"><BsTrophyFill className="text-yellow-400" /> Best (Mejor)</div>
+          <div className="flex items-center gap-1"><BsGraphUp className="text-green-400" /> Average (Promedio)</div>
+          <div className="flex items-center gap-1"><span className="text-yellow-500 font-bold">+2</span> Penalización 2 seg</div>
+          <div className="flex items-center gap-1"><span className="text-red-500 font-bold">DNF</span> Did Not Finish</div>
+        </div>
+
         {currentRound && sortedParticipants ? (
           <div className="bg-gray-800 rounded-xl overflow-hidden shadow-lg">
             {isMobileView ? (
@@ -211,25 +217,30 @@ const ResultsViewWCA = () => {
                       </div>
                       <div className="flex gap-2">
                         <span className="text-xs bg-blue-600 px-2 py-1 rounded">
-                          Best: {participant.best > 0 ? participant.best.toFixed(2) : participant.times.some(t => t < 0) && participant.best <= 0 ? 'DNF' : '-'}
+                          Best: {participant.best > 0 ? participant.best.toFixed(2) : participant.best === -1 ? 'DNF' : '-'}
                         </span>
                         <span className="text-xs bg-green-600 px-2 py-1 rounded">
-                          Avg: {participant.average > 0 ? participant.average.toFixed(2) : participant.times.length === (currentRound.format === 'ao5' ? 5 : 3) && participant.average <= 0 ? 'DNF' : '-'}
+                          Avg: {participant.average > 0 ? participant.average.toFixed(2) : participant.average === -1 ? 'DNF' : '-'}
                         </span>
                       </div>
                     </div>
                     
                     <div className={`grid ${currentRound.format === 'ao5' ? 'grid-cols-5' : 'grid-cols-3'} gap-2`}>
                       {Array.from({ length: currentRound.format === 'ao5' ? 5 : 3 }).map((_, index) => {
-                        const time = participant.times[index] !== undefined ? participant.times[index] : 0;
+                        const time = participant.times[index] || { base: 0, penalty: '' };
+                        const nt = normalizeTime(time);
+                        const isDnf = nt.penalty === 'DNF';
+                        const val = isDnf || (nt.base <= 0 && nt.penalty !== 'DNF') ? -1 : nt.base + (nt.penalty === '+2' ? 2 : 0);
+                        const bestHighlight = val === participant.best && val > 0;
+
                         return (
                           <div key={index} className="flex flex-col items-center">
                             <label className="text-xs text-gray-400">T{index + 1}</label>
                             <div className={`w-full text-center py-1 rounded text-sm ${
-                              time === participant.best && time > 0 ? 'bg-green-900/50 text-green-300' : 
-                              time < 0 ? 'bg-red-900/50 text-red-300' : 'bg-gray-700 text-gray-300'
+                              bestHighlight ? 'bg-green-900/50 text-green-300' : 
+                              isDnf ? 'bg-red-900/50 text-red-300' : 'bg-gray-700 text-gray-300'
                             }`}>
-                              {time > 0 ? time.toFixed(2) : time < 0 ? 'DNF' : '-'}
+                              {formatTimeDisplay(time, true)}
                             </div>
                           </div>
                         );
@@ -284,24 +295,29 @@ const ResultsViewWCA = () => {
                       </td>
                       <td className="px-4 py-3 font-medium">{participant.name}</td>
                       {Array.from({ length: currentRound.format === 'ao5' ? 5 : 3 }).map((_, index) => {
-                        const time = participant.times[index] !== undefined ? participant.times[index] : 0;
+                        const time = participant.times[index] || { base: 0, penalty: '' };
+                        const nt = normalizeTime(time);
+                        const isDnf = nt.penalty === 'DNF';
+                        const val = isDnf || (nt.base <= 0 && nt.penalty !== 'DNF') ? -1 : nt.base + (nt.penalty === '+2' ? 2 : 0);
+                        const bestHighlight = val === participant.best && val > 0;
+
                         return (
                           <td 
                             key={index} 
                             className={`px-2 py-3 text-center ${
-                              time === participant.best && time > 0 ? 'text-green-400 font-bold' : 
-                              time < 0 ? 'text-red-400' : 'text-gray-300'
+                              bestHighlight ? 'text-green-400 font-bold' : 
+                              isDnf ? 'text-red-400' : 'text-gray-300'
                             }`}
                           >
-                            {time > 0 ? time.toFixed(2) : time < 0 ? 'DNF' : '-'}
+                            {formatTimeDisplay(time, false)}
                           </td>
                         );
                       })}
                       <td className="px-3 py-3 text-center font-bold text-blue-400">
-                        {participant.best > 0 ? participant.best.toFixed(2) : participant.times.some(t => t < 0) && participant.best <= 0 ? 'DNF' : '-'}
+                        {participant.best > 0 ? participant.best.toFixed(2) : participant.best === -1 ? 'DNF' : '-'}
                       </td>
                       <td className="px-3 py-3 text-center font-bold text-green-400">
-                        {participant.average > 0 ? participant.average.toFixed(2) : participant.times.length === (currentRound.format === 'ao5' ? 5 : 3) && participant.average <= 0 ? 'DNF' : '-'}
+                        {participant.average > 0 ? participant.average.toFixed(2) : participant.average === -1 ? 'DNF' : '-'}
                       </td>
                     </tr>
                   ))}

@@ -1,9 +1,16 @@
 import Dexie, { type Table } from 'dexie';
 
 // 1. Definimos las interfaces basadas en localStorage.js
+export type Penalty = '' | '+2' | 'DNF';
+
+export interface TimeRecord {
+    base: number;
+    penalty: Penalty;
+}
+
 export interface ResultLocal {
     idCompetitor: string;
-    times: number[];
+    times: (number | TimeRecord)[];
     media: string;
 }
 
