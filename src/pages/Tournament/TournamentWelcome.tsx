@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import {
   FaEdit,
   FaCalendarAlt,
@@ -7,6 +7,7 @@ import {
   FaUpload,
   FaTimes,
   FaSave,
+  FaTrash,
 } from 'react-icons/fa';
 import { MdCategory, MdPeople } from 'react-icons/md';
 import { db } from '../../common/db';
@@ -52,6 +53,9 @@ const TournamentWelcome = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteInputName, setDeleteInputName] = useState('');
 
   // Cargar datos del torneo
   useEffect(() => {
@@ -128,6 +132,13 @@ const TournamentWelcome = () => {
     setEditMode(false);
   };
 
+  // Eliminar el torneo actual
+  const handleDeleteTournament = async () => {
+    if (!id || deleteInputName !== tournament?.name) return;
+    await db.tournaments.delete(id);
+    navigate('/dashboard/tournaments');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen text-white p-6 mx-auto flex items-center justify-center">
@@ -160,12 +171,21 @@ const TournamentWelcome = () => {
         <h1 className="text-3xl font-bold">Panel del Torneo</h1>
         <div className="flex items-center gap-2">
           {editMode && (
-            <button
-              onClick={saveChanges}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700"
-            >
-              <FaSave /> Guardar
-            </button>
+            <>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition"
+                title="Eliminar este torneo permanentemente"
+              >
+                <FaTrash /> Eliminar
+              </button>
+              <button
+                onClick={saveChanges}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 transition"
+              >
+                <FaSave /> Guardar
+              </button>
+            </>
           )}
           <button
             onClick={() => setEditMode(!editMode)}
@@ -449,6 +469,55 @@ const TournamentWelcome = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal para eliminar torneo con confirmación textual */}
+      {showDeleteModal && tournament && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl relative">
+            <h3 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
+              <FaTrash className="text-red-500" /> Confirmar Eliminación
+            </h3>
+            <p className="text-gray-300 mb-4 text-sm">
+              Esta acción no se puede deshacer. Se eliminarán permanentemente el torneo, junto con todas sus categorías, horarios y competidores asociados.
+            </p>
+            <p className="text-gray-400 mb-2 text-sm">
+              Para proceder, escribe con exactitud el nombre del torneo:
+            </p>
+            <div className="bg-gray-900 rounded-lg px-3 py-2 text-center select-all font-mono mb-4 text-gray-300 font-semibold border border-gray-700">
+              {tournament.name}
+            </div>
+            <input
+              type="text"
+              value={deleteInputName}
+              onChange={(e) => setDeleteInputName(e.target.value)}
+              placeholder="Escribe el nombre aquí..."
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 mb-6 text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-all font-mono text-center"
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteInputName('');
+                }}
+                className="px-5 py-2.5 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors font-medium"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteTournament}
+                disabled={deleteInputName !== tournament.name}
+                className={`px-5 py-2.5 rounded-lg font-bold flex items-center gap-2 transition-all ${
+                  deleteInputName === tournament.name
+                    ? 'bg-red-600 hover:bg-red-700 text-white'
+                    : 'bg-red-900/40 text-red-300/40 cursor-not-allowed'
+                }`}
+              >
+                Eliminar Definitivamente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
