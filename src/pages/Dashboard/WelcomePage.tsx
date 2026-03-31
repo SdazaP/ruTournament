@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { FaBook } from 'react-icons/fa';
 
 const WelcomePage = () => {
   return (
@@ -79,7 +80,7 @@ const WelcomePage = () => {
               Competencia anual de verano con los mejores equipos de la región.
             </p>
             <Link 
-              to="/tournaments/1" 
+              to="/dashboard" 
               className="text-blue-600 dark:text-blue-400 hover:underline"
             >
               Ver detalles →
@@ -100,7 +101,7 @@ const WelcomePage = () => {
               Torneo clasificatorio para el campeonato nacional de este año.
             </p>
             <Link 
-              to="/tournaments/2" 
+              to="/dashboard" 
               className="text-blue-600 dark:text-blue-400 hover:underline"
             >
               Ver detalles →
@@ -121,7 +122,7 @@ const WelcomePage = () => {
               Evento amistoso para promover el deporte y la camaradería.
             </p>
             <Link 
-              to="/tournaments/3" 
+              to="/dashboard" 
               className="text-blue-600 dark:text-blue-400 hover:underline"
             >
               Ver detalles →
@@ -133,11 +134,18 @@ const WelcomePage = () => {
       {/* Call to Action */}
       <div className="text-center">
         <h2 className="text-2xl font-bold dark:text-white mb-6">¿Listo para comenzar?</h2>
-        <Link to="new-tournament">
-          <button className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors">
-            Crear nuevo torneo +
-          </button>
-        </Link>
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+          <Link to="new-tournament">
+            <button className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors w-full md:w-auto">
+              Crear nuevo torneo +
+            </button>
+          </Link>
+          <Link to="guide">
+            <button className="px-8 py-4 bg-gray-600 dark:bg-gray-700 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2 w-full md:w-auto">
+              <FaBook /> Guía de Uso del Sistema
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   );

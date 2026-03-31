@@ -11,6 +11,7 @@ import DashboardLayout from './layout/DashboardLayout';
 import DashboardTournament from './layout/DashboardTournament';
 import Tournaments from './pages/Dashboard/Tournaments';
 import WelcomePage from './pages/Dashboard/WelcomePage';
+import Guide from './pages/Dashboard/Guide';
 import TournamentWelcome from './pages/Tournament/TournamentWelcome';
 import Participants from './pages/Tournament/Participants';
 import Categories from './pages/Tournament/Categories';
@@ -65,6 +66,15 @@ function App() {
                     <>
                       <PageTitle title="Tournament Creation" />
                       <TournamentCreation />
+                    </>
+                  }
+                />
+                <Route
+                  path="guide"
+                  element={
+                    <>
+                      <PageTitle title="Guía de Uso" />
+                      <Guide />
                     </>
                   }
                 />
