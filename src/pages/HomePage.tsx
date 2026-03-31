@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import Logo from '../images/logo/logo.png'; // Asegúrate de que esta ruta es correcta
+import { FaGithub } from 'react-icons/fa';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -31,9 +32,18 @@ const HomePage = () => {
         Acceder al Dashboard
       </button>
 
-      <div className="mt-16 text-center text-bodydark2">
-        <p className="mb-2">© {new Date().getFullYear()} ruTournaments</p>
+      <div className="mt-16 text-center text-bodydark2 flex flex-col items-center">
+        <p className="mb-2">© {new Date().getFullYear()} ruTournaments - Sebastian Daza Pérez</p>
         <p className="text-sm">Sistema de gestión de torneos competitivos de cubo rubik</p>
+        <a 
+          href="https://github.com/SdazaP" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="mt-4 text-gray-400 hover:text-white transition-colors duration-300"
+          title="Visitar el GitHub del creador"
+        >
+          <FaGithub size={24} />
+        </a>
       </div>
     </div>
   );
