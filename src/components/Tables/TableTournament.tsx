@@ -1,4 +1,5 @@
 import React from "react";
+import { FaTrash, FaPlus, FaMinus } from "react-icons/fa";
 
 interface CategoryData {
   category: string;
@@ -28,32 +29,32 @@ const TableTournament: React.FC<TableTournamentProps> = ({
   };
 
   return (
-    <div className="w-full rounded-lg border border-gray-700 bg-gray-800 p-4 shadow sm:p-6">
-      <div className="overflow-x-auto">
+    <div className="w-full bg-gray-800">
+      <div className="overflow-x-auto rounded-t-lg border border-gray-700">
         {/* Encabezados de la tabla */}
-        <div className="grid min-w-[600px] grid-cols-5 rounded-t-lg bg-gray-800">
-          <div className="p-3 text-center">
-            <h5 className="text-sm font-medium uppercase text-white sm:text-base">
+        <div className="grid min-w-[600px] grid-cols-5 bg-gray-900/50 border-b border-gray-700">
+          <div className="p-4 text-center">
+            <h5 className="text-xs font-bold tracking-wider text-gray-400 uppercase">
               Categorías
             </h5>
           </div>
-          <div className="p-3 text-center">
-            <h5 className="text-sm font-medium uppercase text-white sm:text-base">
+          <div className="p-4 text-center">
+            <h5 className="text-xs font-bold tracking-wider text-gray-400 uppercase">
               Rondas
             </h5>
           </div>
-          <div className="p-3 text-center">
-            <h5 className="text-sm font-medium uppercase text-white sm:text-base">
+          <div className="p-4 text-center">
+            <h5 className="text-xs font-bold tracking-wider text-gray-400 uppercase">
               Formato
             </h5>
           </div>
-          <div className="p-3 text-center">
-            <h5 className="text-sm font-medium uppercase text-white sm:text-base">
+          <div className="p-4 text-center">
+            <h5 className="text-xs font-bold tracking-wider text-gray-400 uppercase">
               AVG
             </h5>
           </div>
-          <div className="p-3 text-center">
-            <h5 className="text-sm font-medium uppercase text-white sm:text-base">
+          <div className="p-4 text-center">
+            <h5 className="text-xs font-bold tracking-wider text-gray-400 uppercase">
               Acciones
             </h5>
           </div>
@@ -63,14 +64,14 @@ const TableTournament: React.FC<TableTournamentProps> = ({
         {tournamentData.map((tournament, index) => (
           <div
             key={index}
-            className="grid min-w-[600px] grid-cols-5 border-b border-gray-700 last:rounded-b-lg"
+            className="grid min-w-[600px] grid-cols-5 border-b border-gray-750 hover:bg-gray-750/30 transition-colors last:border-0"
           >
             {/* Categoría */}
             <div className="flex items-center justify-center p-3">
               <select
                 value={tournament.category}
                 onChange={(e) => onChange(index, "category", e.target.value)}
-                className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all cursor-pointer"
               >
                 {options.category.map((option, i) => (
                   <option key={i} value={option}>
@@ -85,7 +86,7 @@ const TableTournament: React.FC<TableTournamentProps> = ({
               <select
                 value={tournament.rounds}
                 onChange={(e) => onChange(index, "rounds", e.target.value)}
-                className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all cursor-pointer"
               >
                 {options.rounds.map((option, i) => (
                   <option key={i} value={option}>
@@ -100,7 +101,7 @@ const TableTournament: React.FC<TableTournamentProps> = ({
               <select
                 value={tournament.mode}
                 onChange={(e) => onChange(index, "mode", e.target.value)}
-                className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all cursor-pointer"
               >
                 {options.mode.map((option, i) => (
                   <option key={i} value={option}>
@@ -115,7 +116,7 @@ const TableTournament: React.FC<TableTournamentProps> = ({
               <select
                 value={tournament.avg_mode}
                 onChange={(e) => onChange(index, "avg_mode", e.target.value)}
-                className="w-full rounded border border-gray-600 bg-gray-800 p-2 text-white focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-md border border-gray-600 bg-gray-700 p-2.5 text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all cursor-pointer"
               >
                 {options.avg_modes.map((option, i) => (
                   <option key={i} value={option}>
@@ -127,25 +128,18 @@ const TableTournament: React.FC<TableTournamentProps> = ({
 
             {/* Acciones */}
             <div className="flex items-center justify-center p-3 space-x-2">
-              {tournamentData.length > 1 && (
+              {tournamentData.length > 1 ? (
                 <button
                   onClick={() => onRemove(index)}
-                  className="p-1 text-red-500 hover:text-red-700"
+                  className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                   title="Eliminar categoría"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <FaTrash />
                 </button>
+              ) : (
+                <span className="w-8 h-8 flex items-center justify-center text-gray-600">
+                  -
+                </span>
               )}
             </div>
           </div>
@@ -153,44 +147,22 @@ const TableTournament: React.FC<TableTournamentProps> = ({
       </div>
 
       {/* Botones de acción */}
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+      <div className="mt-4 flex flex-wrap items-center justify-end gap-3 p-2">
         <button
           onClick={onAddRow}
-          className="flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex items-center gap-2 rounded-lg bg-blue-500/10 border border-blue-500/30 px-4 py-2 text-sm text-blue-400 font-medium hover:bg-blue-600 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-              clipRule="evenodd"
-            />
-          </svg>
-          <span className="ml-2">Añadir categoría</span>
+          <FaPlus />
+          Añadir Categoría
         </button>
 
         {tournamentData.length > 1 && (
           <button
             onClick={() => onRemove(tournamentData.length - 1)}
-            className="flex items-center rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-2 text-sm text-red-400 font-medium hover:bg-red-600 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-red-500"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <span className="ml-2">Eliminar última</span>
+            <FaMinus />
+            Eliminar Última
           </button>
         )}
       </div>

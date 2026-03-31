@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import TableTournament from '../../components/Tables/TableTournament';
 import TableCompetitors from '../../components/Tables/TableCompetitors';
 import { db } from '../../common/db';
-
+import { FaTrophy, FaLayerGroup, FaUsers, FaArrowRight, FaArrowLeft, FaCheck } from 'react-icons/fa';
 type TournamentData = {
   name: string;
   description: string;
@@ -20,10 +20,10 @@ type CategoryData = {
 
 type CompetitorData = {
   name: string;
-  category: string;
+  categories: string[];
 };
 
-export default function TournamentWelcome() {
+export default function TournamentCreation() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [tournamentData, setTournamentData] = useState<TournamentData>({
@@ -41,7 +41,7 @@ export default function TournamentWelcome() {
     }
   ]);
   const [competitors, setCompetitors] = useState<CompetitorData[]>([
-    { name: '', category: "3x3" }
+    { name: '', categories: ["3x3"] }
   ]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -69,12 +69,12 @@ export default function TournamentWelcome() {
   };
 
   const handleAddCompetitor = () => {
-    setCompetitors(prev => [...prev, { name: '', category: "3x3" }]);
+    setCompetitors(prev => [...prev, { name: '', categories: ["3x3"] }]);
   };
 
-  const handleUpdateCompetitor = (index: number, field: keyof CompetitorData, value: string) => {
+  const handleUpdateCompetitor = (index: number, field: keyof CompetitorData, value: any) => {
     const updatedCompetitors = [...competitors];
-    updatedCompetitors[index][field] = value;
+    updatedCompetitors[index] = { ...updatedCompetitors[index], [field]: value };
     setCompetitors(updatedCompetitors);
   };
 
@@ -100,11 +100,14 @@ export default function TournamentWelcome() {
     const builtCompetitors = competitors
       .filter(comp => comp.name.trim() !== '')
       .map((comp, index) => {
-        const foundCategory = builtCategories.find(c => c.name === comp.category);
+        const foundCategoryIds = comp.categories.map(catName => 
+          builtCategories.find(c => c.name === catName)?.id
+        ).filter(Boolean); // mantener solo los truthy
+        
         return {
           id: Date.now().toString() + "c" + index,
           name: comp.name,
-          categories: foundCategory ? [foundCategory.id] : []
+          categories: foundCategoryIds as string[]
         };
       });
 
@@ -124,155 +127,168 @@ export default function TournamentWelcome() {
     navigate('/dashboard');
   };
 
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="flex items-center justify-center w-full p-4 md:p-10">
-            <div className="w-full max-w-6xl h-full flex flex-col items-center justify-center">
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-6 md:mb-10 text-white text-center">
-                Bienvenido
-              </h1>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 w-full">
-                <div className="flex flex-col items-center gap-4 md:gap-6">
-                  <div className="w-20 h-20 md:w-32 md:h-32 bg-gray-700 rounded-full flex items-center justify-center text-lg text-white">
-                    Logo
-                  </div>
-                  <label className="text-base md:text-lg font-medium text-white text-center">
-                    Ingresa el nombre del torneo
-                  </label>
+  const steps = [
+    { id: 1, title: 'Información', icon: <FaTrophy /> },
+    { id: 2, title: 'Categorías', icon: <FaLayerGroup /> },
+    { id: 3, title: 'Competidores', icon: <FaUsers /> },
+  ];
+
+  return (
+    <div className="min-h-screen text-white p-4 md:p-6 lg:p-8 mx-auto max-w-6xl">
+      {/* Header & Stepper */}
+      <div className="mb-8">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-6 flex items-center gap-3">
+          <FaTrophy className="text-blue-500" />
+          Crear Nuevo Torneo
+        </h1>
+        
+        <div className="flex items-center justify-between relative max-w-3xl mx-auto">
+          <div className="absolute left-0 top-1/2 -z-10 h-1 w-full -translate-y-1/2 rounded bg-gray-700"></div>
+          <div 
+            className="absolute left-0 top-1/2 -z-10 h-1 -translate-y-1/2 rounded bg-blue-500 transition-all duration-300"
+            style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
+          ></div>
+          
+          {steps.map(step => (
+            <div key={step.id} className="flex flex-col items-center gap-2">
+              <div 
+                className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full text-lg sm:text-xl font-bold transition-colors ${
+                  currentStep >= step.id 
+                    ? 'bg-blue-600 text-white shadow-[0_0_10px_rgba(37,99,235,0.5)]' 
+                    : 'bg-gray-800 text-gray-500 border-2 border-gray-700'
+                }`}
+              >
+                {step.icon}
+              </div>
+              <span className={`text-xs sm:text-sm font-medium ${currentStep >= step.id ? 'text-white' : 'text-gray-500'}`}>
+                {step.title}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content Card */}
+      <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6 sm:p-8">
+        {currentStep === 1 && (
+          <div className="animate-fade-in">
+            <h2 className="text-2xl font-bold mb-6 text-gray-200 border-b border-gray-700 pb-4">Información Básica</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-gray-400">Nombre del Torneo *</label>
                   <input
                     name="name"
                     type="text"
                     value={tournamentData.name}
                     onChange={handleInputChange}
-                    placeholder="Ingrese el nombre"
-                    className="w-full rounded-lg border border-gray-600 py-2 md:py-3 px-4 text-white bg-gray-800 outline-none focus:border-blue-500"
+                    placeholder="Ej. Tlaxcala Open 2026"
+                    className="w-full rounded-lg border border-gray-600 bg-gray-900 p-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
-                <div className="flex flex-col gap-3 md:gap-4">
-                  <label className="text-base md:text-lg font-medium text-white text-center lg:text-left">
-                    Descripción del Torneo
-                  </label>
-                  <textarea
-                    name="description"
-                    rows={4}
-                    value={tournamentData.description}
+                
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-gray-400">Ubicación</label>
+                  <input
+                    name="location"
+                    type="text"
+                    value={tournamentData.location}
                     onChange={handleInputChange}
-                    placeholder="Ingrese la descripción"
-                    className="w-full rounded-lg border border-gray-600 py-2 md:py-3 px-4 text-white bg-gray-800 outline-none focus:border-blue-500"
-                  ></textarea>
+                    placeholder="Ej. Centro de Convenciones"
+                    className="w-full rounded-lg border border-gray-600 bg-gray-900 p-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  />
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-6 md:mt-10 w-full sm:w-auto">
-                <button
-                  className="px-6 py-2 md:px-8 md:py-3 bg-blue-500 text-white text-base md:text-lg rounded shadow-md hover:bg-blue-600"
-                  onClick={() => setCurrentStep(2)}
-                  disabled={!tournamentData.name}
-                >
-                  Siguiente
-                </button>
-                <Link to="/" className="w-full sm:w-auto">
-                  <button className="w-full px-6 py-2 md:px-8 md:py-3 bg-red-500 text-white text-base md:text-lg rounded shadow-md hover:bg-red-700">
-                    Cancelar
-                  </button>
-                </Link>
+              
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-400">Descripción del Torneo</label>
+                <textarea
+                  name="description"
+                  rows={5}
+                  value={tournamentData.description}
+                  onChange={handleInputChange}
+                  placeholder="Detalles, horarios, reglas especiales..."
+                  className="w-full h-full rounded-lg border border-gray-600 bg-gray-900 p-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                ></textarea>
               </div>
             </div>
           </div>
-        );
-      case 2:
-        return (
-          <div className="flex items-center justify-center w-full p-4 md:p-10">
-            <div className="w-full max-w-6xl h-full flex flex-col items-center justify-center">
-              <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 my-4">
-                <div className="w-20 h-20 md:w-32 md:h-32 bg-gray-700 rounded-full flex items-center justify-center text-lg text-white">
-                  Logo
-                </div>
-                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white text-center">
-                  {tournamentData.name || 'Nombre del Torneo'}
-                </h1>
-              </div>
-              <h2 className="text-2xl md:text-4xl font-bold text-gray-400 my-4 text-center">
-                Categorías
-              </h2>
-              <div className="w-full">
-                <TableTournament 
-                  tournamentData={categories}
-                  onAddRow={() => handleAddCategory({
-                    category: "3x3",
-                    rounds: "Final directa",
-                    mode: "WCA",
-                    avg_mode: "ao5"
-                  })}
-                  onChange={handleUpdateCategory}
-                  onRemove={handleRemoveCategory}
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-6 md:mt-10">
-                <button
-                  className="px-6 py-2 md:px-8 md:py-3 bg-gray-500 text-white text-base md:text-lg rounded shadow-md hover:bg-gray-600"
-                  onClick={() => setCurrentStep(1)}
-                >
-                  Anterior
-                </button>
-                <button
-                  className="px-6 py-2 md:px-8 md:py-3 bg-blue-500 text-white text-base md:text-lg rounded shadow-md hover:bg-blue-600"
-                  onClick={() => setCurrentStep(3)}
-                  disabled={categories.length === 0}
-                >
-                  Siguiente
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      case 3:
-        return (
-          <div className="flex items-center justify-center w-full p-4 md:p-10">
-            <div className="w-full max-w-6xl h-full flex flex-col items-center justify-center">
-              <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 my-4">
-                <div className="w-20 h-20 md:w-32 md:h-32 bg-gray-700 rounded-full flex items-center justify-center text-lg text-white">
-                  Logo
-                </div>
-                <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white text-center">
-                  {tournamentData.name || 'Nombre del Torneo'}
-                </h1>
-              </div>
-              <h2 className="text-2xl md:text-4xl font-bold text-gray-400 my-4 text-center">
-                Lista de competidores
-              </h2>
-              <div className="w-full">
-                <TableCompetitors 
-                  competitors={competitors}
-                  categories={categories.map(c => c.category)}
-                  onAddRow={handleAddCompetitor}
-                  onChange={handleUpdateCompetitor}
-                  onRemove={handleRemoveCompetitor}
-                />
-              </div>
-              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-6 md:mt-10">
-                <button
-                  className="px-6 py-2 md:px-8 md:py-3 bg-gray-500 text-white text-base md:text-lg rounded shadow-md hover:bg-gray-600"
-                  onClick={() => setCurrentStep(2)}
-                >
-                  Anterior
-                </button>
-                <button
-                  className="px-6 py-2 md:px-8 md:py-3 bg-blue-500 text-white text-base md:text-lg rounded shadow-md hover:bg-blue-600"
-                  onClick={handleFinalize}
-                  disabled={competitors.length === 0 || competitors.some(c => !c.name.trim())}
-                >
-                  Finalizar
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+        )}
 
-  return renderStep();
+        {currentStep === 2 && (
+          <div className="animate-fade-in">
+            <h2 className="text-2xl font-bold mb-2 text-gray-200">Categorías y Eventos</h2>
+            <p className="text-gray-400 mb-6 border-b border-gray-700 pb-4">Añade los eventos oficiales que formarán parte de tu torneo</p>
+            
+            <div className="w-full overflow-hidden rounded-lg">
+              <TableTournament 
+                tournamentData={categories}
+                onAddRow={() => handleAddCategory({ category: "3x3", rounds: "Final directa", mode: "WCA", avg_mode: "ao5" })}
+                onChange={handleUpdateCategory}
+                onRemove={handleRemoveCategory}
+              />
+            </div>
+          </div>
+        )}
+
+        {currentStep === 3 && (
+          <div className="animate-fade-in">
+            <h2 className="text-2xl font-bold mb-2 text-gray-200">Competidores</h2>
+            <p className="text-gray-400 mb-6 border-b border-gray-700 pb-4">Registra a los participantes y asígnales sus categorías</p>
+            
+            <div className="w-full overflow-hidden rounded-lg">
+              <TableCompetitors 
+                competitors={competitors}
+                categories={categories.map(c => c.category)}
+                onAddRow={handleAddCompetitor}
+                onChange={handleUpdateCompetitor}
+                onRemove={handleRemoveCompetitor}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer Navigation */}
+      <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          {currentStep === 1 ? (
+             <Link to="/dashboard" className="inline-block">
+               <button className="px-6 py-2.5 bg-gray-700 text-gray-300 font-medium rounded-lg hover:bg-gray-600 transition-colors">
+                 Cancelar
+               </button>
+             </Link>
+          ) : (
+             <button
+               onClick={() => setCurrentStep(prev => prev - 1)}
+               className="flex items-center gap-2 px-6 py-2.5 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors"
+             >
+               <FaArrowLeft /> Atrás
+             </button>
+          )}
+        </div>
+        
+        <div>
+          {currentStep < 3 ? (
+             <button
+               onClick={() => setCurrentStep(prev => prev + 1)}
+               disabled={currentStep === 1 && !tournamentData.name.trim()}
+               className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+             >
+               Siguiente <FaArrowRight />
+             </button>
+          ) : (
+             <button
+               onClick={handleFinalize}
+               disabled={competitors.length === 0 || competitors.some(c => !c.name.trim())}
+               className="flex items-center gap-2 px-8 py-2.5 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-900/20"
+             >
+               <FaCheck /> Finalizar y Crear
+             </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
