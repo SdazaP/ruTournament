@@ -378,6 +378,22 @@ const Participants = () => {
           <FaEdit /> Modo edición activado
         </div>
       )}
+
+      {/* Footer Area */}
+      <div className="mt-12 pt-6 border-t border-gray-700 pb-8">
+        <div className="bg-gray-800/50 rounded-lg p-5 mb-6 text-sm text-gray-400">
+          <h4 className="font-semibold text-gray-300 mb-2">💡 ¿Cómo funciona esta sección?</h4>
+          <p>
+            Desde aquí puedes gestionar a todos los competidores de tu torneo. 
+            Utiliza el botón <strong>Activar Edición</strong> en la parte superior para habilitar modificaciones en los nombres de los competidores o gestionar las categorías en las que participan. 
+            Estando en el modo de edición, haz clic en la 'x' junto al nombre de una categoría para dar de baja a un competidor de ella, o presiona el botón "Eliminar" de su fila si deseas retirarlo por completo del torneo.
+          </p>
+        </div>
+        <div className="text-center text-xs text-gray-500">
+          © 2026 ruTournament - Sebastian Daza Pérez
+        </div>
+      </div>
+
     </div>
   );
 };

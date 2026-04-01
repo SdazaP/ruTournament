@@ -828,6 +828,22 @@ const Categories = () => {
           No hay categorías registradas aún
         </div>
       )}
+
+      {/* Footer Area */}
+      <div className="mt-12 pt-6 border-t border-gray-700 pb-8">
+        <div className="bg-gray-800/50 rounded-lg p-5 mb-6 text-sm text-gray-400">
+          <h4 className="font-semibold text-gray-300 mb-2">💡 ¿Cómo funciona esta sección?</h4>
+          <p>
+            Aquí puedes añadir y administrar los eventos (categorías) del torneo. 
+            Cada torneo soporta un máximo de 10 categorías activas en total. 
+            Al <strong>Activar Edición</strong>, podrás añadir y eliminar rondas (ej. pasar de Final a 3 Rondas clasificatorias), así como establecer cuántos competidores avanzan a la próxima ronda de acuerdo con los listados de desempeño.
+          </p>
+        </div>
+        <div className="text-center text-xs text-gray-500">
+          © 2026 ruTournament - Sebastian Daza Pérez
+        </div>
+      </div>
+
     </div>
   );
 };

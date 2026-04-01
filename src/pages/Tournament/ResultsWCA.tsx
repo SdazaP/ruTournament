@@ -700,6 +700,22 @@ const ResultsWCA = () => {
           <FaEdit /> Modo edición activado
         </div>
       )}
+
+      {/* Footer Area */}
+      <div className="mt-12 pt-6 border-t border-gray-700 pb-8">
+        <div className="bg-gray-800/50 rounded-lg p-5 mb-6 text-sm text-gray-400">
+          <h4 className="font-semibold text-gray-300 mb-2">💡 ¿Cómo funciona esta sección?</h4>
+          <p>
+            En esta sección registras y consolidas los tiempos obtenidos por los competidores en cada ronda. 
+            Utiliza el botón <strong>Activar edición</strong> para insertar o editar, presiona la celda del tiempo directamente para editar. Asegúrate de registrar los tiempos correctamente (en segundos y con hasta dos decimales).
+            Utiliza los botones de penalización "+2" y "DNF" según el reglamento competitivo. Los promedios oficiales y sus respectivos descartes de peores y mejores tiempos se calcularán automáticamente.
+          </p>
+        </div>
+        <div className="text-center text-xs text-gray-500">
+          © 2026 ruTournament - Sebastian Daza Pérez
+        </div>
+      </div>
+
     </div>
   );
 };

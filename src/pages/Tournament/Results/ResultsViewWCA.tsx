@@ -349,7 +349,7 @@ const ResultsViewWCA = () => {
       {/* Pie de página */}
       <footer className="mt-12 text-center text-gray-500 text-sm">
         <p>Resultados oficiales según el formato WCA</p>
-        <p className="mt-1">© {new Date().getFullYear()} Torneo de Cubos Rubik</p>
+        <p className="mt-1">© {new Date().getFullYear()} ruTournament - Sebastian Daza Pérez</p>
       </footer>
     </div>
   );
