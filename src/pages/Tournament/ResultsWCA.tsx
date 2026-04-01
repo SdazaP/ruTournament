@@ -63,6 +63,34 @@ export const calculateRulesStats = (times: TimeRecord[], format: 'ao3' | 'ao5') 
   };
 };
 
+export const sortWCA = (a: any, b: any) => {
+  const getWeight = (avg: number) => {
+    if (avg > 0) return 1;    // Valid average
+    if (avg === -1) return 2; // DNF
+    return 3;                 // Not completed (0)
+  };
+
+  const weightA = getWeight(a.average);
+  const weightB = getWeight(b.average);
+
+  if (weightA !== weightB) return weightA - weightB;
+
+  if (weightA === 1) {
+    if (a.average !== b.average) return a.average - b.average;
+    const bestA = a.best > 0 ? a.best : Infinity;
+    const bestB = b.best > 0 ? b.best : Infinity;
+    return bestA - bestB; // Ascendente por Best si hay empate en Average
+  }
+
+  // Si ambos son DNF o sin tiempo, ordenar por Best
+  const bestA = a.best > 0 ? a.best : (a.best === -1 ? Infinity - 1 : Infinity);
+  const bestB = b.best > 0 ? b.best : (b.best === -1 ? Infinity - 1 : Infinity);
+  if (bestA !== bestB) return bestA - bestB;
+
+  // Sino, empata
+  return a.name?.localeCompare(b.name || '');
+};
+
 export const formatTimeDisplay = (t: any, isMobile: boolean = false): React.ReactNode => {
   const time = normalizeTime(t);
   if (time.base === 0 && time.penalty !== 'DNF') return '-';
@@ -113,7 +141,8 @@ const ResultsWCA = () => {
   const [editMode, setEditMode] = useState(false);
   const [editingParticipant, setEditingParticipant] =
     useState<Participant | null>(null);
-  const [tempTimes, setTempTimes] = useState<TimeRecord[]>([]);
+  const [tempTimes, setTempTimes] = useState<any[]>([]);
+  const [errorMsg, setErrorMsg] = useState('');
   const [advancingCompetitors, setAdvancingCompetitors] = useState<
     {
       id: string;
@@ -222,7 +251,7 @@ const ResultsWCA = () => {
             best: computed.best > 0 ? computed.best : 0,
           };
         })
-        .sort((a: any, b: any) => a.average - b.average);
+        .sort(sortWCA);
 
       const nextRoundNum = selectedRound + 1;
       const nextRound = category.rounds.find((r: any) => r.num === nextRoundNum);
@@ -255,8 +284,15 @@ const ResultsWCA = () => {
   };
 
   const handleTimeChange = (index: number, value: string) => {
+    // Validar formato decimal numérico positivo (Max 2 decimales)
+    if (value !== '' && !/^\d*\.?\d{0,2}$/.test(value)) {
+      setErrorMsg('⚠️ Formato incorrecto: Máximo 2 decimales permitidos (ej. 9.53).');
+      setTimeout(() => setErrorMsg(''), 4000);
+      return; // Ignora el cambio si tiene más de 2 decimales
+    }
+    setErrorMsg('');
     const newTimes = [...tempTimes];
-    newTimes[index] = { ...newTimes[index], base: parseFloat(value) || 0 };
+    newTimes[index] = { ...newTimes[index], base: value }; // Almacenamos temporalmente como string
     setTempTimes(newTimes);
   };
 
@@ -271,7 +307,13 @@ const ResultsWCA = () => {
     if (!editingParticipant || !currentRound || !id || !selectedCategory)
       return;
 
-    const { best, average } = calculateRulesStats(tempTimes, currentRound.format);
+    // Parsear el input string temporal a números antes de guardar y calcular estadísticas
+    const parsedTimes = tempTimes.map(t => ({
+      ...t,
+      base: typeof t.base === 'string' ? parseFloat(t.base) || 0 : t.base || 0
+    }));
+
+    const { best, average } = calculateRulesStats(parsedTimes, currentRound.format);
 
     // Actualiza el estado local
     setCategories((prev) =>
@@ -285,7 +327,7 @@ const ResultsWCA = () => {
               ...round,
               participants: round.participants.map((p) => {
                 if (p.id !== editingParticipant.id) return p;
-                return { ...p, times: tempTimes, best, average };
+                return { ...p, times: parsedTimes, best, average };
               }),
             };
           }),
@@ -323,6 +365,7 @@ const ResultsWCA = () => {
   const cancelEditing = () => {
     setEditingParticipant(null);
     setTempTimes([]);
+    setErrorMsg('');
   };
 
   const renderTimeCell = (
@@ -335,12 +378,12 @@ const ResultsWCA = () => {
       return (
         <div className="flex flex-col sm:flex-row items-center gap-1 w-full justify-center">
           <input
-            type="number"
-            value={currentTime.base || ''}
+            type="text"
+            inputMode="decimal"
+            value={currentTime.base === 0 && currentTime.base !== "0" ? '' : currentTime.base}
             onChange={(e) => handleTimeChange(index, e.target.value)}
             className="w-16 bg-gray-800 border border-blue-500 rounded px-1 py-1 text-center text-sm"
-            step="0.01"
-            min="0"
+            placeholder="0.00"
           />
           <div className="flex sm:flex-col gap-1">
             <button 
@@ -459,25 +502,32 @@ const ResultsWCA = () => {
 
       {/* Controles de edición activa */}
       {editMode && editingParticipant && (
-        <div className="flex flex-wrap gap-3 mb-4 p-3 bg-gray-700 rounded-lg items-center">
-          <span className="font-medium flex items-center gap-2">
-            <FaInfoCircle className="text-yellow-400" /> Editando:{' '}
-            {editingParticipant.name}
-          </span>
-          <div className="flex gap-2">
-            <button
-              onClick={saveChanges}
-              className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm flex items-center gap-2"
-            >
-              <FaSave /> Guardar
-            </button>
-            <button
-              onClick={cancelEditing}
-              className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm flex items-center gap-2"
-            >
-              <FaTimes /> Cancelar
-            </button>
+        <div className="flex flex-col gap-3 mb-4 p-3 bg-gray-700 rounded-lg">
+          <div className="flex flex-wrap gap-3 items-center">
+            <span className="font-medium flex items-center gap-2">
+              <FaInfoCircle className="text-yellow-400" /> Editando:{' '}
+              {editingParticipant.name}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={saveChanges}
+                className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm flex items-center gap-2"
+              >
+                <FaSave /> Guardar
+              </button>
+              <button
+                onClick={cancelEditing}
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm flex items-center gap-2"
+              >
+                <FaTimes /> Cancelar
+              </button>
+            </div>
           </div>
+          {errorMsg && (
+            <div className="text-red-200 text-xs sm:text-sm font-semibold bg-red-900/50 p-2 rounded w-fit border border-red-500/50">
+              {errorMsg}
+            </div>
+          )}
         </div>
       )}
 
@@ -488,7 +538,7 @@ const ResultsWCA = () => {
             // Vista móvil - Tarjetas
             <div className="space-y-3">
               {[...currentRound.participants]
-                .sort((a, b) => a.average - b.average)
+                .sort(sortWCA)
                 .map((participant) => (
                   <div
                     key={participant.id}
@@ -593,7 +643,7 @@ const ResultsWCA = () => {
 
               <tbody>
                 {[...currentRound.participants]
-                  .sort((a, b) => a.average - b.average)
+                  .sort(sortWCA)
                   .map((participant) => (
                     <tr
                       key={participant.id}

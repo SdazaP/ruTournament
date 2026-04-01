@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { db } from '../../../common/db';
 
 import { BsTrophyFill, BsGraphUp } from 'react-icons/bs';
-import { calculateRulesStats, normalizeTime, formatTimeDisplay } from '../ResultsWCA';
+import { calculateRulesStats, normalizeTime, formatTimeDisplay, sortWCA } from '../ResultsWCA';
 import { TimeRecord } from '../../../common/db';
 
 type Participant = {
@@ -74,7 +74,7 @@ const ResultsViewWCA = () => {
           return {
             roundNumber: round.num,
             format: round.format as 'ao3' | 'ao5',
-            participants: participants.sort((a, b) => a.average - b.average)
+            participants: participants.sort(sortWCA)
               .map((p, i) => ({ ...p, ranking: i + 1 }))
           };
         });
