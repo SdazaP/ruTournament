@@ -14,12 +14,18 @@ export interface ResultLocal {
     media: string;
 }
 
+export interface ScrambleRecord {
+    text: string;
+    svg: string; // renderizado
+}
+
 export interface RoundLocal {
     id?: string;
     num: number;
     format: string;
     results: ResultLocal[];
     competitorsToAdvance: number;
+    scrambles?: ScrambleRecord[];
 }
 
 export interface CategoryLocal {

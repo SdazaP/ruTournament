@@ -15,6 +15,7 @@ import Guide from './pages/Dashboard/Guide';
 import TournamentWelcome from './pages/Tournament/TournamentWelcome';
 import Participants from './pages/Tournament/Participants';
 import Categories from './pages/Tournament/Categories';
+import Scrambles from './pages/Tournament/Scrambles';
 import ResultsWCA from './pages/Tournament/ResultsWCA';
 import ResultsRB from './pages/Tournament/ResultsRB';
 import ResultsViewRB from './pages/Tournament/Results/ResultsViewRB';
@@ -126,6 +127,15 @@ function App() {
                     <>
                       <PageTitle title="Tournament Categories" />
                       <Categories />
+                    </>
+                  }
+                />
+                <Route
+                  path='scrambles'
+                  element={
+                    <>
+                      <PageTitle title="Official Scrambles" />
+                      <Scrambles />
                     </>
                   }
                 />

@@ -22,7 +22,11 @@ const TableTournament: React.FC<TableTournamentProps> = ({
   onRemove 
 }) => {
   const options = {
-    category: ["3x3", "4x4", "3x3 OH", "2x2", "Pyraminx", "Megaminx", "Skewb", "Square-1"],
+    category: [
+      "3x3", "2x2", "4x4", "5x5", "6x6", "7x7",
+      "3x3 OH",
+      "Clock", "Megaminx", "Pyraminx", "Skewb", "Square-1",
+    ],
     rounds: ["Final directa", "2 rondas", "3 Rondas", "4 Rondas", "5 Rondas"],
     mode: ["WCA"],
     avg_modes: ["ao5", "mo3"],

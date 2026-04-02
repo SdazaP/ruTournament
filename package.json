@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "apexcharts": "^3.41.0",
+    "cstimer_module": "^0.1.5",
     "dexie": "^4.4.1",
     "dexie-react-hooks": "^4.4.0",
     "flatpickr": "^4.6.13",

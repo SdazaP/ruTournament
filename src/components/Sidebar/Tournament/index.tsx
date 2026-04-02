@@ -16,7 +16,7 @@ import {
   FiGrid,
   FiChevronLeft
 } from 'react-icons/fi';
-import { FaCube, FaMedal, FaTrophy } from 'react-icons/fa';
+import { FaCube, FaMedal, FaTrophy, FaSyncAlt } from 'react-icons/fa';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -161,6 +161,20 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 >
                   <FiCalendar size={18} />
                   Categorías y Horarios
+                </NavLink>
+              </li>
+
+              {/* <!-- Menu Item Mezclas (Scrambles) --> */}
+              <li>
+                <NavLink
+                  to="scrambles"
+                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    pathname.includes('scrambles') &&
+                    'bg-graydark dark:bg-meta-4'
+                  }`}
+                >
+                  <FaSyncAlt size={18} />
+                  Mezclas Oficiales
                 </NavLink>
               </li>
 

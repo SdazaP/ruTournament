@@ -50,8 +50,12 @@ const Categories = () => {
   });
 
   const [editMode, setEditMode] = useState(false);
-  const icons = ['3x3', '4x4', 'OH', '2x2', 'Pyr', 'Mega', 'Sq1', 'Skewb'];
-  const PREDEFINED_CATEGORIES = ["3x3", "4x4", "3x3 OH", "2x2", "Pyraminx", "Megaminx", "Skewb", "Square-1"];
+  const icons = ['3x3', '2x2', '4x4', '5x5', '6x6', '7x7', 'OH', 'Clock', 'Mega', 'Pyr', 'Skewb', 'Sq1'];
+  const PREDEFINED_CATEGORIES = [
+    "3x3", "2x2", "4x4", "5x5", "6x6", "7x7",
+    "3x3 OH",
+    "Clock", "Megaminx", "Pyraminx", "Skewb", "Square-1",
+  ];
 
   // Cargar datos del torneo
   useEffect(() => {
