@@ -139,7 +139,6 @@ const TournamentWelcome = () => {
 
   // Manejar el toggle del botón Editar / Cancelar
   const handleEditToggle = () => {
-    if (isFinalized) return;
     if (!editMode) {
       setEditMode(true);
     } else {
@@ -183,8 +182,7 @@ const TournamentWelcome = () => {
     setPendingStatus(null);
   };
 
-  // Helpers de estado
-  const isFinalized = tournament?.status === 'finalizado';
+
 
   // Eliminar el torneo actual
   const handleDeleteTournament = async () => {
@@ -243,18 +241,14 @@ const TournamentWelcome = () => {
           )}
           <button
             onClick={handleEditToggle}
-            disabled={isFinalized}
-            title={isFinalized ? 'El torneo está finalizado. Reactívalo para editar.' : ''}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              isFinalized
-                ? 'bg-gray-700 opacity-50 cursor-not-allowed'
-                : editMode
+              editMode
                 ? 'bg-yellow-600 hover:bg-yellow-700'
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {isFinalized ? <FaLock /> : editMode ? <FaTimes /> : <FaEdit />}
-            {isFinalized ? 'Bloqueado' : editMode ? 'Cancelar' : 'Editar'}
+            {editMode ? <FaTimes /> : <FaEdit />}
+            {editMode ? 'Cancelar' : 'Editar'}
           </button>
         </div>
       </div>
