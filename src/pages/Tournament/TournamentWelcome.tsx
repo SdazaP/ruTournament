@@ -8,6 +8,10 @@ import {
   FaTimes,
   FaSave,
   FaTrash,
+  FaLock,
+  FaCheckCircle,
+  FaClock,
+  FaExclamationTriangle,
 } from 'react-icons/fa';
 import { MdCategory, MdPeople } from 'react-icons/md';
 import { db } from '../../common/db';
@@ -56,6 +60,8 @@ const TournamentWelcome = () => {
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteInputName, setDeleteInputName] = useState('');
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<Tournament['status'] | null>(null);
 
   // Cargar datos del torneo
   useEffect(() => {
@@ -127,10 +133,29 @@ const TournamentWelcome = () => {
   // Guardar cambios en el torneo
   const saveChanges = async () => {
     if (!tournament) return;
-    
     await db.tournaments.put(tournament as any);
     setEditMode(false);
   };
+
+  // Solicitar cambio de estado (abre modal de confirmación)
+  const requestStatusChange = (newStatus: Tournament['status']) => {
+    if (newStatus === tournament?.status) return;
+    setPendingStatus(newStatus);
+    setShowStatusModal(true);
+  };
+
+  // Confirmar y persistir cambio de estado
+  const confirmStatusChange = async () => {
+    if (!tournament || !pendingStatus || !id) return;
+    const updated = { ...tournament, status: pendingStatus };
+    await db.tournaments.put(updated as any);
+    setTournament(updated);
+    setShowStatusModal(false);
+    setPendingStatus(null);
+  };
+
+  // Helpers de estado
+  const isFinalized = tournament?.status === 'finalizado';
 
   // Eliminar el torneo actual
   const handleDeleteTournament = async () => {
@@ -188,25 +213,40 @@ const TournamentWelcome = () => {
             </>
           )}
           <button
-            onClick={() => setEditMode(!editMode)}
+            onClick={() => !isFinalized && setEditMode(!editMode)}
+            disabled={isFinalized}
+            title={isFinalized ? 'El torneo está finalizado. Reactívalo para editar.' : ''}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              editMode
+              isFinalized
+                ? 'bg-gray-700 opacity-50 cursor-not-allowed'
+                : editMode
                 ? 'bg-yellow-600 hover:bg-yellow-700'
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {editMode ? (
-              <>
-                <FaTimes /> Cancelar
-              </>
-            ) : (
-              <>
-                <FaEdit /> Editar
-              </>
-            )}
+            {isFinalized ? <FaLock /> : editMode ? <FaTimes /> : <FaEdit />}
+            {isFinalized ? 'Bloqueado' : editMode ? 'Cancelar' : 'Editar'}
           </button>
         </div>
       </div>
+
+      {/* Banner de estado del torneo */}
+      {tournament.status === 'finalizado' && (
+        <div className="mb-6 bg-gray-700/50 border border-gray-600 rounded-lg px-5 py-3 flex items-center gap-3 text-gray-300">
+          <FaLock className="text-gray-400 flex-shrink-0" />
+          <span className="text-sm">
+            Este torneo está <strong className="text-white">Finalizado</strong>. No se pueden realizar modificaciones. Para editar, cambia el estado a <strong>Activo</strong>.
+          </span>
+        </div>
+      )}
+      {tournament.status === 'proximamente' && (
+        <div className="mb-6 bg-blue-900/20 border border-blue-700/40 rounded-lg px-5 py-3 flex items-center gap-3 text-blue-300">
+          <FaClock className="flex-shrink-0" />
+          <span className="text-sm">
+            Torneo en estado <strong className="text-white">Próximamente</strong>. Puedes editar la información general pero <strong>no subir resultados</strong>.
+          </span>
+        </div>
+      )}
 
       {/* Notificación del modo edición */}
       {editMode && (
@@ -308,30 +348,29 @@ const TournamentWelcome = () => {
           <div className="space-y-5">
             {/* Estado del Evento */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-3">
                 Estado del Evento
               </label>
               <div className="flex flex-wrap gap-3">
-                {['activo', 'proximamente', 'finalizado'].map((status) => {
-                  const isCurrent = tournament.status === status;
+                {([
+                  { key: 'proximamente', label: 'Próximamente', icon: FaClock, activeColor: 'bg-blue-600', desc: 'Editable, sin resultados' },
+                  { key: 'activo',       label: 'Activo',        icon: FaCheckCircle, activeColor: 'bg-green-600', desc: 'Edición completa' },
+                  { key: 'finalizado',  label: 'Finalizado',    icon: FaLock, activeColor: 'bg-gray-600', desc: 'Solo lectura' },
+                ] as const).map(({ key, label, icon: Icon, activeColor, desc }) => {
+                  const isCurrent = tournament.status === key;
                   return (
                     <button
-                      key={status}
-                      onClick={() =>
-                        editMode && handleTournamentChange('status', status)
-                      }
-                      className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                      key={key}
+                      onClick={() => requestStatusChange(key)}
+                      className={`flex-1 min-w-[110px] flex flex-col items-center gap-1 px-3 py-3 rounded-lg text-sm transition-all border-2 ${
                         isCurrent
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-700 hover:bg-gray-600'
-                      } ${
-                        !editMode
-                          ? 'cursor-not-allowed opacity-70'
-                          : 'cursor-pointer'
+                          ? `${activeColor} border-transparent text-white shadow-lg scale-105`
+                          : 'bg-gray-700 border-gray-600 hover:border-gray-500 text-gray-300'
                       }`}
-                      disabled={!editMode}
                     >
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                      <Icon size={16} />
+                      <span className="font-semibold">{label}</span>
+                      <span className="text-xs opacity-70">{desc}</span>
                     </button>
                   );
                 })}
@@ -513,6 +552,63 @@ const TournamentWelcome = () => {
                 }`}
               >
                 Eliminar Definitivamente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Confirmar Cambio de Estado */}
+      {showStatusModal && pendingStatus && tournament && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
+              <FaExclamationTriangle size={22} />
+            </div>
+            <h3 className="text-xl font-bold text-center text-white mb-2">Cambiar Estado del Torneo</h3>
+            <p className="text-gray-400 text-center text-sm mb-4">
+              ¿Estás seguro de que deseas cambiar el estado de{' '}
+              <strong className="text-white">"{tournament.name}"</strong>{' '}
+              de <strong>{tournament.status}</strong> a{' '}
+              <strong className={`${
+                pendingStatus === 'activo' ? 'text-green-400' :
+                pendingStatus === 'finalizado' ? 'text-gray-300' : 'text-blue-400'
+              }`}>{pendingStatus}</strong>?
+            </p>
+            {pendingStatus === 'finalizado' && (
+              <div className="bg-red-900/20 border border-red-700/40 rounded-lg p-3 text-xs text-red-300 mb-4 flex items-start gap-2">
+                <FaLock className="mt-0.5 flex-shrink-0" />
+                <span>El torneo quedará en <strong>solo lectura</strong>. No se podrán realizar ningún tipo de modificaciones hasta que lo reactives.</span>
+              </div>
+            )}
+            {pendingStatus === 'proximamente' && (
+              <div className="bg-blue-900/20 border border-blue-700/40 rounded-lg p-3 text-xs text-blue-300 mb-4 flex items-start gap-2">
+                <FaClock className="mt-0.5 flex-shrink-0" />
+                <span>Podrás editar la información del torneo pero <strong>no podrás subir resultados</strong> hasta que lo actives.</span>
+              </div>
+            )}
+            {pendingStatus === 'activo' && (
+              <div className="bg-green-900/20 border border-green-700/40 rounded-lg p-3 text-xs text-green-300 mb-4 flex items-start gap-2">
+                <FaCheckCircle className="mt-0.5 flex-shrink-0" />
+                <span>El torneo quedará completamente editable, incluyendo la carga de resultados.</span>
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowStatusModal(false); setPendingStatus(null); }}
+                className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmStatusChange}
+                className={`flex-1 py-2.5 px-4 text-white rounded-lg transition-colors font-medium text-sm ${
+                  pendingStatus === 'activo' ? 'bg-green-600 hover:bg-green-700' :
+                  pendingStatus === 'finalizado' ? 'bg-gray-600 hover:bg-gray-500' :
+                  'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                Sí, Confirmar
               </button>
             </div>
           </div>

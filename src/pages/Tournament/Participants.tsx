@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft, FaExclamationTriangle, FaInfoCircle, FaGavel, FaRunning, FaRandom } from 'react-icons/fa';
+import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft, FaExclamationTriangle, FaInfoCircle, FaGavel, FaRunning, FaRandom, FaLock } from 'react-icons/fa';
 import { db } from '../../common/db';
+import { useTournamentStatus } from '../../hooks/useTournamentStatus';
 
 type Participant = {
   id: string;
@@ -15,6 +16,7 @@ const AVAILABLE_ROLES = ['judge', 'runner', 'scrambler'];
 const Participants = () => {
   const { id: tournamentId } = useParams();
   const navigate = useNavigate();
+  const { isFinalized } = useTournamentStatus(tournamentId);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [tournament, setTournament] = useState<any>(null);
   const [categories, setCategories] = useState<string[]>([]);
@@ -234,17 +236,29 @@ const Participants = () => {
           Participantes {tournament ? `de "${tournament.name}"` : ''}
         </h2>
         <button
-          onClick={() => setEditMode(!editMode)}
+          onClick={() => !isFinalized && setEditMode(!editMode)}
+          disabled={isFinalized}
+          title={isFinalized ? 'El torneo está Finalizado. No se pueden realizar modificaciones.' : ''}
           className={`px-4 py-2 w-full sm:w-auto rounded-lg transition-colors flex items-center justify-center gap-2 ${
-            editMode 
-              ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
+            isFinalized
+              ? 'bg-gray-700 opacity-50 cursor-not-allowed text-white'
+              : editMode
+              ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
               : 'bg-blue-600 hover:bg-blue-700 text-white'
           }`}
         >
-          {editMode ? <FaTimes /> : <FaEdit />}
-          {editMode ? 'Desactivar Edición' : 'Activar Edición'}
+          {isFinalized ? <FaLock /> : editMode ? <FaTimes /> : <FaEdit />}
+          {isFinalized ? 'Bloqueado' : editMode ? 'Desactivar Edición' : 'Activar Edición'}
         </button>
       </div>
+
+      {/* Banner de torneo finalizado */}
+      {isFinalized && (
+        <div className="mb-6 bg-gray-700/40 border border-gray-600 rounded-lg px-4 py-3 flex items-center gap-3 text-gray-300 text-sm">
+          <FaLock className="text-gray-400 flex-shrink-0" />
+          <span><strong className="text-white">Torneo Finalizado.</strong> No se pueden agregar, editar ni eliminar participantes. Reactiva el torneo desde el Panel.</span>
+        </div>
+      )}
       
       {/* Filtros y búsqueda */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -278,7 +292,7 @@ const Participants = () => {
       </div>
 
       {/* Formulario para agregar nuevo participante */}
-      {categories.length > 0 && (
+      {categories.length > 0 && !isFinalized && (
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <input
             type="text"

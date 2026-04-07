@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db, ScrambleRecord } from '../../common/db';
-import { FaSyncAlt, FaInfoCircle, FaTrash } from 'react-icons/fa';
+import { FaSyncAlt, FaInfoCircle, FaTrash, FaLock } from 'react-icons/fa';
 import { MdCategory, MdOutlineTimer } from 'react-icons/md';
+import { useTournamentStatus } from '../../hooks/useTournamentStatus';
 
 // ─── Tipos locales ───────────────────────────────────────────────────────────
 
@@ -115,6 +116,7 @@ function useCstimerWorker() {
 const Scrambles = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isFinalized } = useTournamentStatus(id);
   const { ready, getScramble, getImage } = useCstimerWorker();
 
   const [showGroupAlert, setShowGroupAlert] = useState(false);
@@ -433,7 +435,11 @@ const Scrambles = () => {
             </div>
 
             <div className="flex gap-2">
-              {hasScrambles ? (
+              {isFinalized ? (
+                <span className="px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-gray-700 opacity-60 cursor-not-allowed text-gray-300">
+                  <FaLock /> Torneo Finalizado — Sin acceso
+                </span>
+              ) : hasScrambles ? (
                 <button
                   onClick={handleDeleteScrambles}
                   className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm flex items-center gap-2 transition-colors"

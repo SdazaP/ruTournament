@@ -7,8 +7,10 @@ import {
   FaTimes,
   FaCheck,
   FaArrowLeft,
+  FaLock,
 } from 'react-icons/fa';
 import { db } from '../../common/db';
+import { useTournamentStatus } from '../../hooks/useTournamentStatus';
 
 type Round = {
   roundNumber: number;
@@ -31,6 +33,7 @@ type Category = {
 const Categories = () => {
   const { id: tournamentId } = useParams();
   const navigate = useNavigate();
+  const { isFinalized } = useTournamentStatus(tournamentId);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tournament, setTournament] = useState<any>(null);
 
@@ -454,7 +457,7 @@ const Categories = () => {
   };
 
   const toggleEditMode = () => {
-    setEditMode(!editMode);
+    if (!isFinalized) setEditMode(!editMode);
   };
 
   return (
@@ -465,15 +468,28 @@ const Categories = () => {
         </h2>
         <button
           onClick={toggleEditMode}
-          className={`px-4 py-2 rounded-lg transition-colors ${
-            editMode
+          disabled={isFinalized}
+          title={isFinalized ? 'El torneo está Finalizado.' : ''}
+          className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+            isFinalized
+              ? 'bg-gray-700 opacity-50 cursor-not-allowed'
+              : editMode
               ? 'bg-red-600 hover:bg-red-700'
               : 'bg-blue-600 hover:bg-blue-700'
           }`}
         >
-          {editMode ? 'Desactivar Edición' : 'Activar Edición'}
+          {isFinalized ? <FaLock /> : null}
+          {isFinalized ? 'Bloqueado' : editMode ? 'Desactivar Edición' : 'Activar Edición'}
         </button>
       </div>
+
+      {/* Banner de torneo finalizado */}
+      {isFinalized && (
+        <div className="mb-6 bg-gray-700/40 border border-gray-600 rounded-lg px-4 py-3 flex items-center gap-3 text-gray-300 text-sm">
+          <FaLock className="text-gray-400 flex-shrink-0" />
+          <span><strong className="text-white">Torneo Finalizado.</strong> No se pueden agregar, editar ni eliminar categorías ni rondas. Reactiva el torneo desde el Panel.</span>
+        </div>
+      )}
 
       {/* Formulario para agregar nueva categoría (solo visible en modo edición) */}
       {editMode && (

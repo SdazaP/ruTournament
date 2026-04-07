@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../../common/db';
-import { FaEdit, FaSave, FaTimes, FaTrash, FaInfoCircle } from 'react-icons/fa';
+import { FaEdit, FaSave, FaTimes, FaTrash, FaInfoCircle, FaLock } from 'react-icons/fa';
+import { useTournamentStatus } from '../../hooks/useTournamentStatus';
 import {
   MdOutlineTimer,
   MdLeaderboard,
@@ -138,6 +139,7 @@ type Category = {
 
 const ResultsWCA = () => {
   const { id, categoryName } = useParams();
+  const { canUploadResults, status } = useTournamentStatus(id);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedRound, setSelectedRound] = useState<number>(1);
@@ -460,22 +462,19 @@ const ResultsWCA = () => {
         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
           {/* Botón de edición */}
           <button
-            onClick={() => setEditMode(!editMode)}
+            onClick={() => canUploadResults && setEditMode(!editMode)}
+            disabled={!canUploadResults}
+            title={!canUploadResults ? `El torneo está en estado "${status}" — no se pueden cargar resultados.` : ''}
             className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-2 ${
-              editMode
+              !canUploadResults
+                ? 'bg-gray-700 opacity-50 cursor-not-allowed'
+                : editMode
                 ? 'bg-yellow-600 hover:bg-yellow-700'
                 : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {editMode ? (
-              <>
-                <FaTimes /> Desactivar Edición
-              </>
-            ) : (
-              <>
-                <FaEdit /> Activar Edición
-              </>
-            )}
+            {!canUploadResults ? <FaLock /> : editMode ? <FaTimes /> : <FaEdit />}
+            {!canUploadResults ? 'Bloqueado' : editMode ? 'Desactivar Edición' : 'Activar Edición'}
           </button>
 
           {/* Selectores */}
@@ -525,6 +524,19 @@ const ResultsWCA = () => {
           </div>
         </div>
       </div>
+
+      {/* Banner de bloqueo de resultados */}
+      {!canUploadResults && (
+        <div className="mb-4 bg-gray-700/40 border border-gray-600 rounded-lg px-4 py-3 flex items-center gap-3 text-gray-300 text-sm">
+          <FaLock className="text-gray-400 flex-shrink-0" />
+          <span>
+            {status === 'finalizado'
+              ? <><strong className="text-white">Torneo Finalizado.</strong> Los resultados son de solo lectura. Para modificarlos, reactiva el torneo desde el Panel.</>
+              : <><strong className="text-white">Torneo Próximamente.</strong> La carga de resultados está deshabilitada. Actívalo desde el Panel para permitir modificaciones.</>
+            }
+          </span>
+        </div>
+      )}
 
       {/* Leyenda WCA */}
       <div className="flex flex-wrap gap-4 text-xs sm:text-sm text-gray-400 bg-gray-800/80 p-3 rounded-lg mb-4 items-center justify-center">

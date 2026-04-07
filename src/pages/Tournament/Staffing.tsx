@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { FaUserShield, FaInfoCircle, FaExclamationTriangle, FaEdit, FaTimes, FaGavel, FaRunning, FaRandom } from 'react-icons/fa';
+import { FaUserShield, FaInfoCircle, FaExclamationTriangle, FaEdit, FaTimes, FaGavel, FaRunning, FaRandom, FaLock } from 'react-icons/fa';
 import { MdCategory } from 'react-icons/md';
 import { db } from '../../common/db';
+import { useTournamentStatus } from '../../hooks/useTournamentStatus';
 
 type Round = {
   roundNumber: number;
@@ -29,6 +30,7 @@ const AVAILABLE_ROLES = ['judge', 'runner', 'scrambler'];
 
 const Staffing = () => {
   const { id } = useParams<{ id: string }>();
+  const { isFinalized } = useTournamentStatus(id);
   const [categories, setCategories] = useState<Category[]>([]);
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -160,15 +162,19 @@ const Staffing = () => {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
           {/* Botón de Edición */}
           <button
-            onClick={() => setEditMode(!editMode)}
+            onClick={() => !isFinalized && setEditMode(!editMode)}
+            disabled={isFinalized}
+            title={isFinalized ? 'El torneo está Finalizado.' : ''}
             className={`px-4 py-2 w-full sm:w-auto rounded-lg transition-colors flex items-center justify-center gap-2 ${
-              editMode 
+              isFinalized
+                ? 'bg-gray-700 opacity-50 cursor-not-allowed text-white'
+                : editMode 
                 ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
             }`}
           >
-            {editMode ? <FaTimes /> : <FaEdit />}
-            {editMode ? 'Desactivar Edición' : 'Activar Edición'}
+            {isFinalized ? <FaLock /> : editMode ? <FaTimes /> : <FaEdit />}
+            {isFinalized ? 'Bloqueado' : editMode ? 'Desactivar Edición' : 'Activar Edición'}
           </button>
 
           {/* Selector de Categoría */}
@@ -203,6 +209,12 @@ const Staffing = () => {
         </div>
       ) : (
         <div className="flex flex-col gap-4">
+          {isFinalized && (
+            <div className="bg-gray-700/40 border border-gray-600 rounded-lg px-4 py-3 flex items-center gap-3 text-gray-300 text-sm">
+              <FaLock className="text-gray-400 flex-shrink-0" />
+              <span><strong className="text-white">Torneo Finalizado.</strong> La asignación de roles está bloqueada. Reactiva el torneo desde el Panel.</span>
+            </div>
+          )}
           <div className="flex flex-col gap-4 border border-gray-700 text-gray-300 text-xs sm:text-sm p-4 rounded-lg">
 
             {/* Bloque Rojo - Error Crítico */}

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaLayerGroup, FaInfoCircle, FaCogs, FaUsers, FaClock, FaCheck, FaExclamationTriangle, FaGavel, FaRunning, FaRandom, FaTrash } from 'react-icons/fa';
+import { FaLayerGroup, FaInfoCircle, FaCogs, FaUsers, FaClock, FaCheck, FaExclamationTriangle, FaGavel, FaRunning, FaRandom, FaTrash, FaLock } from 'react-icons/fa';
 import { MdCategory } from 'react-icons/md';
 import { db, CategoryLocal, CompetitorLocal, GroupLocal } from '../../common/db';
+import { useTournamentStatus } from '../../hooks/useTournamentStatus';
 
 const Groups = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isFinalized } = useTournamentStatus(id);
   const [competitors, setCompetitors] = useState<CompetitorLocal[]>([]);
   const [categories, setCategories] = useState<CategoryLocal[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -356,12 +358,19 @@ const Groups = () => {
             </div>
 
             <button 
-                onClick={handleGenerateGroupsClick}
-                className="mt-4 w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                onClick={() => !isFinalized && handleGenerateGroupsClick()}
+                disabled={isFinalized}
+                title={isFinalized ? 'El torneo está Finalizado.' : ''}
+                className={`mt-4 w-full px-4 py-2 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                  isFinalized
+                    ? 'bg-gray-600 opacity-50 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
             >
-                <FaLayerGroup /> {savedGroups.length > 0 ? 'Regenerar Grupos' : 'Auto-Generar'}
+                {isFinalized ? <FaLock /> : <FaLayerGroup />}
+                {isFinalized ? 'Bloqueado' : savedGroups.length > 0 ? 'Regenerar Grupos' : 'Auto-Generar'}
             </button>
-            {savedGroups.length > 0 && (
+            {savedGroups.length > 0 && !isFinalized && (
               <button
                 onClick={handleDeleteGroups}
                 className="w-full px-4 py-2 bg-red-700/70 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
