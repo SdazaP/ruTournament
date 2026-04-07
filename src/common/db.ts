@@ -40,6 +40,7 @@ export interface CompetitorLocal {
     name?: string;
     categories: string[]; // IDs de las categorías a las que pertenece
     roles?: string[]; // Roles disponibles: 'judge', 'runner', 'scrambler'
+    assignedRoles?: Record<string, string[]>; // { 'ID_CATEGORIA': ['judge'] }
 }
 
 export interface TournamentLocal {

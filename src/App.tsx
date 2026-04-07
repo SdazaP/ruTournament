@@ -14,6 +14,7 @@ import WelcomePage from './pages/Dashboard/WelcomePage';
 import Guide from './pages/Dashboard/Guide';
 import TournamentWelcome from './pages/Tournament/TournamentWelcome';
 import Participants from './pages/Tournament/Participants';
+import Staffing from './pages/Tournament/Staffing';
 import Categories from './pages/Tournament/Categories';
 import Scrambles from './pages/Tournament/Scrambles';
 import ResultsWCA from './pages/Tournament/ResultsWCA';
@@ -116,8 +117,17 @@ function App() {
                   path='competitors'
                   element={
                     <>
-                      <PageTitle title="Tournament Competitors" />
+                      <PageTitle title="Tournament Participants" />
                       <Participants />
+                    </>
+                  }
+                />
+                <Route
+                  path='staffing'
+                  element={
+                    <>
+                      <PageTitle title="Tournament Staffing" />
+                      <Staffing />
                     </>
                   }
                 />
