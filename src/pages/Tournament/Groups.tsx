@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { FaLayerGroup, FaInfoCircle, FaCogs, FaUsers, FaClock, FaCheck, FaExclamationTriangle } from 'react-icons/fa';
+import { FaLayerGroup, FaInfoCircle, FaCogs, FaUsers, FaClock, FaCheck, FaExclamationTriangle, FaGavel, FaRunning, FaRandom } from 'react-icons/fa';
 import { MdCategory } from 'react-icons/md';
 import { db, CategoryLocal, CompetitorLocal, GroupLocal } from '../../common/db';
 
@@ -228,7 +228,44 @@ const Groups = () => {
           <p>No hay categorías registradas en este torneo.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <>
+          {/* Leyenda de Roles */}
+          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 mb-6">
+            <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+              <FaInfoCircle /> Significado de los roles de Staff
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex bg-gray-750 p-3 rounded-lg border border-gray-600 items-start gap-3">
+                <div className="bg-blue-900/50 text-blue-400 p-2 rounded-full flex-shrink-0">
+                  <FaGavel size={16} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-blue-300 capitalize">Judge (Juez)</h4>
+                  <p className="text-xs text-gray-400 mt-1">Llama al competidor, supervisa que siga las normas de inspección/resolución y firma los tiempos oficiales.</p>
+                </div>
+              </div>
+              <div className="flex bg-gray-750 p-3 rounded-lg border border-gray-600 items-start gap-3">
+                <div className="bg-green-900/50 text-green-400 p-2 rounded-full flex-shrink-0">
+                  <FaRunning size={16} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-green-300 capitalize">Runner (Corredor)</h4>
+                  <p className="text-xs text-gray-400 mt-1">Lleva los cubos revueltos desde la mesa de Scramblers a las estaciones de los Jueces.</p>
+                </div>
+              </div>
+              <div className="flex bg-gray-750 p-3 rounded-lg border border-gray-600 items-start gap-3">
+                <div className="bg-purple-900/50 text-purple-400 p-2 rounded-full flex-shrink-0">
+                  <FaRandom size={16} />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-purple-300 capitalize">Scrambler (Mezclador)</h4>
+                  <p className="text-xs text-gray-400 mt-1">Aplica las mezclas oficiales a cada cubo usando un cover, asegurando que no se filtre información.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           
           {/* Panel Lateral: Configuración */}
           <div className="lg:col-span-1 bg-gray-800 rounded-lg border border-gray-700 p-5 flex flex-col gap-5 h-fit">
@@ -405,6 +442,7 @@ const Groups = () => {
              )}
           </div>
         </div>
+        </>
       )}
 
         {/* Modal de Advertencia de Regeneración */}
