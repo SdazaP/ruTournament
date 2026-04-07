@@ -16,7 +16,7 @@ import {
   FiGrid,
   FiChevronLeft
 } from 'react-icons/fi';
-import { FaCube, FaMedal, FaTrophy, FaSyncAlt } from 'react-icons/fa';
+import { FaCube, FaMedal, FaTrophy, FaSyncAlt, FaLayerGroup } from 'react-icons/fa';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -185,7 +185,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                                 (isActive && '!text-white')
                               }
                             >
-                              Competidores
+                              <FaCube size={18} />
+                              Categorías y roles
                             </NavLink>
                           </li>
                           <li>
@@ -196,7 +197,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                                 (isActive && '!text-white')
                               }
                             >
-                              Roles de competidores
+                              <FiAward size={18} />
+                              Roles por categorías
                             </NavLink>
                           </li>
                         </ul>
@@ -206,30 +208,78 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   );
                 }}
               </SidebarLinkGroup>
-              <li>
-                <NavLink
-                  to="categories"
-                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${pathname.includes('categories') &&
-                    'bg-graydark dark:bg-meta-4'
-                    }`}
-                >
-                  <FiCalendar size={18} />
-                  Categorías y Horarios
-                </NavLink>
-              </li>
-
-              {/* <!-- Menu Item Mezclas (Scrambles) --> */}
-              <li>
-                <NavLink
-                  to="scrambles"
-                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${pathname.includes('scrambles') &&
-                    'bg-graydark dark:bg-meta-4'
-                    }`}
-                >
-                  <FaSyncAlt size={18} />
-                  Mezclas Oficiales
-                </NavLink>
-              </li>
+              <SidebarLinkGroup activeCondition={pathname.includes('categories') || pathname.includes('scrambles') || pathname.includes('groups')}>
+                {(handleClick, open) => {
+                  return (
+                    <React.Fragment>
+                      <NavLink
+                        to="#"
+                        className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${(pathname.includes('categories') || pathname.includes('scrambles') || pathname.includes('groups')) &&
+                          'bg-graydark dark:bg-meta-4'
+                          }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          sidebarExpanded
+                            ? handleClick()
+                            : setSidebarExpanded(true);
+                        }}
+                      >
+                        <FiList size={18} />
+                        Administrar Categorías
+                        <FiChevronDown
+                          className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current ${open && 'rotate-180'
+                            }`}
+                          size={20}
+                        />
+                      </NavLink>
+                      {/* <!-- Dropdown Menu Start --> */}
+                      <div
+                        className={`translate transform overflow-hidden ${!open && 'hidden'
+                          }`}
+                      >
+                        <ul className="mt-4 mb-5.5 flex flex-col gap-2.5 pl-6">
+                          <li>
+                            <NavLink
+                              to="categories"
+                              className={({ isActive }) =>
+                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
+                                (isActive && '!text-white')
+                              }
+                            >
+                              <FiCalendar size={18} />
+                              Categorías y Horarios
+                            </NavLink>
+                          </li>
+                          <li>
+                            <NavLink
+                              to="groups"
+                              className={({ isActive }) =>
+                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
+                                (isActive && '!text-white')
+                              }
+                            >
+                              <FaLayerGroup size={18} />
+                              Generador de Horarios
+                            </NavLink>
+                          </li>
+                          <li>
+                            <NavLink
+                              to="scrambles"
+                              className={({ isActive }) =>
+                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
+                                (isActive && '!text-white')
+                              }
+                            >
+                              <FaSyncAlt size={18} />
+                              Generador de Mezclas
+                            </NavLink>
+                          </li>
+                        </ul>
+                      </div>
+                    </React.Fragment>
+                  );
+                }}
+              </SidebarLinkGroup>
 
               {/* <!-- Menu Item Resultados --> */}
               <SidebarLinkGroup activeCondition={pathname.includes('results')}>
