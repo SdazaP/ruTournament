@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { db } from '../../../common/db';
 
 import { BsTrophyFill, BsGraphUp } from 'react-icons/bs';
-import { calculateRulesStats, normalizeTime, formatTimeDisplay, sortWCA } from '../ResultsWCA';
+import { calculateRulesStats, normalizeTime, formatTimeDisplay, sortWCA, formatSecondsToDisplay } from '../ResultsWCA';
 import { TimeRecord } from '../../../common/db';
 
 type Participant = {
@@ -217,10 +217,10 @@ const ResultsViewWCA = () => {
                       </div>
                       <div className="flex gap-2">
                         <span className="text-xs bg-blue-600 px-2 py-1 rounded">
-                          Best: {participant.best > 0 ? participant.best.toFixed(2) : participant.best === -1 ? 'DNF' : '-'}
+                          Best: {participant.best > 0 ? formatSecondsToDisplay(participant.best) : participant.best === -1 ? 'DNF' : '-'}
                         </span>
                         <span className="text-xs bg-green-600 px-2 py-1 rounded">
-                          Avg: {participant.average > 0 ? participant.average.toFixed(2) : participant.average === -1 ? 'DNF' : '-'}
+                          Avg: {participant.average > 0 ? formatSecondsToDisplay(participant.average) : participant.average === -1 ? 'DNF' : '-'}
                         </span>
                       </div>
                     </div>
@@ -314,10 +314,10 @@ const ResultsViewWCA = () => {
                         );
                       })}
                       <td className="px-3 py-3 text-center font-bold text-blue-400">
-                        {participant.best > 0 ? participant.best.toFixed(2) : participant.best === -1 ? 'DNF' : '-'}
+                        {participant.best > 0 ? formatSecondsToDisplay(participant.best) : participant.best === -1 ? 'DNF' : '-'}
                       </td>
                       <td className="px-3 py-3 text-center font-bold text-green-400">
-                        {participant.average > 0 ? participant.average.toFixed(2) : participant.average === -1 ? 'DNF' : '-'}
+                        {participant.average > 0 ? formatSecondsToDisplay(participant.average) : participant.average === -1 ? 'DNF' : '-'}
                       </td>
                     </tr>
                   ))}

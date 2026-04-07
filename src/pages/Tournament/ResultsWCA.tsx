@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../../common/db';
-import { FaEdit, FaSave, FaTimes, FaTrash, FaInfoCircle, FaLock } from 'react-icons/fa';
+import { FaEdit, FaSave, FaTimes, FaInfoCircle, FaLock } from 'react-icons/fa';
 import { useTournamentStatus } from '../../hooks/useTournamentStatus';
 import {
   MdOutlineTimer,
@@ -96,6 +96,26 @@ export const sortWCA = (a: any, b: any) => {
   return a.name?.localeCompare(b.name || '');
 };
 
+export const parseTimeToSeconds = (val: string | number): number => {
+  if (typeof val === 'number') return val;
+  if (!val) return 0;
+  if (typeof val === 'string' && val.includes(':')) {
+    const parts = val.split(':');
+    const m = parseInt(parts[0], 10) || 0;
+    const s = parseFloat(parts[1]) || 0;
+    return m * 60 + s;
+  }
+  return parseFloat(val) || 0;
+};
+
+export const formatSecondsToDisplay = (seconds: number): string => {
+  if (typeof seconds !== 'number' || isNaN(seconds)) return '-';
+  if (seconds < 60) return seconds.toFixed(2);
+  const m = Math.floor(seconds / 60);
+  const s = seconds - m * 60;
+  return `${m}:${s < 10 ? '0' : ''}${s.toFixed(2)}`;
+};
+
 export const formatTimeDisplay = (t: any, isMobile: boolean = false): React.ReactNode => {
   const time = normalizeTime(t);
   if (time.base === 0 && time.penalty !== 'DNF') return '-';
@@ -104,17 +124,17 @@ export const formatTimeDisplay = (t: any, isMobile: boolean = false): React.Reac
     if (isMobile) {
       return <span className="text-red-500 font-bold">DNF</span>;
     }
-    return <span className="text-red-400">({time.base > 0 ? time.base.toFixed(2) : '-'}) DNF</span>;
+    return <span className="text-red-400">({time.base > 0 ? formatSecondsToDisplay(time.base) : '-'}) DNF</span>;
   }
   
   if (time.penalty === '+2') {
     if (isMobile) {
-      return <span className="text-yellow-500 font-bold">{(time.base + 2).toFixed(2)}</span>;
+      return <span className="text-yellow-500 font-bold">{formatSecondsToDisplay(time.base + 2)}</span>;
     }
-    return <span className="text-yellow-400">{time.base.toFixed(2)} +2 = {(time.base + 2).toFixed(2)}</span>;
+    return <span className="text-yellow-400">{formatSecondsToDisplay(time.base)} +2 = {formatSecondsToDisplay(time.base + 2)}</span>;
   }
   
-  return time.base.toFixed(2);
+  return formatSecondsToDisplay(time.base);
 };
 
 type Participant = {
@@ -149,14 +169,6 @@ const ResultsWCA = () => {
     useState<Participant | null>(null);
   const [tempTimes, setTempTimes] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
-  const [advancingCompetitors, setAdvancingCompetitors] = useState<
-    {
-      id: string;
-      name: string;
-      average: number;
-      best: number;
-    }[]
-  >([]);
 
   useEffect(() => {
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
@@ -273,36 +285,7 @@ const ResultsWCA = () => {
       const currentRoundObj = category.rounds.find((r: any) => r.num === selectedRound);
       if (!currentRoundObj) return;
 
-      const participantsWithResults = (currentRoundObj.results || [])
-        .map((result: any) => {
-          const competitor = tournament.competitors.find(
-            (c: any) => c.id === result.idCompetitor,
-          );
-          const loadedTimes = result.times.map(normalizeTime);
-          const computed = calculateRulesStats(loadedTimes, currentRoundObj.format as 'ao3'|'ao5');
-          return {
-            id: result.idCompetitor,
-            name: competitor?.name || '',
-            average: parseFloat(result.media) || 0,
-            best: computed.best > 0 ? computed.best : 0,
-          };
-        })
-        .sort(sortWCA);
 
-      const nextRoundNum = selectedRound + 1;
-      const nextRound = category.rounds.find((r: any) => r.num === nextRoundNum);
-      
-      if (!nextRound) {
-        setAdvancingCompetitors([]);
-        return;
-      }
-      
-      const competitorsToAdvance =
-        String(currentRoundObj.competitorsToAdvance) === 'all' 
-          ? participantsWithResults.length 
-          : Number(currentRoundObj.competitorsToAdvance) || (currentRoundObj.format === 'ao5' ? 12 : 8);
-
-      setAdvancingCompetitors(participantsWithResults.slice(0, competitorsToAdvance));
     });
   }, [id, selectedCategory, selectedRound]);
 
@@ -320,15 +303,39 @@ const ResultsWCA = () => {
   };
 
   const handleTimeChange = (index: number, value: string) => {
-    // Validar formato decimal numérico positivo (Max 2 decimales)
-    if (value !== '' && !/^\d*\.?\d{0,2}$/.test(value)) {
-      setErrorMsg('⚠️ Formato incorrecto: Máximo 2 decimales permitidos (ej. 9.53).');
+    // Validar formato decimal numérico positivo (M:SS.CC o SS.CC)
+    if (value !== '' && !/^(\d+:)?\d*\.?\d{0,2}$/.test(value)) {
+      setErrorMsg('⚠️ Formato incorrecto: Usa SS.CC o M:SS.CC (ej. 1:07.78 o 9.53).');
       setTimeout(() => setErrorMsg(''), 4000);
-      return; // Ignora el cambio si tiene más de 2 decimales
+      return; 
     }
     setErrorMsg('');
     const newTimes = [...tempTimes];
     newTimes[index] = { ...newTimes[index], base: value }; // Almacenamos temporalmente como string
+    setTempTimes(newTimes);
+  };
+
+  const handleTimeBlur = (index: number, value: string) => {
+    if (!value || value.includes('.') || value.includes(':')) return;
+    
+    let formatted = value;
+    const len = value.length;
+    
+    if (len <= 2) {
+      formatted = (parseInt(value, 10) / 100).toFixed(2);
+    } else if (len === 3 || len === 4) {
+      const centis = value.slice(-2);
+      const secs = parseInt(value.slice(0, -2), 10);
+      formatted = `${secs}.${centis}`;
+    } else if (len >= 5) {
+      const centis = value.slice(-2);
+      const secs = value.slice(-4, -2).padStart(2, '0');
+      const mins = parseInt(value.slice(0, -4), 10);
+      formatted = `${mins}:${secs}.${centis}`;
+    }
+
+    const newTimes = [...tempTimes];
+    newTimes[index] = { ...newTimes[index], base: formatted };
     setTempTimes(newTimes);
   };
 
@@ -339,14 +346,14 @@ const ResultsWCA = () => {
     setTempTimes(newTimes);
   };
 
-  const saveChanges = async () => {
+  const saveChanges = async (shouldCancel: boolean = true) => {
     if (!editingParticipant || !currentRound || !id || !selectedCategory)
       return;
 
     // Parsear el input string temporal a números antes de guardar y calcular estadísticas
     const parsedTimes = tempTimes.map(t => ({
       ...t,
-      base: typeof t.base === 'string' ? parseFloat(t.base) || 0 : t.base || 0
+      base: parseTimeToSeconds(t.base)
     }));
 
     const { best, average } = calculateRulesStats(parsedTimes, currentRound.format);
@@ -382,7 +389,7 @@ const ResultsWCA = () => {
            const existingIndex = round.results.findIndex((r: any) => r.idCompetitor === editingParticipant.id);
            const updatedResult = {
              idCompetitor: editingParticipant.id.toString(),
-             times: tempTimes,
+             times: parsedTimes,
              media: average.toFixed(2),
            };
            if (existingIndex >= 0) {
@@ -395,7 +402,17 @@ const ResultsWCA = () => {
        }
     }
 
-    cancelEditing();
+    if (shouldCancel) {
+      cancelEditing();
+    }
+  };
+
+  const handleRowClick = async (participant: Participant) => {
+    if (!editMode) return;
+    if (editingParticipant && editingParticipant.id !== participant.id) {
+      await saveChanges(false);
+    }
+    startEditing(participant);
   };
 
   const cancelEditing = () => {
@@ -418,18 +435,21 @@ const ResultsWCA = () => {
             inputMode="decimal"
             value={currentTime.base === 0 && currentTime.base !== "0" ? '' : currentTime.base}
             onChange={(e) => handleTimeChange(index, e.target.value)}
+            onBlur={(e) => handleTimeBlur(index, e.target.value)}
             className="w-16 bg-gray-800 border border-blue-500 rounded px-1 py-1 text-center text-sm"
             placeholder="0.00"
           />
           <div className="flex sm:flex-col gap-1">
             <button 
               onClick={() => handlePenaltyChange(index, '+2')}
+              tabIndex={-1}
               className={`text-[10px] sm:text-[9px] px-1 py-0.5 rounded ${currentTime.penalty === '+2' ? 'bg-yellow-600 text-white' : 'bg-gray-700 text-gray-400'}`}
             >
               +2
             </button>
             <button 
               onClick={() => handlePenaltyChange(index, 'DNF')}
+              tabIndex={-1}
               className={`text-[10px] sm:text-[9px] px-1 py-0.5 rounded ${currentTime.penalty === 'DNF' ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-400'}`}
             >
               DNF
@@ -444,7 +464,7 @@ const ResultsWCA = () => {
         className={`w-full py-1 text-center ${
           editMode ? 'cursor-pointer hover:bg-gray-700' : ''
         }`}
-        onClick={() => editMode && startEditing(participant)}
+        onClick={() => handleRowClick(participant)}
       >
         {formatTimeDisplay(originalTime, isMobileView)}
       </div>
@@ -556,7 +576,7 @@ const ResultsWCA = () => {
             </span>
             <div className="flex gap-2">
               <button
-                onClick={saveChanges}
+                onClick={() => saveChanges(true)}
                 className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm flex items-center gap-2"
               >
                 <FaSave /> Guardar
@@ -600,13 +620,13 @@ const ResultsWCA = () => {
                         <span className="text-xs bg-blue-600 px-2 py-1 rounded flex items-center gap-1">
                           <BsTrophyFill size={10} />{' '}
                           {participant.best > 0
-                            ? participant.best.toFixed(2)
+                            ? formatSecondsToDisplay(participant.best)
                             : participant.best === -1 ? 'DNF' : '-'}
                         </span>
                         <span className="text-xs bg-green-600 px-2 py-1 rounded flex items-center gap-1">
                           <BsGraphUp size={10} />{' '}
                           {participant.average > 0
-                            ? participant.average.toFixed(2)
+                            ? formatSecondsToDisplay(participant.average)
                             : participant.average === -1 ? 'DNF' : '-'}
                         </span>
                       </div>
@@ -717,14 +737,14 @@ const ResultsWCA = () => {
                       {/* Mejor tiempo */}
                       <td className="px-3 py-3 text-center font-medium text-blue-400">
                         {participant.best > 0
-                          ? participant.best.toFixed(2)
+                          ? formatSecondsToDisplay(participant.best)
                           : participant.best === -1 ? 'DNF' : '-'}
                       </td>
 
                       {/* Promedio */}
                       <td className="px-3 py-3 text-center font-medium text-green-400">
                         {participant.average > 0
-                          ? participant.average.toFixed(2)
+                          ? formatSecondsToDisplay(participant.average)
                           : participant.average === -1 ? 'DNF' : '-'}
                       </td>
                     </tr>
@@ -753,7 +773,8 @@ const ResultsWCA = () => {
           <h4 className="font-semibold text-gray-300 mb-2">💡 ¿Cómo funciona esta sección?</h4>
           <p>
             En esta sección registras y consolidas los tiempos obtenidos por los competidores en cada ronda. 
-            Utiliza el botón <strong>Activar edición</strong> para insertar o editar, presiona la celda del tiempo directamente para editar. Asegúrate de registrar los tiempos correctamente (en segundos y con hasta dos decimales).
+            Utiliza el botón <strong>Activar edición</strong> para insertar o editar, presiona la celda del tiempo directamente para editar.
+            El sistema soporta el estándar oficial de teclado WCA (Smart Input): Si omites los símbolos de formato y escribes "987", se procesará automáticamente como "9.87". Si escribes "55678", se procesará como "5:56.78".
             Utiliza los botones de penalización "+2" y "DNF" según el reglamento competitivo. Los promedios oficiales y sus respectivos descartes de peores y mejores tiempos se calcularán automáticamente.
           </p>
         </div>
