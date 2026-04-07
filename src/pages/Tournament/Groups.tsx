@@ -6,12 +6,12 @@ import { db, CategoryLocal, CompetitorLocal, GroupLocal } from '../../common/db'
 
 const Groups = () => {
   const { id } = useParams<{ id: string }>();
-  const [categories, setCategories] = useState<CategoryLocal[]>([]);
   const [competitors, setCompetitors] = useState<CompetitorLocal[]>([]);
-  
+  const [categories, setCategories] = useState<CategoryLocal[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedRound, setSelectedRound] = useState<number>(1);
   const [stationsCount, setStationsCount] = useState<number>(2);
+  const [showOverwriteModal, setShowOverwriteModal] = useState(false);
 
   // Cargar datos
   useEffect(() => {
@@ -57,7 +57,7 @@ const Groups = () => {
   };
 
   // Función núcleo de generación de grupos y staff
-  const handleGenerateGroups = async () => {
+  const actuallyGenerateGroups = async () => {
     if (!activeCategory || !activeRound || !id) return;
 
     // 1. Filtrar los competidores que sí participan en esta categoría
@@ -203,6 +203,14 @@ const Groups = () => {
       return c ? c.name : 'Desconocido';
   }
 
+  const handleGenerateGroupsClick = () => {
+    if (savedGroups.length > 0) {
+      setShowOverwriteModal(true);
+    } else {
+      actuallyGenerateGroups();
+    }
+  };
+
   return (
     <div className="text-white p-4 md:p-6 lg:p-8">
       {/* Encabezado */}
@@ -278,7 +286,7 @@ const Groups = () => {
             </div>
 
             <button 
-                onClick={handleGenerateGroups}
+                onClick={handleGenerateGroupsClick}
                 className="mt-4 w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
             >
                 <FaLayerGroup /> {savedGroups.length > 0 ? 'Regenerar Grupos' : 'Auto-Generar'}
@@ -396,9 +404,42 @@ const Groups = () => {
                  </div>
              )}
           </div>
-
         </div>
       )}
+
+        {/* Modal de Advertencia de Regeneración */}
+         {showOverwriteModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+              <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+                <div className="p-6">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
+                    <FaInfoCircle size={24} />
+                  </div>
+                  <h3 className="text-xl font-bold text-center text-white mb-2">Renovar Grupos</h3>
+                  <p className="text-gray-400 text-center text-sm mb-6">
+                    Ya existen grupos programados para esta ronda. Volver a generarlos destruirá la distribución actual y <strong>eliminará por completo</strong> cualquier mezcla (scramble) oficial que hayas generado específicamente para ellos. ¿Continuar de todas formas?
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onClick={() => setShowOverwriteModal(false)}
+                      className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowOverwriteModal(false);
+                        actuallyGenerateGroups();
+                      }}
+                      className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
+                    >
+                      Sí, Destruir y Regenerar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+         )}
     </div>
   );
 };
