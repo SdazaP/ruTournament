@@ -7,7 +7,10 @@ type Participant = {
   id: string;
   name: string;
   categories: string[];
+  roles?: string[];
 };
+
+const AVAILABLE_ROLES = ['judge', 'runner', 'scrambler'];
 
 const Participants = () => {
   const { id: tournamentId } = useParams();
@@ -64,10 +67,11 @@ const Participants = () => {
     const selectedCategory = tournament.categories.find((cat: any) => cat.name === newParticipant.category);
     if (!selectedCategory) return;
     
-    const newParticipantObj = {
+    const newParticipantObj: Participant = {
       id: Date.now().toString(),
       name: newParticipant.name,
-      categories: [selectedCategory.id]
+      categories: [selectedCategory.id],
+      roles: []
     };
     
     // Actualizar Dexie
@@ -132,7 +136,7 @@ const Participants = () => {
         if (p.id === participantId) {
           return { 
             ...p, 
-            categories: p.categories.filter((c: string) => c !== categoryId) 
+            categories: (p.categories || []).filter((c: string) => c !== categoryId) 
           };
         }
         return p;
@@ -140,12 +144,47 @@ const Participants = () => {
       await db.tournaments.put(currentTournament as any);
     }
     
-    setParticipants(participants.map(p => {
-      if (p.id === participantId) {
-        return { ...p, categories: p.categories.filter((c: string) => c !== categoryId) };
-      }
-      return p;
-    }));
+    setParticipants(participants.map(p => 
+      p.id === participantId ? { ...p, categories: p.categories.filter(c => c !== categoryId) } : p
+    ));
+  };
+
+  const handleAddRole = async (participantId: string, role: string) => {
+    if (!editMode || !tournamentId) return;
+    
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
+        if (p.id === participantId) {
+          return { ...p, roles: [...(p.roles || []), role] };
+        }
+        return p;
+      });
+      await db.tournaments.put(currentTournament as any);
+    }
+    
+    setParticipants(participants.map(p => 
+      p.id === participantId ? { ...p, roles: [...(p.roles || []), role] } : p
+    ));
+  };
+
+  const handleRemoveRole = async (participantId: string, role: string) => {
+    if (!editMode || !tournamentId) return;
+    
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
+        if (p.id === participantId) {
+          return { ...p, roles: (p.roles || []).filter((r:string) => r !== role) };
+        }
+        return p;
+      });
+      await db.tournaments.put(currentTournament as any);
+    }
+    
+    setParticipants(participants.map(p => 
+      p.id === participantId ? { ...p, roles: (p.roles || []).filter(r => r !== role) } : p
+    ));
   };
 
   const handleNameChange = async (participantId: string, newName: string) => {
@@ -259,8 +298,9 @@ const Participants = () => {
         <table className="w-full">
           <thead className="bg-gray-750">
             <tr>
-              <th className="p-3 text-left">Nombre</th>
-              <th className="p-3 text-left">Categorías</th>
+              <th className="p-3 text-left w-1/4">Nombre</th>
+              <th className="p-3 text-left w-1/3">Categorías</th>
+              <th className="p-3 text-left w-1/4">Roles</th>
               {editMode && <th className="p-3 text-right">Acciones</th>}
             </tr>
           </thead>
@@ -320,6 +360,43 @@ const Participants = () => {
                       </select>
                     )}
                   </td>
+                  <td className="p-3 align-top">
+                    <div className="flex flex-wrap gap-2 mb-2">
+                       {(participant.roles || []).map((role) => (
+                        <div key={role} className="flex items-center bg-blue-900/50 text-blue-300 border border-blue-700/50 rounded-full px-3 py-1">
+                          <span className="text-sm capitalize">{role}</span>
+                          {editMode && (
+                            <button 
+                              onClick={() => handleRemoveRole(participant.id, role)}
+                              className="ml-2 text-blue-400 hover:text-red-400 text-xs"
+                              title="Eliminar rol"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {editMode && (
+                      <select
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            handleAddRole(participant.id, e.target.value);
+                            e.target.value = '';
+                          }
+                        }}
+                        className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        title="Añadir rol"
+                      >
+                        <option value="">Añadir rol...</option>
+                        {AVAILABLE_ROLES
+                          .filter(role => !(participant.roles || []).includes(role))
+                          .map((role) => (
+                            <option key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
+                          ))}
+                      </select>
+                    )}
+                  </td>
                   {editMode && (
                     <td className="p-3 text-right">
                       <button
@@ -335,7 +412,7 @@ const Participants = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={editMode ? 3 : 2} className="p-4 text-center text-gray-400">
+                <td colSpan={editMode ? 4 : 3} className="p-4 text-center text-gray-400">
                   No se encontraron participantes
                 </td>
               </tr>
