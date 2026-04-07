@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft } from 'react-icons/fa';
+import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft, FaExclamationTriangle } from 'react-icons/fa';
 import { db } from '../../common/db';
 
 type Participant = {
@@ -28,6 +28,8 @@ const Participants = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
+  const [categoryToRemove, setCategoryToRemove] = useState<{participantId: string, categoryId: string, participantName: string, categoryName: string} | null>(null);
+  const [roleToRemove, setRoleToRemove] = useState<{participantId: string, role: string, participantName: string} | null>(null);
 
   // Cargar datos del torneo
   useEffect(() => {
@@ -126,8 +128,13 @@ const Participants = () => {
     }));
   };
 
-  const handleRemoveCategory = async (participantId: string, categoryId: string) => {
-    if (!editMode || !tournamentId) return;
+  const handleRemoveCategoryClick = (participantId: string, categoryId: string, participantName: string, categoryName: string) => {
+    setCategoryToRemove({ participantId, categoryId, participantName, categoryName });
+  };
+
+  const confirmRemoveCategory = async () => {
+    if (!editMode || !tournamentId || !categoryToRemove) return;
+    const { participantId, categoryId } = categoryToRemove;
     
     // Actualizar Dexie
     const currentTournament = await db.tournaments.get(tournamentId);
@@ -147,6 +154,7 @@ const Participants = () => {
     setParticipants(participants.map(p => 
       p.id === participantId ? { ...p, categories: p.categories.filter(c => c !== categoryId) } : p
     ));
+    setCategoryToRemove(null);
   };
 
   const handleAddRole = async (participantId: string, role: string) => {
@@ -168,8 +176,13 @@ const Participants = () => {
     ));
   };
 
-  const handleRemoveRole = async (participantId: string, role: string) => {
-    if (!editMode || !tournamentId) return;
+  const handleRemoveRoleClick = (participantId: string, role: string, participantName: string) => {
+    setRoleToRemove({ participantId, role, participantName });
+  };
+
+  const confirmRemoveRole = async () => {
+    if (!editMode || !tournamentId || !roleToRemove) return;
+    const { participantId, role } = roleToRemove;
     
     const currentTournament = await db.tournaments.get(tournamentId);
     if (currentTournament) {
@@ -185,6 +198,7 @@ const Participants = () => {
     setParticipants(participants.map(p => 
       p.id === participantId ? { ...p, roles: (p.roles || []).filter(r => r !== role) } : p
     ));
+    setRoleToRemove(null);
   };
 
   const handleNameChange = async (participantId: string, newName: string) => {
@@ -327,7 +341,7 @@ const Participants = () => {
                           <span className="text-sm">{getCategoryName(categoryId)}</span>
                           {editMode && (
                             <button 
-                              onClick={() => handleRemoveCategory(participant.id, categoryId)}
+                              onClick={() => handleRemoveCategoryClick(participant.id, categoryId, participant.name, getCategoryName(categoryId))}
                               className="ml-2 text-gray-400 hover:text-red-400 text-xs"
                               title="Eliminar categoría"
                             >
@@ -367,7 +381,7 @@ const Participants = () => {
                           <span className="text-sm capitalize">{role}</span>
                           {editMode && (
                             <button 
-                              onClick={() => handleRemoveRole(participant.id, role)}
+                              onClick={() => handleRemoveRoleClick(participant.id, role, participant.name)}
                               className="ml-2 text-blue-400 hover:text-red-400 text-xs"
                               title="Eliminar rol"
                             >
@@ -421,29 +435,112 @@ const Participants = () => {
         </table>
       </div>
 
-      {/* Modal de confirmación para eliminar */}
+      {/* Modal de confirmación para eliminar competidor */}
       {participantToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4">Confirmar eliminación</h3>
-            <p className="mb-6">
-              ¿Estás seguro que deseas eliminar al participante <span className="font-semibold">{participantToDelete.name}</span>?
-              Esta acción no se puede deshacer.
-            </p>
-            
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setParticipantToDelete(null)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => handleDelete(participantToDelete.id)}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <FaTrash /> Eliminar
-              </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
+                <FaTrash size={20} />
+              </div>
+              <h3 className="text-xl font-bold text-center text-white mb-2">Eliminar Participante</h3>
+              <p className="text-gray-400 text-center text-sm mb-4">
+                ¿Estás seguro que deseas expulsar del torneo a <span className="font-semibold">{participantToDelete.name}</span>? Perderá todos sus registros y roles de staff en los grupos seleccionados.
+              </p>
+              <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-400 mb-6 flex items-start gap-2">
+                <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
+                <span>
+                  <strong>Nota:</strong> Si este participante ya tenía lugar en los Horarios/Grupos, su nombre aparecerá temporalmente como "Desconocido". Recuerda <strong>re-generar los horarios</strong> de sus categorías para equilibrar nuevamente.
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setParticipantToDelete(null)}
+                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => handleDelete(participantToDelete.id)}
+                  className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
+                >
+                  Sí, Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para remover categoría */}
+      {categoryToRemove && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
+                <FaTrash size={20} />
+              </div>
+              <h3 className="text-xl font-bold text-center text-white mb-2">Remover Categoría</h3>
+              <p className="text-gray-400 text-center text-sm mb-4">
+                ¿Seguro que deseas retirar la categoría de <strong>{categoryToRemove.categoryName}</strong> al competidor <span className="font-semibold">{categoryToRemove.participantName}</span>?
+              </p>
+              <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-400 mb-6 flex items-start gap-2">
+                <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
+                <span>
+                  <strong>Atención:</strong> Dejará un hueco como "Desconocido" en cualquier horario previamente generado de esta categoría. Se recomienda regenerar los grupos.
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setCategoryToRemove(null)}
+                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmRemoveCategory}
+                  className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
+                >
+                  Sí, Retirar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación para remover rol */}
+      {roleToRemove && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
+                <FaTrash size={20} />
+              </div>
+              <h3 className="text-xl font-bold text-center text-white mb-2">Remover Rol de WCA</h3>
+              <p className="text-gray-400 text-center text-sm mb-4">
+                ¿Confirmas que deseas quitarle el rol de <strong>{roleToRemove.role}</strong> a la persona <span className="font-semibold">{roleToRemove.participantName}</span>? Ya no será tomado en cuenta para futuros sorteos.
+              </p>
+              <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-400 mb-6 flex items-start gap-2">
+                <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
+                <span>
+                  <strong>Importante:</strong> Si se le había asignado para ser staff en un horario generado, aparecerá como "Desconocido". Para ajustar y asignar a alguien más será necesario regenerar tu distribución.
+                </span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setRoleToRemove(null)}
+                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmRemoveRole}
+                  className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
+                >
+                  Sí, Retirar
+                </button>
+              </div>
             </div>
           </div>
         </div>

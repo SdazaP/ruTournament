@@ -118,6 +118,7 @@ const Scrambles = () => {
   const { ready, getScramble, getImage } = useCstimerWorker();
 
   const [showGroupAlert, setShowGroupAlert] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -261,11 +262,15 @@ const Scrambles = () => {
   };
 
   // ── Eliminar mezclas ─────────────────────────────────────────────────────
-  const handleDeleteScrambles = async () => {
+  const handleDeleteScrambles = () => {
     if (!id || !currentCategoryObj || !currentRoundObj) return;
-    if (!confirm('¿Seguro que deseas eliminar estas mezclas de todos los grupos?')) return;
+    setShowDeleteModal(true);
+  };
 
-    const tournament = await db.tournaments.get(id);
+  const confirmDeleteScrambles = async () => {
+    setShowDeleteModal(false);
+
+    const tournament = await db.tournaments.get(id!);
     if (tournament) {
       const catIdx = tournament.categories.findIndex((c: any) => c.id === selectedCategory);
       if (catIdx >= 0) {
@@ -313,7 +318,7 @@ const Scrambles = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <FaSyncAlt className="text-blue-400" /> Mezclas Oficiales
+            <FaSyncAlt className="text-blue-400" /> Generador de Mezclas
           </h2>
           {!ready && (
             <p className="text-xs text-yellow-400 mt-1 animate-pulse">
@@ -398,8 +403,8 @@ const Scrambles = () => {
                   onClick={handleGenerateScrambles}
                   disabled={isGenerating || !ready}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors ${isGenerating || !ready
-                      ? 'bg-gray-600 cursor-not-allowed opacity-70'
-                      : 'bg-green-600 hover:bg-green-700 text-white'
+                    ? 'bg-gray-600 cursor-not-allowed opacity-70'
+                    : 'bg-green-600 hover:bg-green-700 text-white'
                     }`}
                 >
                   <FaSyncAlt className={isGenerating ? 'animate-spin' : ''} />
@@ -463,8 +468,8 @@ const Scrambles = () => {
                             <div
                               key={i}
                               className={`flex flex-col xl:flex-row gap-4 items-center rounded-lg p-4 border break-inside-avoid shadow-sm ${isExtra
-                                  ? 'border-yellow-700/40 bg-yellow-900/10'
-                                  : 'border-gray-600 bg-gray-800'
+                                ? 'border-yellow-700/40 bg-yellow-900/10'
+                                : 'border-gray-600 bg-gray-800'
                                 }`}
                             >
                               {/* Etiqueta + texto */}
@@ -539,6 +544,37 @@ const Scrambles = () => {
                   className="flex-1 py-2.5 px-4 bg-primary hover:bg-opacity-90 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
                 >
                   Ir a Generador de Horarios
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación de Eliminación */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
+                <FaTrash size={20} />
+              </div>
+              <h3 className="text-xl font-bold text-center text-white mb-2">Eliminar Mezclas Oficiales</h3>
+              <p className="text-gray-400 text-center text-sm mb-6">
+                ¿Estás seguro de que deseas eliminar todas las secuencias de mezclas de <strong>todos los grupos</strong> de esta ronda? Tendrás que volver a generarlas si cambias de opinión.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmDeleteScrambles}
+                  className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
+                >
+                  Sí, Eliminar Todo
                 </button>
               </div>
             </div>

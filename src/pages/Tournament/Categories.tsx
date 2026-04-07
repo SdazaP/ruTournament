@@ -50,6 +50,8 @@ const Categories = () => {
   });
 
   const [editMode, setEditMode] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<{id: string, name: string} | null>(null);
+  const [roundToDelete, setRoundToDelete] = useState<{id: string, roundNumber: number, name: string} | null>(null);
   const icons = ['3x3', '2x2', '4x4', '5x5', '6x6', '7x7', 'OH', 'Clock', 'Mega', 'Pyr', 'Skewb', 'Sq1'];
   const PREDEFINED_CATEGORIES = [
     "3x3", "2x2", "4x4", "5x5", "6x6", "7x7",
@@ -147,8 +149,13 @@ const Categories = () => {
     });
   };
 
-  const handleDeleteCategory = async (id: string) => {
-    if (!tournamentId) return;
+  const handleDeleteCategory = (id: string, name: string) => {
+    setCategoryToDelete({ id, name });
+  };
+
+  const confirmDeleteCategory = async () => {
+    if (!tournamentId || !categoryToDelete) return;
+    const { id } = categoryToDelete;
 
     // Actualizar Dexie
     const currentTournament = await db.tournaments.get(tournamentId);
@@ -164,6 +171,7 @@ const Categories = () => {
     }
 
     setCategories(categories.filter((category) => category.id !== id));
+    setCategoryToDelete(null);
   };
 
   const handleUpdateSchedule = async (
@@ -356,8 +364,13 @@ const Categories = () => {
     );
   };
 
-  const handleDeleteRound = async (id: string, roundNumber: number) => {
-    if (!tournamentId) return;
+  const handleDeleteRound = (id: string, roundNumber: number, name: string) => {
+    setRoundToDelete({ id, roundNumber, name });
+  };
+
+  const confirmDeleteRound = async () => {
+    if (!tournamentId || !roundToDelete) return;
+    const { id, roundNumber } = roundToDelete;
 
     const currentTournament = await db.tournaments.get(tournamentId);
     if (currentTournament) {
@@ -398,6 +411,7 @@ const Categories = () => {
         return category;
       }),
     );
+    setRoundToDelete(null);
   };
 
   const handleUpdateRoundFormat = async (
@@ -640,7 +654,7 @@ const Categories = () => {
               </div>
               {editMode && (
                 <button
-                  onClick={() => handleDeleteCategory(category.id)}
+                  onClick={() => handleDeleteCategory(category.id, category.name)}
                   className="text-gray-400 hover:text-red-400"
                 >
                   ×
@@ -767,6 +781,7 @@ const Categories = () => {
                                   handleDeleteRound(
                                     category.id,
                                     round.roundNumber,
+                                    category.name
                                   )
                                 }
                                 className="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded ml-auto"
@@ -862,6 +877,68 @@ const Categories = () => {
           © 2026 ruTournament - Sebastian Daza Pérez
         </div>
       </div>
+
+      {/* Modal de Confirmación de Categoría */}
+      {categoryToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
+                <FaTrash size={20} />
+              </div>
+              <h3 className="text-xl font-bold text-center text-white mb-2">Eliminar Categoría</h3>
+              <p className="text-gray-400 text-center text-sm mb-6">
+                ¿Estás seguro de que deseas eliminar la categoría <strong>{categoryToDelete.name}</strong>? Se borrará todo el historial, rondas y competidores de este evento.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setCategoryToDelete(null)}
+                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmDeleteCategory}
+                  className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
+                >
+                  Sí, Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación de Ronda */}
+      {roundToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
+                <FaTrash size={20} />
+              </div>
+              <h3 className="text-xl font-bold text-center text-white mb-2">Eliminar Ronda</h3>
+              <p className="text-gray-400 text-center text-sm mb-6">
+                ¿Estás seguro de que deseas eliminar la Ronda {roundToDelete.roundNumber} de <strong>{roundToDelete.name}</strong>? Se perderán los agrupamientos y resultados.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setRoundToDelete(null)}
+                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmDeleteRound}
+                  className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
+                >
+                  Sí, Eliminar Ronda
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
