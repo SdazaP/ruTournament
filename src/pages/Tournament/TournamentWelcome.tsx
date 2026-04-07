@@ -137,19 +137,48 @@ const TournamentWelcome = () => {
     setEditMode(false);
   };
 
-  // Solicitar cambio de estado (abre modal de confirmación)
+  // Manejar el toggle del botón Editar / Cancelar
+  const handleEditToggle = () => {
+    if (isFinalized) return;
+    if (!editMode) {
+      setEditMode(true);
+    } else {
+      // Cancelando edición: descartar cambios locales
+      if (id) {
+        db.tournaments.get(id).then(t => {
+          if (t) setTournamentData(t as unknown as Tournament);
+        });
+      }
+      setEditMode(false);
+    }
+  };
+
+  // Solicitar cambio de estado: Siempre abre el modal para pedir confirmación
   const requestStatusChange = (newStatus: Tournament['status']) => {
     if (newStatus === tournament?.status) return;
     setPendingStatus(newStatus);
     setShowStatusModal(true);
   };
 
-  // Confirmar y persistir cambio de estado
+  // Confirmar cambio de estado (viene del modal)
   const confirmStatusChange = async () => {
-    if (!tournament || !pendingStatus || !id) return;
+    if (!tournament || !pendingStatus) return;
+    
+    // Aplicamos el nuevo estado localmente
     const updated = { ...tournament, status: pendingStatus };
-    await db.tournaments.put(updated as any);
     setTournament(updated);
+
+    // Si NO estamos en modo edición, persistimos inmediatamente en la base de datos
+    if (!editMode) {
+      await db.tournaments.put(updated as any);
+    }
+    
+    setShowStatusModal(false);
+    setPendingStatus(null);
+  };
+
+  // Cancelar modal
+  const cancelStatusChange = () => {
     setShowStatusModal(false);
     setPendingStatus(null);
   };
@@ -213,7 +242,7 @@ const TournamentWelcome = () => {
             </>
           )}
           <button
-            onClick={() => !isFinalized && setEditMode(!editMode)}
+            onClick={handleEditToggle}
             disabled={isFinalized}
             title={isFinalized ? 'El torneo está finalizado. Reactívalo para editar.' : ''}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
@@ -348,29 +377,30 @@ const TournamentWelcome = () => {
           <div className="space-y-5">
             {/* Estado del Evento */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-3">
+              <label className="block text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">
                 Estado del Evento
               </label>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex gap-2">
                 {([
-                  { key: 'proximamente', label: 'Próximamente', icon: FaClock, activeColor: 'bg-blue-600', desc: 'Editable, sin resultados' },
-                  { key: 'activo',       label: 'Activo',        icon: FaCheckCircle, activeColor: 'bg-green-600', desc: 'Edición completa' },
-                  { key: 'finalizado',  label: 'Finalizado',    icon: FaLock, activeColor: 'bg-gray-600', desc: 'Solo lectura' },
-                ] as const).map(({ key, label, icon: Icon, activeColor, desc }) => {
+                  { key: 'proximamente', label: 'Próx.', icon: FaClock,       activeColor: 'bg-blue-600',  inactiveHover: 'hover:border-blue-500/60' },
+                  { key: 'activo',       label: 'Activo', icon: FaCheckCircle, activeColor: 'bg-green-600', inactiveHover: 'hover:border-green-500/60' },
+                  { key: 'finalizado',  label: 'Final.',  icon: FaLock,       activeColor: 'bg-gray-500',  inactiveHover: 'hover:border-gray-400/60' },
+                ] as const).map(({ key, label, icon: Icon, activeColor, inactiveHover }) => {
                   const isCurrent = tournament.status === key;
                   return (
                     <button
                       key={key}
                       onClick={() => requestStatusChange(key)}
-                      className={`flex-1 min-w-[110px] flex flex-col items-center gap-1 px-3 py-3 rounded-lg text-sm transition-all border-2 ${
+                      disabled={!editMode}
+                      title={!editMode ? 'Activa el modo edición para cambiar el estado' : label}
+                      className={`flex-1 flex flex-col items-center gap-0.5 px-2 py-2 rounded-lg text-xs transition-all border ${
                         isCurrent
-                          ? `${activeColor} border-transparent text-white shadow-lg scale-105`
-                          : 'bg-gray-700 border-gray-600 hover:border-gray-500 text-gray-300'
-                      }`}
+                          ? `${activeColor} border-transparent text-white shadow-md`
+                          : `bg-gray-700/70 border-gray-600 ${editMode ? inactiveHover : ''} text-gray-400 ${editMode ? 'hover:text-white' : ''}`
+                      } ${!editMode ? 'opacity-60 cursor-not-allowed' : ''}`}
                     >
-                      <Icon size={16} />
-                      <span className="font-semibold">{label}</span>
-                      <span className="text-xs opacity-70">{desc}</span>
+                      <Icon size={13} />
+                      <span className="font-medium leading-tight">{label}</span>
                     </button>
                   );
                 })}
@@ -567,9 +597,7 @@ const TournamentWelcome = () => {
             </div>
             <h3 className="text-xl font-bold text-center text-white mb-2">Cambiar Estado del Torneo</h3>
             <p className="text-gray-400 text-center text-sm mb-4">
-              ¿Estás seguro de que deseas cambiar el estado de{' '}
-              <strong className="text-white">"{tournament.name}"</strong>{' '}
-              de <strong>{tournament.status}</strong> a{' '}
+              ¿Estás seguro de que deseas cambiar el estado de <strong className="text-white">"{tournament.name}"</strong> de <strong>{tournament.status}</strong> a{' '}
               <strong className={`${
                 pendingStatus === 'activo' ? 'text-green-400' :
                 pendingStatus === 'finalizado' ? 'text-gray-300' : 'text-blue-400'
@@ -595,7 +623,7 @@ const TournamentWelcome = () => {
             )}
             <div className="flex gap-3">
               <button
-                onClick={() => { setShowStatusModal(false); setPendingStatus(null); }}
+                onClick={cancelStatusChange}
                 className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
               >
                 Cancelar
