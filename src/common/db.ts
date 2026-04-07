@@ -19,19 +19,35 @@ export interface ScrambleRecord {
     svg: string; // renderizado
 }
 
+export interface GroupLocal {
+    id: string;
+    name: string;
+    startTime: string;
+    endTime: string;
+    competitors: string[]; // IDs de competidores
+    staff: {
+        judge: string[]; // IDs de jueces
+        runner: string[]; // IDs de runners
+        scrambler: string[]; // IDs de scramblers
+    };
+}
+
 export interface RoundLocal {
     id?: string;
     num: number;
     format: string;
     results: ResultLocal[];
-    competitorsToAdvance: number;
+    competitorsToAdvance: number | 'all';
     scrambles?: ScrambleRecord[];
+    groups?: GroupLocal[];
 }
 
 export interface CategoryLocal {
     id?: string;
     name: string;
     format: string;
+    startTime?: string;
+    endTime?: string;
     rounds: RoundLocal[];
 }
 

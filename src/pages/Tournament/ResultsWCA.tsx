@@ -13,10 +13,14 @@ import { TimeRecord, Penalty } from '../../common/db';
 
 export const normalizeTime = (t: any): TimeRecord => {
   if (t !== null && typeof t === 'object' && 'base' in t) {
-    return t as TimeRecord;
+    return { ...t, base: Number(t.base) || 0 } as TimeRecord;
   }
   if (typeof t === 'number') {
     return { base: t > 0 ? t : 0, penalty: t < 0 ? 'DNF' : '' };
+  }
+  if (typeof t === 'string' && !isNaN(Number(t))) {
+    const num = Number(t);
+    return { base: num > 0 ? num : 0, penalty: num < 0 ? 'DNF' : '' };
   }
   return { base: 0, penalty: '' };
 };
@@ -170,9 +174,39 @@ const ResultsWCA = () => {
     const selectedCategories = tournament.categories.map((cat) => {
       const categoryRounds = (cat.rounds || [])
         .filter((round) => round.num && round.format) // Agregado
-        .map((round) => {
+        .map((round, _, allRounds) => {
+          let allowedIds: string[] | null = null;
+          
+          if (round.num > 1) {
+             const prevRound = allRounds.find((r: any) => r.num === round.num - 1);
+             if (prevRound && prevRound.results) {
+                const prevResultsWithStats = (prevRound.results || []).map((res: any) => {
+                   const loadedTimes = (res.times || []).map(normalizeTime);
+                   const computed = calculateRulesStats(loadedTimes, prevRound.format as 'ao3'|'ao5');
+                   return {
+                      id: res.idCompetitor,
+                      name: '', // no vital para este sort, pero cumple con Participant
+                      average: parseFloat(res.media) || 0,
+                      best: computed.best > 0 ? computed.best : 0,
+                   };
+                }).sort(sortWCA);
+                
+                const cToAdvance = String(prevRound.competitorsToAdvance) === 'all' 
+                   ? prevResultsWithStats.length 
+                   : Number(prevRound.competitorsToAdvance) || (prevRound.format === 'ao5' ? 12 : 8);
+                   
+                allowedIds = prevResultsWithStats.slice(0, cToAdvance).map((r: any) => r.id);
+             } else {
+                allowedIds = []; // si no hay ronda anterior o resultados, nadie avanza
+             }
+          }
+
           const participants = tournament.competitors
-            .filter((comp) => (comp.categories || []).includes(cat.id as string))
+            .filter((comp) => {
+               if (!(comp.categories || []).includes(cat.id as string)) return false;
+               if (allowedIds !== null && !allowedIds.includes(comp.id as string)) return false;
+               return true;
+            })
             .map((comp) => {
               const result = (round.results || []).find(
                 (r) => r.idCompetitor === comp.id,

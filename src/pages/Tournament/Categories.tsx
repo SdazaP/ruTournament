@@ -69,8 +69,8 @@ const Categories = () => {
               id: cat.id,
               name: cat.name,
               icon: cat.name.substring(0, 3),
-              startTime: '10:00',
-              endTime: '11:00',
+              startTime: cat.startTime || '10:00',
+              endTime: cat.endTime || '11:00',
               participants:
                 currentTournament.competitors?.filter((comp: any) =>
                   comp.categories.includes(cat.id),
@@ -166,11 +166,26 @@ const Categories = () => {
     setCategories(categories.filter((category) => category.id !== id));
   };
 
-  const handleUpdateSchedule = (
+  const handleUpdateSchedule = async (
     id: string,
     field: 'startTime' | 'endTime',
     value: string,
   ) => {
+    if (!tournamentId) return;
+
+    // Actualizar Dexie
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.categories = currentTournament.categories.map((cat: any) => {
+        if (cat.id === id) {
+          return { ...cat, [field]: value };
+        }
+        return cat;
+      }) as any;
+      await db.tournaments.put(currentTournament as any);
+    }
+
+    // Actualizar estado local
     setCategories(
       categories.map((category) => {
         if (category.id === id) {

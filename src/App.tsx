@@ -15,6 +15,7 @@ import Guide from './pages/Dashboard/Guide';
 import TournamentWelcome from './pages/Tournament/TournamentWelcome';
 import Participants from './pages/Tournament/Participants';
 import Staffing from './pages/Tournament/Staffing';
+import Groups from './pages/Tournament/Groups';
 import Categories from './pages/Tournament/Categories';
 import Scrambles from './pages/Tournament/Scrambles';
 import ResultsWCA from './pages/Tournament/ResultsWCA';
@@ -128,6 +129,15 @@ function App() {
                     <>
                       <PageTitle title="Tournament Staffing" />
                       <Staffing />
+                    </>
+                  }
+                />
+                <Route
+                  path='groups'
+                  element={
+                    <>
+                      <PageTitle title="Tournament Groups" />
+                      <Groups />
                     </>
                   }
                 />
