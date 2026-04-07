@@ -229,16 +229,16 @@ const Participants = () => {
   return (
     <div className="min-h-screen text-white p-4 sm:p-6 relative">
 
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">
-          Participantes {tournament ? `de "${tournament.name}` : ''}"
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <h2 className="text-xl sm:text-2xl font-bold">
+          Participantes {tournament ? `de "${tournament.name}"` : ''}
         </h2>
         <button
           onClick={() => setEditMode(!editMode)}
-          className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+          className={`px-4 py-2 w-full sm:w-auto rounded-lg transition-colors flex items-center justify-center gap-2 ${
             editMode 
-              ? 'bg-yellow-600 hover:bg-yellow-700' 
-              : 'bg-blue-600 hover:bg-blue-700'
+              ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
+              : 'bg-blue-600 hover:bg-blue-700 text-white'
           }`}
         >
           {editMode ? <FaTimes /> : <FaEdit />}

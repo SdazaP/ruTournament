@@ -177,6 +177,31 @@ const Scrambles = () => {
       return;
     }
 
+    await actuallyGenerateScrambles(currentRoundObj.groups);
+  };
+
+  // Genera mezclas sin tomar en cuenta grupos (modo plano, guardado en la ronda)
+  const handleGenerateScramblesWithoutGroups = async () => {
+    setShowGroupAlert(false);
+    if (!currentCategoryObj || !currentRoundObj || !id || !ready) return;
+
+    // Crear un grupo virtual para representar la ronda entera
+    const virtualGroup = {
+      id: 'no-group',
+      name: 'Mezclas de la Ronda',
+      startTime: '',
+      endTime: '',
+      scrambles: [] as ScrambleRecord[],
+      competitors: [],
+      staff: { judge: [], runner: [], scrambler: [] }
+    };
+
+    await actuallyGenerateScrambles([virtualGroup], true);
+  };
+
+  const actuallyGenerateScrambles = async (groups: Group[], isUngrouped = false) => {
+    if (!currentCategoryObj || !currentRoundObj || !id) return;
+
     setIsGenerating(true);
     setProgress(0);
 
@@ -185,7 +210,7 @@ const Scrambles = () => {
 
     // ao5 → 5 oficiales + 2 extra = 7 | ao3 → 3 + 2 = 5
     const scramblesPerGroup = currentRoundObj.format === 'ao5' ? 7 : 5;
-    const groupsCount = currentRoundObj.groups.length;
+    const groupsCount = groups.length;
     const totalScramblesToGenerate = scramblesPerGroup * groupsCount;
 
     try {
@@ -214,12 +239,11 @@ const Scrambles = () => {
           setProgress(Math.round((globalCounter / totalScramblesToGenerate) * 100));
         }
 
-        const baseGroup = currentRoundObj.groups[g];
-        generatedGroups.push({ ...baseGroup, scrambles: newScrambles });
+        generatedGroups.push({ ...groups[g], scrambles: newScrambles });
       }
 
       // Persistir en la BD
-      const tournament = await db.tournaments.get(id);
+      const tournament = await db.tournaments.get(id!);
       if (tournament) {
         const catIdx = tournament.categories.findIndex((c: any) => c.id === selectedCategory);
         if (catIdx >= 0) {
@@ -227,7 +251,9 @@ const Scrambles = () => {
             (r: any) => r.num === selectedRound,
           );
           if (rndIdx >= 0) {
-            if (tournament.categories[catIdx].rounds[rndIdx].groups) {
+            if (isUngrouped) {
+              tournament.categories[catIdx].rounds[rndIdx].scrambles = generatedGroups[0].scrambles;
+            } else if (tournament.categories[catIdx].rounds[rndIdx].groups) {
               tournament.categories[catIdx].rounds[rndIdx].groups = tournament.categories[catIdx].rounds[rndIdx].groups.map((dbG: any) => {
                 const match = generatedGroups.find(gg => gg.id === dbG.id);
                 if (match) return { ...dbG, scrambles: match.scrambles };
@@ -240,18 +266,33 @@ const Scrambles = () => {
       }
 
       // Actualizar estado local
-      setCategories((prev) =>
-        prev.map((c) => {
-          if (c.id !== selectedCategory) return c;
-          return {
-            ...c,
-            rounds: c.rounds.map((r) => {
-              if (r.roundNumber !== selectedRound) return r;
-              return { ...r, groups: generatedGroups };
-            }),
-          };
-        }),
-      );
+      if (isUngrouped) {
+        setCategories((prev) =>
+          prev.map((c) => {
+            if (c.id !== selectedCategory) return c;
+            return {
+              ...c,
+              rounds: c.rounds.map((r) => {
+                if (r.roundNumber !== selectedRound) return r;
+                return { ...r, scrambles: generatedGroups[0].scrambles };
+              }),
+            };
+          }),
+        );
+      } else {
+        setCategories((prev) =>
+          prev.map((c) => {
+            if (c.id !== selectedCategory) return c;
+            return {
+              ...c,
+              rounds: c.rounds.map((r) => {
+                if (r.roundNumber !== selectedRound) return r;
+                return { ...r, groups: generatedGroups };
+              }),
+            };
+          }),
+        );
+      }
     } catch (err) {
       console.error(err);
       alert('Error al generar las mezclas. Verifica la consola del navegador.');
@@ -304,7 +345,8 @@ const Scrambles = () => {
   };
 
   // ─── Renderizado ──────────────────────────────────────────────────────────
-  const hasScrambles = (currentRoundObj?.groups ?? []).some(g => (g.scrambles?.length ?? 0) > 0);
+  const hasScrambles = (currentRoundObj?.groups ?? []).some(g => (g.scrambles?.length ?? 0) > 0)
+    || (currentRoundObj?.scrambles?.length ?? 0) > 0;
   const officialCount = currentRoundObj?.format === 'ao5' ? 5 : 3;
   // Categorías con soporte oficial de mezclas en csTimer
   const isSupportedCategory = currentCategoryObj
@@ -444,7 +486,41 @@ const Scrambles = () => {
             ) : !hasScrambles ? (
               <div className="text-center py-12 text-gray-500 flex flex-col items-center gap-2">
                 <FaSyncAlt size={28} className="opacity-40" />
-                <p>Presiona <strong>"Generar mezclas"</strong> para calcular las secuencias por grupos.</p>
+                <p>Presiona <strong>"Generar mezclas"</strong> para calcular las secuencias.</p>
+              </div>
+            ) : (currentRoundObj.scrambles?.length ?? 0) > 0 ? (
+              // Modo sin grupos: mezclas directamente en la ronda
+              <div className="space-y-4">
+                <div className="mb-4 bg-blue-900/20 border border-blue-700/40 rounded-lg p-3 text-xs text-blue-300 flex items-center gap-2">
+                  <FaInfoCircle />
+                  <span>Mezclas generadas sin grupos. Para organizarlas por grupo, genera primero los horarios y regenera las mezclas.</span>
+                </div>
+                {(currentRoundObj.scrambles ?? []).map((scramble, i) => {
+                  const isExtra = i >= officialCount;
+                  const label = isExtra ? `E${i - officialCount + 1}` : `${i + 1}`;
+                  return (
+                    <div
+                      key={i}
+                      className={`flex flex-col xl:flex-row gap-4 items-center rounded-lg p-4 border break-inside-avoid shadow-sm ${
+                        isExtra ? 'border-yellow-700/40 bg-yellow-900/10' : 'border-gray-600 bg-gray-800'
+                      }`}
+                    >
+                      <div className="flex-1 w-full">
+                        <div className={`text-xs font-bold uppercase tracking-widest mb-1 ${isExtra ? 'text-yellow-400' : 'text-blue-400'}`}>
+                          {isExtra ? `⚠ Extra ${label}` : `Mezcla ${label}`}
+                        </div>
+                        <div className="text-lg md:text-xl lg:text-2xl font-mono leading-relaxed break-words">
+                          {scramble.text}
+                        </div>
+                      </div>
+                      <div
+                        className="flex-shrink-0 rounded-lg bg-gray-300 p-1.5 mix-blend-screen"
+                        style={{ width: '180px' }}
+                        dangerouslySetInnerHTML={{ __html: scramble.svg }}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="space-y-10">
@@ -517,7 +593,7 @@ const Scrambles = () => {
         </div>
       </div>
 
-      {/* Modal de Alerta de Grupos */}
+      {/* Modal de Alerta de Grupos — con opción de continuar sin grupos */}
       {showGroupAlert && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
           <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
@@ -525,25 +601,35 @@ const Scrambles = () => {
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
                 <FaInfoCircle size={24} />
               </div>
-              <h3 className="text-xl font-bold text-center text-white mb-2">Grupos no encontrados</h3>
-              <p className="text-gray-400 text-center text-sm mb-6">
-                Por favor, genera primero los grupos de esta ronda antes de calcular sus mezclas. Cada grupo requiere su propia secuencia oficial para evitar filtraciones de información.
+              <h3 className="text-xl font-bold text-center text-white mb-2">Sin grupos generados</h3>
+              <p className="text-gray-400 text-center text-sm mb-4">
+                Esta ronda aún no tiene grupos. Para generar mezclas <strong>separadas por grupo</strong>, primero crea los horarios desde el Generador de Horarios.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="bg-blue-900/20 border border-blue-700/40 rounded-lg p-3 text-xs text-blue-300 mb-6 flex items-start gap-2">
+                <FaInfoCircle className="mt-0.5 flex-shrink-0" />
+                <span>También puedes generar <strong>mezclas sin grupos</strong> para imprimir una sola secuencia de la ronda, aunque no estarán organizadas por turnos.</span>
+              </div>
+              <div className="flex flex-col gap-2">
                 <button
-                  onClick={() => setShowGroupAlert(false)}
-                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                  onClick={handleGenerateScramblesWithoutGroups}
+                  className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
                 >
-                  Cancelar
+                  <FaSyncAlt /> Continuar sin grupos
                 </button>
                 <button
                   onClick={() => {
                     setShowGroupAlert(false);
                     navigate(`/dashboard/tournament/${id}/groups`);
                   }}
-                  className="flex-1 py-2.5 px-4 bg-primary hover:bg-opacity-90 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
+                  className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
                 >
                   Ir a Generador de Horarios
+                </button>
+                <button
+                  onClick={() => setShowGroupAlert(false)}
+                  className="w-full py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                >
+                  Cancelar
                 </button>
               </div>
             </div>

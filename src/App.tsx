@@ -38,189 +38,189 @@ function App() {
       <ScrollToTop />
       <Routes>
         {/* DashboardLayout */}
-      <Route
-        path="/dashboard/*"
-        element={
-          <>
-            <PageTitle title="Dashboard Tournaments" />
-            <DashboardLayout>
-              <Routes>
-                <Route
-                  index
-                  element={
-                    <>
-                      <PageTitle title="Dashboard Tournaments" />
-                      <WelcomePage />
-                    </>
-                  }
-                />
-                <Route
-                  path="tournaments"
-                  element={
-                    <>
-                      <PageTitle title="Tournaments" />
-                      <Tournaments />
-                    </>
-                  }
-                />
-                <Route
-                  path="new-tournament"
-                  element={
-                    <>
-                      <PageTitle title="Tournament Creation" />
-                      <TournamentCreation />
-                    </>
-                  }
-                />
-                <Route
-                  path="guide"
-                  element={
-                    <>
-                      <PageTitle title="Guía de Uso" />
-                      <Guide />
-                    </>
-                  }
-                />
-              </Routes>
-            </DashboardLayout>
-          </>
-        }
-      />
-      
-      <Route
-        path='/'
-        element={
-          <>
-            <PageTitle title='ruTournament'/>
-            <HomePage/>
-          </>
-        }
-      />
+        <Route
+          path="/dashboard/*"
+          element={
+            <>
+              <PageTitle title="Dashboard Tournaments" />
+              <DashboardLayout>
+                <Routes>
+                  <Route
+                    index
+                    element={
+                      <>
+                        <PageTitle title="Dashboard Tournaments" />
+                        <WelcomePage />
+                      </>
+                    }
+                  />
+                  <Route
+                    path="tournaments"
+                    element={
+                      <>
+                        <PageTitle title="Tournaments" />
+                        <Tournaments />
+                      </>
+                    }
+                  />
+                  <Route
+                    path="new-tournament"
+                    element={
+                      <>
+                        <PageTitle title="Tournament Creation" />
+                        <TournamentCreation />
+                      </>
+                    }
+                  />
+                  <Route
+                    path="guide"
+                    element={
+                      <>
+                        <PageTitle title="Guía de Uso" />
+                        <Guide />
+                      </>
+                    }
+                  />
+                </Routes>
+              </DashboardLayout>
+            </>
+          }
+        />
 
-      {/* Rutas de torneos específicos */}
-      <Route
-        path="/dashboard/tournament/:id/*"
-        element={
-          <>
-            <PageTitle title="Tournament Details" />
-            <DashboardTournament>
-              <Routes>
-                <Route
-                  index
-                  element={
-                    <>
-                      <PageTitle title="Tournament Overview" />
-                      <TournamentWelcome />
-                    </>
-                  }
-                />
-                <Route
-                  path='competitors'
-                  element={
-                    <>
-                      <PageTitle title="Tournament Participants" />
-                      <Participants />
-                    </>
-                  }
-                />
-                <Route
-                  path='staffing'
-                  element={
-                    <>
-                      <PageTitle title="Tournament Staffing" />
-                      <Staffing />
-                    </>
-                  }
-                />
-                <Route
-                  path='groups'
-                  element={
-                    <>
-                      <PageTitle title="Tournament Groups" />
-                      <Groups />
-                    </>
-                  }
-                />
-                <Route
-                  path='categories'
-                  element={
-                    <>
-                      <PageTitle title="Tournament Categories" />
-                      <Categories />
-                    </>
-                  }
-                />
-                <Route
-                  path='scrambles'
-                  element={
-                    <>
-                      <PageTitle title="Official Scrambles" />
-                      <Scrambles />
-                    </>
-                  }
-                />
-                <Route
-                  path='results/WCA'
-                  element={
-                    <>
-                      <PageTitle title="WCA Results" />
-                      <ResultsWCA />
-                    </>
-                  }
-                />
-                <Route
-                  path='results/RB'
-                  element={
-                    <>
-                      <PageTitle title="Red Bull Results" />
-                      <ResultsRB />
-                    </>
-                  }
-                />
-                <Route
-                  path='view/resultsRB'
-                  element={
-                    <>
-                      <PageTitle title="View Red Bull Results" />
-                      <ResultsViewRB />
-                    </>
-                  }
-                />
-                <Route
-                  path='view/resultsWCA/:categoryId?'
-                  element={
-                    <>
-                      <PageTitle title="View WCA Results" />
-                      <ResultsViewWCA />
-                    </>
-                  }
-                />
-              </Routes>
-            </DashboardTournament>
-          </>
-        }
-      />
+        <Route
+          path='/'
+          element={
+            <>
+              <PageTitle title='ruTournament' />
+              <HomePage />
+            </>
+          }
+        />
 
-      {/* Rutas de autenticación */}
-      <Route
-        path="/auth/signin"
-        element={
-          <>
-            <PageTitle title="Signin" />
-            <SignIn />
-          </>
-        }
-      />
-      <Route
-        path="/auth/signup"
-        element={
-          <>
-            <PageTitle title="Signup" />
-            <SignUp />
-          </>
-        }
-      />
-    </Routes>
+        {/* Rutas de torneos específicos */}
+        <Route
+          path="/dashboard/tournament/:id/*"
+          element={
+            <>
+              <PageTitle title="Tournament Details" />
+              <DashboardTournament>
+                <Routes>
+                  <Route
+                    index
+                    element={
+                      <>
+                        <PageTitle title="Tournament Overview" />
+                        <TournamentWelcome />
+                      </>
+                    }
+                  />
+                  <Route
+                    path='competitors'
+                    element={
+                      <>
+                        <PageTitle title="Tournament Participants" />
+                        <Participants />
+                      </>
+                    }
+                  />
+                  <Route
+                    path='staffing'
+                    element={
+                      <>
+                        <PageTitle title="Tournament Staffing" />
+                        <Staffing />
+                      </>
+                    }
+                  />
+                  <Route
+                    path='groups'
+                    element={
+                      <>
+                        <PageTitle title="Tournament Groups" />
+                        <Groups />
+                      </>
+                    }
+                  />
+                  <Route
+                    path='categories'
+                    element={
+                      <>
+                        <PageTitle title="Tournament Categories" />
+                        <Categories />
+                      </>
+                    }
+                  />
+                  <Route
+                    path='scrambles'
+                    element={
+                      <>
+                        <PageTitle title="Official Scrambles" />
+                        <Scrambles />
+                      </>
+                    }
+                  />
+                  <Route
+                    path='results/WCA'
+                    element={
+                      <>
+                        <PageTitle title="WCA Results" />
+                        <ResultsWCA />
+                      </>
+                    }
+                  />
+                  <Route
+                    path='results/RB'
+                    element={
+                      <>
+                        <PageTitle title="Red Bull Results" />
+                        <ResultsRB />
+                      </>
+                    }
+                  />
+                  <Route
+                    path='view/resultsRB'
+                    element={
+                      <>
+                        <PageTitle title="View Red Bull Results" />
+                        <ResultsViewRB />
+                      </>
+                    }
+                  />
+                  <Route
+                    path='view/resultsWCA/:categoryId?'
+                    element={
+                      <>
+                        <PageTitle title="View WCA Results" />
+                        <ResultsViewWCA />
+                      </>
+                    }
+                  />
+                </Routes>
+              </DashboardTournament>
+            </>
+          }
+        />
+
+        {/* Rutas de autenticación */}
+        <Route
+          path="/auth/signin"
+          element={
+            <>
+              <PageTitle title="Signin" />
+              <SignIn />
+            </>
+          }
+        />
+        <Route
+          path="/auth/signup"
+          element={
+            <>
+              <PageTitle title="Signup" />
+              <SignUp />
+            </>
+          }
+        />
+      </Routes>
     </>
   );
 }

@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { FaLayerGroup, FaInfoCircle, FaCogs, FaUsers, FaClock, FaCheck, FaExclamationTriangle, FaGavel, FaRunning, FaRandom } from 'react-icons/fa';
+import { useParams, useNavigate } from 'react-router-dom';
+import { FaLayerGroup, FaInfoCircle, FaCogs, FaUsers, FaClock, FaCheck, FaExclamationTriangle, FaGavel, FaRunning, FaRandom, FaTrash } from 'react-icons/fa';
 import { MdCategory } from 'react-icons/md';
 import { db, CategoryLocal, CompetitorLocal, GroupLocal } from '../../common/db';
 
 const Groups = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [competitors, setCompetitors] = useState<CompetitorLocal[]>([]);
   const [categories, setCategories] = useState<CategoryLocal[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedRound, setSelectedRound] = useState<number>(1);
   const [stationsCount, setStationsCount] = useState<number>(2);
   const [showOverwriteModal, setShowOverwriteModal] = useState(false);
+  const [showNoCompetitorsModal, setShowNoCompetitorsModal] = useState(false);
+  const [showDeleteGroupsModal, setShowDeleteGroupsModal] = useState(false);
+  const [showNoResultsModal, setShowNoResultsModal] = useState(false);
 
   // Cargar datos
   useEffect(() => {
@@ -70,7 +74,8 @@ const Groups = () => {
             return alert('Error: no se encontró la ronda anterior.');
         }
         if (!previousRound.results || previousRound.results.length === 0) {
-            return alert('Aún no se han subido los resultados de la ronda anterior. No se puede determinar quién pasa a esta ronda.');
+            setShowNoResultsModal(true);
+            return;
         }
 
         const toAdvance = previousRound.competitorsToAdvance;
@@ -97,7 +102,10 @@ const Groups = () => {
 
     // 2. Determinar cantidad de grupos basados en competencia
     const totalCompetitors = shuffledComp.length;
-    if (totalCompetitors === 0) return alert('No hay competidores participando en esta categoría.');
+    if (totalCompetitors === 0) {
+      setShowNoCompetitorsModal(true);
+      return;
+    }
 
     const qtyGroups = Math.ceil(totalCompetitors / stationsCount);
     
@@ -208,6 +216,31 @@ const Groups = () => {
       setShowOverwriteModal(true);
     } else {
       actuallyGenerateGroups();
+    }
+  };
+
+  const handleDeleteGroups = () => {
+    setShowDeleteGroupsModal(true);
+  };
+
+  const confirmDeleteGroups = async () => {
+    if (!id || !activeCategory) return;
+    setShowDeleteGroupsModal(false);
+
+    const tournament = await db.tournaments.get(id);
+    if (tournament) {
+      tournament.categories = tournament.categories.map((cat: any) => {
+        if (cat.id !== selectedCategory) return cat;
+        return {
+          ...cat,
+          rounds: cat.rounds.map((r: any) => {
+            if (r.num !== selectedRound) return r;
+            return { ...r, groups: [], scrambles: [] };
+          })
+        };
+      });
+      await db.tournaments.put(tournament as any);
+      setCategories(tournament.categories);
     }
   };
 
@@ -328,6 +361,14 @@ const Groups = () => {
             >
                 <FaLayerGroup /> {savedGroups.length > 0 ? 'Regenerar Grupos' : 'Auto-Generar'}
             </button>
+            {savedGroups.length > 0 && (
+              <button
+                onClick={handleDeleteGroups}
+                className="w-full px-4 py-2 bg-red-700/70 hover:bg-red-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 text-sm"
+              >
+                <FaTrash size={12} /> Eliminar Grupos
+              </button>
+            )}
             <p className="text-xs text-gray-500 text-center mt-1 leading-relaxed">
                Divide automáticamente a los competidores basándose en el inventario de estaciones y cruza asignaciones de roles.
             </p>
@@ -478,6 +519,102 @@ const Groups = () => {
               </div>
             </div>
          )}
+
+        {/* Modal: Sin Resultados de Ronda Anterior */}
+        {showNoResultsModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+            <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+              <div className="p-6">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
+                  <FaExclamationTriangle size={22} />
+                </div>
+                <h3 className="text-xl font-bold text-center text-white mb-2">Resultados no disponibles</h3>
+                <p className="text-gray-400 text-center text-sm mb-4">
+                  Aún no se han registrado los resultados de la <strong>Ronda {selectedRound - 1}</strong>. Para poder generar los grupos de esta ronda, primero es necesario determinar quién avancó.
+                </p>
+                <div className="bg-blue-900/20 border border-blue-700/40 rounded-lg p-3 text-xs text-blue-300 mb-6 flex items-start gap-2">
+                  <FaInfoCircle className="mt-0.5 flex-shrink-0" />
+                  <span>Ve a la sección de <strong>Resultados</strong> de esta categoría, sube los tiempos de la ronda anterior y luego regresa para continuar con la generación de grupos.</span>
+                </div>
+                <button
+                  onClick={() => setShowNoResultsModal(false)}
+                  className="w-full py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                >
+                  Entendido
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Sin Competidores */}
+        {showNoCompetitorsModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+            <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+              <div className="p-6">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
+                  <FaUsers size={22} />
+                </div>
+                <h3 className="text-xl font-bold text-center text-white mb-2">Sin Competidores</h3>
+                <p className="text-gray-400 text-center text-sm mb-6">
+                  No hay competidores inscritos en esta categoría. Para generar grupos primero debes agregar participantes y asignarlos a sus categorías.
+                </p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      setShowNoCompetitorsModal(false);
+                      navigate(`/dashboard/tournament/${id}/competitors`);
+                    }}
+                    className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
+                  >
+                    <FaUsers /> Ir a Categorías y Roles
+                  </button>
+                  <button
+                    onClick={() => setShowNoCompetitorsModal(false)}
+                    className="w-full py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Confirmar Eliminación de Grupos */}
+        {showDeleteGroupsModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+            <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+              <div className="p-6">
+                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
+                  <FaTrash size={20} />
+                </div>
+                <h3 className="text-xl font-bold text-center text-white mb-2">Eliminar Grupos de la Ronda</h3>
+                <p className="text-gray-400 text-center text-sm mb-4">
+                  ¿Estás seguro de que deseas eliminar todos los grupos de la <strong>Ronda {selectedRound}</strong> de <strong>{activeCategory?.name}</strong>?
+                </p>
+                <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-400 mb-6 flex items-start gap-2">
+                  <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
+                  <span>También se eliminarán las mezclas oficiales asociadas a esta ronda. Esta acción no se puede deshacer.</span>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => setShowDeleteGroupsModal(false)}
+                    className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={confirmDeleteGroups}
+                    className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
+                  >
+                    Sí, Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 };
