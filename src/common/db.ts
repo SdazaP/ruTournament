@@ -30,6 +30,7 @@ export interface GroupLocal {
         runner: string[]; // IDs de runners
         scrambler: string[]; // IDs de scramblers
     };
+    scrambles?: ScrambleRecord[];
 }
 
 export interface RoundLocal {

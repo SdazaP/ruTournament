@@ -1,16 +1,25 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { db, ScrambleRecord } from '../../common/db';
 import { FaSyncAlt, FaInfoCircle, FaTrash } from 'react-icons/fa';
 import { MdCategory, MdOutlineTimer } from 'react-icons/md';
 
 // ─── Tipos locales ───────────────────────────────────────────────────────────
 
+type Group = {
+  id: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+  scrambles?: ScrambleRecord[];
+};
+
 type Round = {
   roundNumber: number;
   format: 'ao3' | 'ao5';
   isFinal?: boolean;
   scrambles?: ScrambleRecord[];
+  groups?: Group[];
 };
 
 type Category = {
@@ -23,22 +32,22 @@ type Category = {
 // ─── Mapa de eventos WCA ────────────────────────────────────────────────────
 // [cstimerType, scrambleLength (0 = default)]
 const wcaEventMap: Record<string, [string, number]> = {
-  '3x3':        ['333',     0],
-  '2x2':        ['222so',   0],
-  '4x4':        ['444wca',  0],
-  '5x5':        ['555wca',  60],
-  '6x6':        ['666wca',  80],
-  '7x7':        ['777wca',  100],
-  '3x3 OH':     ['333',     0],
-  '3x3 BLD':    ['333ni',   0],
-  '3x3 FM':     ['333fm',   0],
-  'Clock':      ['clkwca',  0],
-  'Megaminx':   ['mgmp',    70],
-  'Pyraminx':   ['pyrso',   10],
-  'Skewb':      ['skbso',   0],
-  'Square-1':   ['sqrs',    0],
-  '4x4 BLD':    ['444bld',  40],
-  '5x5 BLD':    ['555bld',  60],
+  '3x3': ['333', 0],
+  '2x2': ['222so', 0],
+  '4x4': ['444wca', 0],
+  '5x5': ['555wca', 60],
+  '6x6': ['666wca', 80],
+  '7x7': ['777wca', 100],
+  '3x3 OH': ['333', 0],
+  '3x3 BLD': ['333ni', 0],
+  '3x3 FM': ['333fm', 0],
+  'Clock': ['clkwca', 0],
+  'Megaminx': ['mgmp', 70],
+  'Pyraminx': ['pyrso', 10],
+  'Skewb': ['skbso', 0],
+  'Square-1': ['sqrs', 0],
+  '4x4 BLD': ['444bld', 40],
+  '5x5 BLD': ['555bld', 60],
 };
 
 // ─── Hook: csTimer Web Worker ────────────────────────────────────────────────
@@ -105,7 +114,10 @@ function useCstimerWorker() {
 
 const Scrambles = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { ready, getScramble, getImage } = useCstimerWorker();
+
+  const [showGroupAlert, setShowGroupAlert] = useState(false);
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -128,6 +140,13 @@ const Scrambles = () => {
           format: r.format as 'ao3' | 'ao5',
           isFinal: r.isFinal ?? false,
           scrambles: r.scrambles ?? [],
+          groups: (r.groups ?? []).map((g: any) => ({
+            id: g.id,
+            name: g.name,
+            startTime: g.startTime,
+            endTime: g.endTime,
+            scrambles: g.scrambles ?? []
+          }))
         })),
       }));
 
@@ -152,6 +171,11 @@ const Scrambles = () => {
   const handleGenerateScrambles = async () => {
     if (!currentCategoryObj || !currentRoundObj || !id || !ready) return;
 
+    if (!currentRoundObj.groups || currentRoundObj.groups.length === 0) {
+      setShowGroupAlert(true);
+      return;
+    }
+
     setIsGenerating(true);
     setProgress(0);
 
@@ -159,30 +183,38 @@ const Scrambles = () => {
     const [scType, scLength] = mapping;
 
     // ao5 → 5 oficiales + 2 extra = 7 | ao3 → 3 + 2 = 5
-    const total = currentRoundObj.format === 'ao5' ? 7 : 5;
-    const newScrambles: ScrambleRecord[] = [];
+    const scramblesPerGroup = currentRoundObj.format === 'ao5' ? 7 : 5;
+    const groupsCount = currentRoundObj.groups.length;
+    const totalScramblesToGenerate = scramblesPerGroup * groupsCount;
 
     try {
-      for (let i = 0; i < total; i++) {
-        const text = await getScramble(scType, scLength);
-        const rawSvg = await getImage(text, scType);
+      const generatedGroups: Group[] = [];
+      let globalCounter = 0;
 
-        // El SVG de cstimer trae width="396" height="296" pero sin viewBox.
-        // Sin viewBox, el navegador no puede escalar el SVG al quitar esos attrs.
-        // Solución: extraer los valores, construir viewBox="0 0 W H" y luego
-        // eliminar los attrs absolutos + añadir style responsivo.
-        const wMatch = rawSvg.match(/ width="(\d+)"/);
-        const hMatch = rawSvg.match(/ height="(\d+)"/);
-        const svgW = wMatch ? wMatch[1] : '396';
-        const svgH = hMatch ? hMatch[1] : '296';
+      for (let g = 0; g < groupsCount; g++) {
+        const newScrambles: ScrambleRecord[] = [];
+        for (let i = 0; i < scramblesPerGroup; i++) {
+          const text = await getScramble(scType, scLength);
+          const rawSvg = await getImage(text, scType);
 
-        const svg = rawSvg
-          .replace(/ width="[^"]*"/, '')           // quitar width attr
-          .replace(/ height="[^"]*"/, '')          // quitar height attr
-          .replace('<svg', `<svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%;height:auto;display:block;"`);
+          const wMatch = rawSvg.match(/ width="(\d+)"/);
+          const hMatch = rawSvg.match(/ height="(\d+)"/);
+          const svgW = wMatch ? wMatch[1] : '396';
+          const svgH = hMatch ? hMatch[1] : '296';
 
-        newScrambles.push({ text, svg });
-        setProgress(Math.round(((i + 1) / total) * 100));
+          const svg = rawSvg
+            .replace(/ width="[^"]*"/, '')
+            .replace(/ height="[^"]*"/, '')
+            .replace('<svg', `<svg viewBox="0 0 ${svgW} ${svgH}" style="width:100%;height:auto;display:block;"`);
+
+          newScrambles.push({ text, svg });
+
+          globalCounter++;
+          setProgress(Math.round((globalCounter / totalScramblesToGenerate) * 100));
+        }
+
+        const baseGroup = currentRoundObj.groups[g];
+        generatedGroups.push({ ...baseGroup, scrambles: newScrambles });
       }
 
       // Persistir en la BD
@@ -194,7 +226,13 @@ const Scrambles = () => {
             (r: any) => r.num === selectedRound,
           );
           if (rndIdx >= 0) {
-            tournament.categories[catIdx].rounds[rndIdx].scrambles = newScrambles;
+            if (tournament.categories[catIdx].rounds[rndIdx].groups) {
+              tournament.categories[catIdx].rounds[rndIdx].groups = tournament.categories[catIdx].rounds[rndIdx].groups.map((dbG: any) => {
+                const match = generatedGroups.find(gg => gg.id === dbG.id);
+                if (match) return { ...dbG, scrambles: match.scrambles };
+                return dbG;
+              });
+            }
             await db.tournaments.put(tournament);
           }
         }
@@ -208,7 +246,7 @@ const Scrambles = () => {
             ...c,
             rounds: c.rounds.map((r) => {
               if (r.roundNumber !== selectedRound) return r;
-              return { ...r, scrambles: newScrambles };
+              return { ...r, groups: generatedGroups };
             }),
           };
         }),
@@ -225,7 +263,7 @@ const Scrambles = () => {
   // ── Eliminar mezclas ─────────────────────────────────────────────────────
   const handleDeleteScrambles = async () => {
     if (!id || !currentCategoryObj || !currentRoundObj) return;
-    if (!confirm('¿Seguro que deseas eliminar estas mezclas?')) return;
+    if (!confirm('¿Seguro que deseas eliminar estas mezclas de todos los grupos?')) return;
 
     const tournament = await db.tournaments.get(id);
     if (tournament) {
@@ -235,7 +273,9 @@ const Scrambles = () => {
           (r: any) => r.num === selectedRound,
         );
         if (rndIdx >= 0) {
-          tournament.categories[catIdx].rounds[rndIdx].scrambles = [];
+          if (tournament.categories[catIdx].rounds[rndIdx].groups) {
+            tournament.categories[catIdx].rounds[rndIdx].groups = tournament.categories[catIdx].rounds[rndIdx].groups.map((g: any) => ({ ...g, scrambles: [] }));
+          }
           await db.tournaments.put(tournament);
         }
       }
@@ -248,7 +288,10 @@ const Scrambles = () => {
           ...c,
           rounds: c.rounds.map((r) => {
             if (r.roundNumber !== selectedRound) return r;
-            return { ...r, scrambles: [] };
+            return {
+              ...r,
+              groups: (r.groups ?? []).map(g => ({ ...g, scrambles: [] }))
+            };
           }),
         };
       }),
@@ -256,7 +299,7 @@ const Scrambles = () => {
   };
 
   // ─── Renderizado ──────────────────────────────────────────────────────────
-  const hasScrambles = (currentRoundObj?.scrambles?.length ?? 0) > 0;
+  const hasScrambles = (currentRoundObj?.groups ?? []).some(g => (g.scrambles?.length ?? 0) > 0);
   const officialCount = currentRoundObj?.format === 'ao5' ? 5 : 3;
   // Categorías con soporte oficial de mezclas en csTimer
   const isSupportedCategory = currentCategoryObj
@@ -348,17 +391,16 @@ const Scrambles = () => {
                   onClick={handleDeleteScrambles}
                   className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm flex items-center gap-2 transition-colors"
                 >
-                  <FaTrash /> <span className="hidden sm:inline">Limpiar</span>
+                  <FaTrash /> <span className="hidden sm:inline">Limpiar Todo</span>
                 </button>
               ) : isSupportedCategory ? (
                 <button
                   onClick={handleGenerateScrambles}
                   disabled={isGenerating || !ready}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors ${
-                    isGenerating || !ready
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors ${isGenerating || !ready
                       ? 'bg-gray-600 cursor-not-allowed opacity-70'
                       : 'bg-green-600 hover:bg-green-700 text-white'
-                  }`}
+                    }`}
                 >
                   <FaSyncAlt className={isGenerating ? 'animate-spin' : ''} />
                   {isGenerating ? `Generando… ${progress}%` : 'Generar mezclas'}
@@ -383,7 +425,7 @@ const Scrambles = () => {
           )}
 
           {/* Listado de scrambles */}
-          <div className="p-4 md:p-6">
+          <div className="p-4 md:p-6 bg-gray-900/30">
             {!isSupportedCategory ? (
               <div className="text-center py-12 text-yellow-500/70 flex flex-col items-center gap-3">
                 <FaInfoCircle size={28} className="opacity-60" />
@@ -397,41 +439,56 @@ const Scrambles = () => {
             ) : !hasScrambles ? (
               <div className="text-center py-12 text-gray-500 flex flex-col items-center gap-2">
                 <FaSyncAlt size={28} className="opacity-40" />
-                <p>Presiona <strong>"Generar mezclas"</strong> para calcular las mezclas de esta ronda.</p>
+                <p>Presiona <strong>"Generar mezclas"</strong> para calcular las secuencias por grupos.</p>
               </div>
             ) : (
-              <div className="space-y-5">
-                {currentRoundObj.scrambles!.map((scramble, i) => {
-                  const isExtra = i >= officialCount;
-                  const label = isExtra ? `E${i - officialCount + 1}` : `${i + 1}`;
+              <div className="space-y-10">
+                {(currentRoundObj.groups ?? []).map((group) => {
+                  if (!group.scrambles || group.scrambles.length === 0) return null;
 
                   return (
-                    <div
-                      key={i}
-                      className={`flex flex-col xl:flex-row gap-4 items-center rounded-lg p-4 border break-inside-avoid ${
-                        isExtra
-                          ? 'border-yellow-700/40 bg-yellow-900/10'
-                          : 'border-gray-600 bg-gray-750'
-                      }`}
-                    >
-                      {/* Etiqueta + texto */}
-                      <div className="flex-1 w-full">
-                        <div className={`text-xs font-bold uppercase tracking-widest mb-1 ${isExtra ? 'text-yellow-400' : 'text-blue-400'}`}>
-                          {isExtra ? `⚠ Extra ${label}` : `Mezcla ${label}`}
-                        </div>
-                        <div className="text-lg md:text-xl lg:text-2xl font-mono leading-relaxed break-words">
-                          {scramble.text}
-                        </div>
+                    <div key={group.id} className="relative">
+                      {/* Header del grupo */}
+                      <div className="sticky top-0 z-10 bg-gray-800 border border-gray-700 p-3 mb-4 rounded-lg flex items-center justify-between shadow-md">
+                        <span className="font-primary font-bold text-lg text-blue-400">{group.name}</span>
+                        <span className="text-xs px-3 py-1 bg-gray-900 text-gray-300 rounded block font-mono border border-gray-700">Horario: {group.startTime} - {group.endTime}</span>
                       </div>
 
-                      {/* SVG del estado final — el SVG ya tiene viewBox + style responsivo */}
-                      <div
-                        className="flex-shrink-0 rounded-lg bg-gray-300 p-1.5"
-                        style={{ width: '180px' }}
-                        dangerouslySetInnerHTML={{ __html: scramble.svg }}
-                      />
+                      <div className="space-y-4 pl-0 md:pl-4 border-l-0 md:border-l-2 border-gray-700/50">
+                        {group.scrambles.map((scramble, i) => {
+                          const isExtra = i >= officialCount;
+                          const label = isExtra ? `E${i - officialCount + 1}` : `${i + 1}`;
+
+                          return (
+                            <div
+                              key={i}
+                              className={`flex flex-col xl:flex-row gap-4 items-center rounded-lg p-4 border break-inside-avoid shadow-sm ${isExtra
+                                  ? 'border-yellow-700/40 bg-yellow-900/10'
+                                  : 'border-gray-600 bg-gray-800'
+                                }`}
+                            >
+                              {/* Etiqueta + texto */}
+                              <div className="flex-1 w-full">
+                                <div className={`text-xs font-bold uppercase tracking-widest mb-1 ${isExtra ? 'text-yellow-400' : 'text-blue-400'}`}>
+                                  {isExtra ? `⚠ Extra ${label}` : `Mezcla ${label}`}
+                                </div>
+                                <div className="text-lg md:text-xl lg:text-2xl font-mono leading-relaxed break-words">
+                                  {scramble.text}
+                                </div>
+                              </div>
+
+                              {/* SVG del estado final */}
+                              <div
+                                className="flex-shrink-0 rounded-lg bg-gray-300 p-1.5 mix-blend-screen"
+                                style={{ width: '180px' }}
+                                dangerouslySetInnerHTML={{ __html: scramble.svg }}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  );
+                  )
                 })}
               </div>
             )}
@@ -454,6 +511,41 @@ const Scrambles = () => {
           © 2026 ruTournament - Sebastian Daza Pérez
         </div>
       </div>
+
+      {/* Modal de Alerta de Grupos */}
+      {showGroupAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
+          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
+                <FaInfoCircle size={24} />
+              </div>
+              <h3 className="text-xl font-bold text-center text-white mb-2">Grupos no encontrados</h3>
+              <p className="text-gray-400 text-center text-sm mb-6">
+                Por favor, genera primero los grupos de esta ronda antes de calcular sus mezclas. Cada grupo requiere su propia secuencia oficial para evitar filtraciones de información.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setShowGroupAlert(false)}
+                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    setShowGroupAlert(false);
+                    navigate(`/dashboard/tournament/${id}/groups`);
+                  }}
+                  className="flex-1 py-2.5 px-4 bg-primary hover:bg-opacity-90 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
+                >
+                  Ir a Generador de Horarios
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
