@@ -22,6 +22,7 @@ import ResultsWCA from './pages/Tournament/ResultsWCA';
 import ResultsRB from './pages/Tournament/ResultsRB';
 import ResultsViewRB from './pages/Tournament/Results/ResultsViewRB';
 import ResultsViewWCA from './pages/Tournament/Results/ResultsViewWCA';
+import Schedule from './pages/Tournament/Schedule';
 import HomePage from './pages/HomePage';
 
 function App() {
@@ -147,6 +148,15 @@ function App() {
                       <>
                         <PageTitle title="Tournament Categories" />
                         <Categories />
+                      </>
+                    }
+                  />
+                  <Route
+                    path='schedule'
+                    element={
+                      <>
+                        <PageTitle title="Cronograma | ruTournament" />
+                        <Schedule />
                       </>
                     }
                   />

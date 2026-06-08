@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   FaSearch,
   FaTrash,
@@ -8,6 +8,7 @@ import {
   FaCheck,
   FaArrowLeft,
   FaLock,
+  FaClock,
 } from 'react-icons/fa';
 import { db } from '../../common/db';
 import { useTournamentStatus } from '../../hooks/useTournamentStatus';
@@ -26,6 +27,7 @@ type Category = {
   icon: string;
   startTime: string;
   endTime: string;
+  room?: string;
   participants: number;
   format: 'WCA' | 'RedBull';
   bracketMode?: 'random' | 'manual';
@@ -46,6 +48,7 @@ const Categories = () => {
     icon: '',
     startTime: '10:00',
     endTime: '11:00',
+    room: '',
     participants: 0,
     format: 'WCA' as 'WCA' | 'RedBull',
     rounds: [{ 
@@ -80,6 +83,7 @@ const Categories = () => {
               icon: cat.name.substring(0, 3),
               startTime: cat.startTime || '10:00',
               endTime: cat.endTime || '11:00',
+              room: cat.room || '',
               participants:
                 currentTournament.competitors?.filter((comp: any) =>
                   comp.categories.includes(cat.id),
@@ -110,6 +114,9 @@ const Categories = () => {
       id: Date.now().toString(),
       name: newCategory.name,
       format: newCategory.format.toLowerCase(),
+      startTime: newCategory.startTime,
+      endTime: newCategory.endTime,
+      room: newCategory.room || '',
     };
 
     if (newCategory.format === 'WCA') {
@@ -148,6 +155,7 @@ const Categories = () => {
       icon: newCategory.icon || newCategory.name.substring(0, 3),
       startTime: newCategory.startTime,
       endTime: newCategory.endTime,
+      room: newCategory.room || '',
       participants: 0,
       format: newCategory.format,
       rounds: newCategory.rounds?.map(round => ({
@@ -162,6 +170,7 @@ const Categories = () => {
       icon: '',
       startTime: '10:00',
       endTime: '11:00',
+      room: '',
       participants: 0,
       format: 'WCA',
       rounds: [{ 
@@ -222,6 +231,30 @@ const Categories = () => {
       categories.map((category) => {
         if (category.id === id) {
           return { ...category, [field]: value };
+        }
+        return category;
+      }),
+    );
+  };
+
+  const handleUpdateRoom = async (id: string, value: string) => {
+    if (!tournamentId) return;
+
+    const currentTournament = await db.tournaments.get(tournamentId);
+    if (currentTournament) {
+      currentTournament.categories = currentTournament.categories.map((cat: any) => {
+        if (cat.id === id) {
+          return { ...cat, room: value };
+        }
+        return cat;
+      }) as any;
+      await db.tournaments.put(currentTournament as any);
+    }
+
+    setCategories(
+      categories.map((category) => {
+        if (category.id === id) {
+          return { ...category, room: value };
         }
         return category;
       }),
@@ -503,9 +536,17 @@ const Categories = () => {
   return (
     <div className="min-h-screen text-white p-4 sm:p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">
-          Categorías {tournament ? `- ${tournament.name}` : ''}
-        </h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-2xl font-bold">
+            Categorías {tournament ? `- ${tournament.name}` : ''}
+          </h2>
+          <Link
+            to={`/dashboard/tournament/${tournamentId}/schedule`}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border border-gray-600"
+          >
+            <FaClock size={12} /> Ver Cronograma
+          </Link>
+        </div>
         <button
           onClick={toggleEditMode}
           disabled={isFinalized}
@@ -631,6 +672,17 @@ const Categories = () => {
                 className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
+            <div className="flex-1 md:max-w-[200px]">
+              <input
+                type="text"
+                placeholder="Sala (opcional)"
+                value={newCategory.room}
+                onChange={(e) =>
+                  setNewCategory({ ...newCategory, room: e.target.value })
+                }
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
 
             {newCategory.format === 'WCA' && (
               <div className="flex-1 flex flex-col gap-2">
@@ -751,6 +803,23 @@ const Categories = () => {
                       )
                     }
                     className={`flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm ${
+                      !editMode ? 'cursor-not-allowed opacity-50' : ''
+                    }`}
+                    disabled={!editMode}
+                  />
+                </div>
+                <div className="mt-2">
+                  <label className="text-xs text-gray-400 block mb-1">
+                    Sala
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Sin sala"
+                    value={category.room || ''}
+                    onChange={(e) =>
+                      handleUpdateRoom(category.id, e.target.value)
+                    }
+                    className={`w-full bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm ${
                       !editMode ? 'cursor-not-allowed opacity-50' : ''
                     }`}
                     disabled={!editMode}

@@ -16,7 +16,7 @@ import {
   FiGrid,
   FiChevronLeft
 } from 'react-icons/fi';
-import { FaCube, FaMedal, FaTrophy, FaSyncAlt, FaLayerGroup } from 'react-icons/fa';
+import { FaCube, FaMedal, FaTrophy, FaSyncAlt, FaLayerGroup, FaClock } from 'react-icons/fa';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -208,13 +208,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   );
                 }}
               </SidebarLinkGroup>
-              <SidebarLinkGroup activeCondition={pathname.includes('categories') || pathname.includes('scrambles') || pathname.includes('groups')}>
+              <SidebarLinkGroup activeCondition={pathname.includes('categories') || pathname.includes('scrambles') || pathname.includes('groups') || pathname.includes('schedule')}>
                 {(handleClick, open) => {
                   return (
                     <React.Fragment>
                       <NavLink
                         to="#"
-                        className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${(pathname.includes('categories') || pathname.includes('scrambles') || pathname.includes('groups')) &&
+                        className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${(pathname.includes('categories') || pathname.includes('scrambles') || pathname.includes('groups') || pathname.includes('schedule')) &&
                           'bg-graydark dark:bg-meta-4'
                           }`}
                         onClick={(e) => {
@@ -248,6 +248,18 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                             >
                               <FiCalendar size={18} />
                               Categorías y Horarios
+                            </NavLink>
+                          </li>
+                          <li>
+                            <NavLink
+                              to="schedule"
+                              className={({ isActive }) =>
+                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
+                                (isActive && '!text-white')
+                              }
+                            >
+                              <FaClock size={18} />
+                              Cronograma
                             </NavLink>
                           </li>
                           <li>

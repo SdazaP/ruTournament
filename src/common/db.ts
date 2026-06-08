@@ -69,6 +69,7 @@ export interface CategoryLocal {
     format: string;
     startTime?: string;
     endTime?: string;
+    room?: string;
     rounds: RoundLocal[];
     hasSeeding?: boolean;
     seedingFormat?: 'ao3' | 'ao5';
