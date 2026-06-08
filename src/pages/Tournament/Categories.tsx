@@ -12,6 +12,7 @@ import {
   FaSave,
   FaUndo,
   FaExclamationTriangle,
+  FaLayerGroup,
 } from 'react-icons/fa';
 import { db } from '../../common/db';
 import { useTournamentStatus } from '../../hooks/useTournamentStatus';
@@ -670,8 +671,8 @@ const Categories = () => {
     <div className="min-h-screen text-white p-4 sm:p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold">
-            Categorías {tournament ? `- ${tournament.name}` : ''}
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <FaLayerGroup className="text-blue-400" /> Categorías
           </h2>
           <Link
             to={`/dashboard/tournament/${tournamentId}/schedule`}

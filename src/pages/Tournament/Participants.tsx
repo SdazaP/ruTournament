@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft, FaExclamationTriangle, FaLock } from 'react-icons/fa';
+import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft, FaExclamationTriangle, FaLock, FaUsers } from 'react-icons/fa';
 import { db } from '../../common/db';
+import { isDuplicateName } from '../../common/validation';
 import { useTournamentStatus } from '../../hooks/useTournamentStatus';
 
 type Participant = {
@@ -27,6 +28,8 @@ const Participants = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [editNameError, setEditNameError] = useState<string | null>(null);
   const [categoryToRemove, setCategoryToRemove] = useState<{participantId: string, categoryId: string, participantName: string, categoryName: string} | null>(null);
 
   // Cargar datos del torneo
@@ -61,6 +64,13 @@ const Participants = () => {
 
   const handleAdd = async () => {
     if (newParticipant.name.trim() === '' || !newParticipant.category || !tournamentId) return;
+
+    const names = participants.map((p) => p.name);
+    if (isDuplicateName(newParticipant.name, names)) {
+      setNameError('Ya existe un competidor con ese nombre');
+      return;
+    }
+    setNameError(null);
     
     const selectedCategory = tournament.categories.find((cat: any) => cat.name === newParticipant.category);
     if (!selectedCategory) return;
@@ -149,6 +159,14 @@ const Participants = () => {
 
   const handleNameChange = async (participantId: string, newName: string) => {
     if (!editMode || !tournamentId) return;
+
+    const names = participants.map((p) => p.name);
+    const idx = participants.findIndex((p) => p.id === participantId);
+    if (isDuplicateName(newName, names, idx)) {
+      setEditNameError('Ya existe un competidor con ese nombre');
+      return;
+    }
+    setEditNameError(null);
     
     const currentTournament = await db.tournaments.get(tournamentId);
     if (currentTournament) {
@@ -175,8 +193,8 @@ const Participants = () => {
     <div className="min-h-screen text-white p-4 sm:p-6 relative">
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-xl sm:text-2xl font-bold">
-          Competidores {tournament ? `de "${tournament.name}"` : ''}
+        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+          <FaUsers className="text-blue-400" /> Competidores
         </h2>
         <button
           onClick={() => !isFinalized && setEditMode(!editMode)}
@@ -237,13 +255,21 @@ const Participants = () => {
       {/* Formulario para agregar nuevo competidor */}
       {categories.length > 0 && !isFinalized && (
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <input
-            type="text"
-            placeholder="Nombre del competidor"
-            value={newParticipant.name}
-            onChange={(e) => setNewParticipant({...newParticipant, name: e.target.value})}
-            className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Nombre del competidor"
+              value={newParticipant.name}
+              onChange={(e) => {
+                setNewParticipant({...newParticipant, name: e.target.value});
+                if (nameError) setNameError(null);
+              }}
+              className={`w-full bg-gray-700 border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-600 focus:border-blue-500 focus:ring-blue-500'}`}
+            />
+            {nameError && (
+              <p className="text-red-400 text-xs mt-1">{nameError}</p>
+            )}
+          </div>
           
           <select
             value={newParticipant.category}
@@ -280,12 +306,21 @@ const Participants = () => {
                 <tr key={participant.id} className="hover:bg-gray-750">
                   <td className="p-3">
                     {editMode ? (
-                      <input
-                        type="text"
-                        value={participant.name}
-                        onChange={(e) => handleNameChange(participant.id, e.target.value)}
-                        className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
+                      <div>
+                        <input
+                          type="text"
+                          value={participant.name}
+                          onChange={(e) => {
+                            handleNameChange(participant.id, e.target.value);
+                            if (editNameError) setEditNameError(null);
+                          }}
+                          onFocus={() => setEditNameError(null)}
+                          className={`w-full bg-gray-700 border rounded px-3 py-2 focus:outline-none focus:ring-1 ${editNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-600 focus:border-blue-500 focus:ring-blue-500'}`}
+                        />
+                        {editNameError && (
+                          <p className="text-red-400 text-xs mt-1">{editNameError}</p>
+                        )}
+                      </div>
                     ) : (
                       <span className="px-3 py-2 block">{participant.name}</span>
                     )}

@@ -132,7 +132,9 @@ const ResultsViewWCA = ({ initialCategoryId }: { initialCategoryId?: string }) =
   return (
     <div className="text-white p-4 md:p-6 lg:p-8 min-h-screen">
       <header className="mb-8 text-center">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Resultados Oficiales</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2 flex items-center gap-2 justify-center">
+          <BsGraphUp className="text-blue-400" /> Resultados Oficiales
+        </h1>
         <p className="text-gray-400 max-w-2xl mx-auto">
           Consulta los resultados de cada categoría y ronda del torneo
         </p>

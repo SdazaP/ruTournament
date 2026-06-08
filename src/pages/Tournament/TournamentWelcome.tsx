@@ -12,6 +12,7 @@ import {
   FaCheckCircle,
   FaClock,
   FaExclamationTriangle,
+  FaTrophy,
 } from 'react-icons/fa';
 import { MdCategory, MdPeople } from 'react-icons/md';
 import { db } from '../../common/db';
@@ -220,7 +221,9 @@ const TournamentWelcome = () => {
     <div className="min-h-screen text-white p-6 mx-auto">
       {/* Encabezado con botones */}
       <div className="flex justify-between items-center mt-6 mb-4">
-        <h1 className="text-3xl font-bold">Panel del Torneo</h1>
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          <FaTrophy className="text-blue-400" /> Panel del Torneo
+        </h1>
         <div className="flex items-center gap-2">
           {editMode && (
             <>
