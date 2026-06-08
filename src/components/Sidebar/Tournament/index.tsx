@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import SidebarLinkGroup from './SidebarLinkGroup';
 import Logo from '../../../images/logo/logo.png';
+import { db } from '../../../common/db';
 
 // Importaciones de react-icons
 import {
@@ -35,6 +36,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const [sidebarExpanded, setSidebarExpanded] = useState(
     storedSidebarExpanded === null ? false : storedSidebarExpanded === 'true',
   );
+  const [tournamentName, setTournamentName] = useState('Nombre de Torneo');
+
+  useEffect(() => {
+    if (id) {
+      db.tournaments.get(id).then((t) => {
+        if (t?.name) setTournamentName(t.name);
+      });
+    }
+  }, [id]);
 
   // close on click outside
   useEffect(() => {
@@ -79,7 +89,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     <>
       {/* <!-- Sidebar Backdrop for Mobile --> */}
       <div
-        onClick={() => setSidebarOpen(false)}
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); setSidebarOpen(false); }}
         className={`fixed inset-0 z-[999] bg-black/50 lg:hidden ${
           sidebarOpen ? 'block' : 'hidden'
         }`}
@@ -92,7 +102,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
       >
       {/* <!-- SIDEBAR HEADER --> */}
       <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
-        <NavLink to="/">
+        <NavLink to="/dashboard">
           <img src={Logo} alt="Logo" />
         </NavLink>
 
@@ -119,8 +129,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             className="h-20 w-20 rounded-full object-cover"
           />
         </NavLink>
-        <span className="mt-2 text-sm font-medium text-white">
-          Nombre de Torneo
+        <span className="mt-2 text-sm font-medium text-white truncate px-2 text-center max-w-full">
+          {tournamentName}
         </span>
       </div>
 

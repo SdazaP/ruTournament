@@ -59,7 +59,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     <>
       {/* <!-- Sidebar Backdrop for Mobile --> */}
       <div
-        onClick={() => setSidebarOpen(false)}
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); setSidebarOpen(false); }}
         className={`fixed inset-0 z-[999] bg-black/50 lg:hidden ${
           sidebarOpen ? 'block' : 'hidden'
         }`}

@@ -62,7 +62,16 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   };
 
   return (
-    <aside
+    <>
+      {/* <!-- Sidebar Backdrop for Mobile --> */}
+      <div
+        onClick={(e) => { e.stopPropagation(); e.preventDefault(); setSidebarOpen(false); }}
+        className={`fixed inset-0 z-[999] bg-black/50 lg:hidden ${
+          sidebarOpen ? 'block' : 'hidden'
+        }`}
+      ></div>
+
+      <aside
       ref={sidebar}
       className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -231,6 +240,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         {/* <!-- Sidebar Menu --> */}
       </div>
     </aside>
+    </>
   );
 };
 
