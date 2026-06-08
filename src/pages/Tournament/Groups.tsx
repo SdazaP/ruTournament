@@ -34,6 +34,7 @@ const Groups = () => {
   }, [id]);
 
   const activeCategory = categories.find(c => c.id === selectedCategory);
+  const isRedBull = activeCategory && (activeCategory as any).format === 'redbull';
   
   // Extraer rondas de la categoria actual
   const rounds = activeCategory?.rounds || [];
@@ -262,8 +263,23 @@ const Groups = () => {
           <FaInfoCircle size={32} />
           <p>No hay categorías registradas en este torneo.</p>
         </div>
+      ) : categories.every(c => (c as any).format === 'redbull') ? (
+        <div className="text-center py-16 text-gray-400 flex flex-col items-center gap-3 bg-gray-800/30 rounded-lg border-2 border-dashed border-gray-700">
+          <FaLayerGroup size={40} className="opacity-50 mb-2" />
+          <h3 className="text-xl font-semibold text-gray-300">Formato Red Bull</h3>
+          <p className="max-w-md text-sm">
+            El formato Red Bull no utiliza grupos físicos con horarios. Los enfrentamientos
+            se gestionan directamente en la sección de <strong>Resultados &gt; Formato RB</strong>.
+          </p>
+        </div>
       ) : (
         <>
+          {activeCategory && (activeCategory as any).format === 'redbull' && (
+            <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-4 text-sm text-yellow-300 mb-6 flex items-start gap-3">
+              <FaInfoCircle className="mt-0.5 flex-shrink-0" />
+              <span>La categoría <strong>{activeCategory.name}</strong> usa formato Red Bull y no necesita grupos. Selecciona una categoría WCA arriba para usar el generador de horarios.</span>
+            </div>
+          )}
           {/* Leyenda de Roles */}
           <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 mb-6">
             <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
@@ -333,7 +349,8 @@ const Groups = () => {
                 <select
                     value={selectedRound}
                     onChange={(e) => setSelectedRound(Number(e.target.value))}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    disabled={isRedBull}
+                    className={`w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 ${isRedBull ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     {rounds.map((r) => (
                     <option key={r.num} value={r.num}>
@@ -353,16 +370,20 @@ const Groups = () => {
                     max="50"
                     value={stationsCount}
                     onChange={(e) => setStationsCount(Number(e.target.value))}
-                    className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    disabled={isRedBull}
+                    className={`w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 ${isRedBull ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
             </div>
 
             <button 
                 onClick={() => !isFinalized && handleGenerateGroupsClick()}
-                disabled={isFinalized}
-                title={isFinalized ? 'El torneo está Finalizado.' : ''}
+                disabled={isFinalized || isRedBull}
+                title={
+                  isRedBull ? 'No disponible para formato Red Bull' :
+                  isFinalized ? 'El torneo está Finalizado.' : ''
+                }
                 className={`mt-4 w-full px-4 py-2 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-                  isFinalized
+                  isFinalized || isRedBull
                     ? 'bg-gray-600 opacity-50 cursor-not-allowed'
                     : 'bg-blue-600 hover:bg-blue-700'
                 }`}

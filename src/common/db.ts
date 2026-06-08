@@ -33,6 +33,23 @@ export interface GroupLocal {
     scrambles?: ScrambleRecord[];
 }
 
+export type RedBullBracketMode = 'random' | 'manual';
+
+export interface RedBullMatchLocal {
+    id: string;
+    competitor1Id: string;
+    competitor2Id: string;
+    winner?: string;
+    times: {
+        competitor1: (TimeRecord | null)[];
+        competitor2: (TimeRecord | null)[];
+    };
+    wins: {
+        competitor1: number;
+        competitor2: number;
+    };
+}
+
 export interface RoundLocal {
     id?: string;
     num: number;
@@ -41,6 +58,9 @@ export interface RoundLocal {
     competitorsToAdvance: number | 'all';
     scrambles?: ScrambleRecord[];
     groups?: GroupLocal[];
+    matches?: RedBullMatchLocal[];
+    bracketMode?: RedBullBracketMode;
+    isSeeding?: boolean;
 }
 
 export interface CategoryLocal {
@@ -50,6 +70,9 @@ export interface CategoryLocal {
     startTime?: string;
     endTime?: string;
     rounds: RoundLocal[];
+    hasSeeding?: boolean;
+    seedingFormat?: 'ao3' | 'ao5';
+    bracketMode?: RedBullBracketMode;
 }
 
 export interface CompetitorLocal {

@@ -17,6 +17,7 @@ type Round = {
   format: 'ao3' | 'ao5';
   competitorsToAdvance: number | 'all';
   isFinal: boolean;
+  isSeeding?: boolean;
 };
 
 type Category = {
@@ -27,6 +28,9 @@ type Category = {
   endTime: string;
   participants: number;
   format: 'WCA' | 'RedBull';
+  bracketMode?: 'random' | 'manual';
+  hasSeeding?: boolean;
+  seedingFormat?: 'ao3' | 'ao5';
   rounds?: Round[];
 };
 
@@ -81,11 +85,15 @@ const Categories = () => {
                   comp.categories.includes(cat.id),
                 ).length || 0,
               format: cat.format === 'wca' ? 'WCA' : 'RedBull',
+              bracketMode: cat.bracketMode || 'random',
+              hasSeeding: cat.hasSeeding || false,
+              seedingFormat: cat.seedingFormat || 'ao5',
               rounds: cat.rounds?.map((round: any, index: number, array: any[]) => ({
                 roundNumber: round.num || index + 1,
-                format: (round.format === 'ao5' ? 'ao5' : 'ao3') as 'ao5' | 'ao3',
+                format: (round.format === 'ao5' ? 'ao5' : round.format === 'ao3' ? 'ao3' : 'rb') as 'ao5' | 'ao3' | 'rb',
                 competitorsToAdvance: round.competitorsToAdvance || 0,
-                isFinal: round.isFinal !== undefined ? round.isFinal : index === array.length - 1
+                isFinal: round.isFinal !== undefined ? round.isFinal : index === array.length - 1,
+                isSeeding: round.isSeeding || false,
               })),
             })) as Category[] || [];
 
@@ -112,6 +120,19 @@ const Categories = () => {
         competitorsToAdvance: 'all',
         isFinal: index === array.length - 1
       }));
+    } else if (newCategory.format === 'RedBull') {
+      categoryToAdd.rounds = [{
+        num: 1,
+        format: 'rb',
+        results: [],
+        competitorsToAdvance: 'all',
+        isFinal: true,
+        matches: [],
+        bracketMode: 'random'
+      }];
+      categoryToAdd.bracketMode = 'random';
+      categoryToAdd.hasSeeding = false;
+      categoryToAdd.seedingFormat = 'ao5';
     }
 
     // Actualizar Dexie
@@ -210,7 +231,6 @@ const Categories = () => {
   const handleUpdateFormat = async (id: string, format: 'WCA' | 'RedBull') => {
     if (!tournamentId) return;
 
-    // Actualizar Dexie
     const currentTournament = await db.tournaments.get(tournamentId);
     if (currentTournament) {
       currentTournament.categories = currentTournament.categories.map((cat: any) => {
@@ -229,7 +249,22 @@ const Categories = () => {
                   }] 
                 }
               : {}),
-            ...(format === 'RedBull' ? { rounds: undefined } : {}),
+            ...(format === 'RedBull'
+              ? { 
+                  rounds: [{ 
+                    num: 1, 
+                    format: 'rb',
+                    results: [],
+                    competitorsToAdvance: 'all',
+                    isFinal: true,
+                    matches: [],
+                    bracketMode: 'random'
+                  }],
+                  bracketMode: 'random',
+                  hasSeeding: false,
+                  seedingFormat: 'ao5'
+                }
+              : {}),
           };
         }
         return cat;
@@ -237,13 +272,20 @@ const Categories = () => {
       await db.tournaments.put(currentTournament as any);
     }
 
-    // Actualizar estado local
     setCategories(
       categories.map((category) => {
         if (category.id === id) {
           const updatedCategory = { ...category, format };
           if (format === 'RedBull') {
-            delete updatedCategory.rounds;
+            updatedCategory.rounds = [{ 
+              roundNumber: 1, 
+              format: 'rb',
+              competitorsToAdvance: 'all',
+              isFinal: true 
+            }];
+            (updatedCategory as any).bracketMode = 'random';
+            (updatedCategory as any).hasSeeding = false;
+            (updatedCategory as any).seedingFormat = 'ao5';
           } else if (!updatedCategory.rounds) {
             updatedCategory.rounds = [{ 
               roundNumber: 1, 
@@ -272,9 +314,9 @@ const Categories = () => {
         if (cat.id === id && cat.rounds) {
           return {
             ...cat,
-            rounds: cat.rounds.map((round: any) => 
-              round.num === roundNumber 
-                ? { ...round, competitorsToAdvance: value } 
+            rounds: cat.rounds.map((round: any) =>
+              round.num === roundNumber
+                ? { ...round, competitorsToAdvance: value }
                 : round
             ),
           };
@@ -284,7 +326,6 @@ const Categories = () => {
       await db.tournaments.put(currentTournament as any);
     }
 
-    // Actualizar estado local
     setCategories(
       categories.map((category) => {
         if (category.id === id && category.rounds) {
@@ -382,11 +423,11 @@ const Categories = () => {
           const filteredRounds = cat.rounds.filter(
             (round: any) => round.num !== roundNumber,
           );
-          
+
           if (filteredRounds.length > 0) {
             filteredRounds[filteredRounds.length - 1].isFinal = true;
           }
-          
+
           return {
             ...cat,
             rounds: filteredRounds
@@ -397,18 +438,17 @@ const Categories = () => {
       await db.tournaments.put(currentTournament as any);
     }
 
-    // Actualizar estado local
     setCategories(
       categories.map((category) => {
         if (category.id === id && category.format === 'WCA' && category.rounds) {
           const filteredRounds = category.rounds.filter(
             (round) => round.roundNumber !== roundNumber,
           );
-          
+
           if (filteredRounds.length > 0) {
             filteredRounds[filteredRounds.length - 1].isFinal = true;
           }
-          
+
           return { ...category, rounds: filteredRounds };
         }
         return category;
@@ -567,7 +607,7 @@ const Categories = () => {
               className="flex-1 md:max-w-[150px] bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="WCA">Formato WCA</option>
-              <option value="RedBull" disabled>RedBull (Próximamente)</option>
+              <option value="RedBull">Red Bull</option>
             </select>
           </div>
 
@@ -735,129 +775,227 @@ const Categories = () => {
                       WCA
                     </button>
                     <button
-                      disabled
-                      title="Próximamente"
-                      className={`px-3 py-1 rounded text-sm cursor-not-allowed opacity-50 ${
+                      onClick={() => handleUpdateFormat(category.id, 'RedBull')}
+                      className={`px-3 py-1 rounded text-sm ${
                         category.format === 'RedBull'
                           ? 'bg-blue-600'
-                          : 'bg-gray-700'
+                          : 'bg-gray-700 hover:bg-gray-600'
                       }`}
                     >
-                      RedBull (Próximamente)
+                      Red Bull
                     </button>
                   </div>
                 </div>
               )}
 
-              {category.format === 'WCA' && category.rounds && (
+              {(category.format === 'WCA' || category.format === 'RedBull') && category.rounds && (
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1">
-                    Rondas
-                  </label>
-                  <div className="space-y-2">
-                    {category.rounds.map((round) => (
-                      <div
-                        key={round.roundNumber}
-                        className="flex flex-col gap-2 p-2 rounded"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">
-                            {round.isFinal
-                              ? 'Final'
-                              : `Ronda ${round.roundNumber}`}
-                            :
-                          </span>
-                          <select
-                            value={round.format}
-                            onChange={(e) =>
-                              handleUpdateRoundFormat(
-                                category.id,
-                                round.roundNumber,
-                                e.target.value as 'ao3' | 'ao5',
-                              )
-                            }
-                            className={`bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm ${
-                              !editMode ? 'cursor-not-allowed opacity-50' : ''
-                            }`}
-                            disabled={!editMode}
-                          >
-                            <option value="ao5">AO5</option>
-                            <option value="ao3">AO3</option>
-                          </select>
-                          {round.isFinal && (
-                            <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded">
-                              Final
-                            </span>
-                          )}
-                          {editMode &&
-                            category.rounds &&
-                            category.rounds.length > 1 && (
-                              <button
-                                onClick={() =>
-                                  handleDeleteRound(
-                                    category.id,
-                                    round.roundNumber,
-                                    category.name
-                                  )
-                                }
-                                className="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded ml-auto"
-                              >
-                                ×
-                              </button>
-                            )}
-                        </div>
-
-                        {/* Mostrar siempre la información de competidores que avanzan */}
-                        {!round.isFinal && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <span>Avanzan:</span>
-                            {editMode ? (
-                              <select
-                                value={round.competitorsToAdvance}
-                                onChange={(e) => {
-                                  const newValue =
-                                    e.target.value === 'all'
-                                      ? 'all'
-                                      : parseInt(e.target.value) || 0;
-                                  handleUpdateCompetitorsToAdvance(
-                                    category.id,
-                                    round.roundNumber,
-                                    newValue
-                                  );
-                                }}
-                                className="bg-gray-700 border border-gray-600 rounded px-2 py-1"
-                              >
-                                <option value="0">Ninguno</option>
-                                <option value="4">4 competidores</option>
-                                <option value="8">8 competidores</option>
-                                <option value="10">10 competidores</option>
-                                <option value="12">12 competidores</option>
-                                <option value="16">16 competidores</option>
-                                <option value="all">Todos</option>
-                              </select>
-                            ) : (
-                              <span className="bg-gray-700 px-2 py-1 rounded">
-                                {round.competitorsToAdvance === 'all'
-                                  ? 'Todos'
-                                  : round.competitorsToAdvance > 0
-                                  ? round.competitorsToAdvance
-                                  : 'Ninguno'}
+                  {category.format === 'WCA' && (
+                    <>
+                      <label className="text-xs text-gray-400 block mb-1">Rondas</label>
+                      <div className="space-y-2">
+                        {category.rounds.map((round) => (
+                          <div key={round.roundNumber} className="flex flex-col gap-2 p-2 rounded">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">
+                                {round.isFinal ? 'Final' : `Ronda ${round.roundNumber}`}:
                               </span>
+                              <select
+                                value={round.format}
+                                onChange={(e) =>
+                                  handleUpdateRoundFormat(category.id, round.roundNumber, e.target.value as 'ao3' | 'ao5')
+                                }
+                                className={`bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm ${!editMode ? 'cursor-not-allowed opacity-50' : ''}`}
+                                disabled={!editMode}
+                              >
+                                <option value="ao5">AO5</option>
+                                <option value="ao3">AO3</option>
+                              </select>
+                              {round.isFinal && (
+                                <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded">Final</span>
+                              )}
+                              {editMode && category.rounds && category.rounds.length > 1 && (
+                                <button
+                                  onClick={() => handleDeleteRound(category.id, round.roundNumber, category.name)}
+                                  className="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded ml-auto"
+                                >×</button>
+                              )}
+                            </div>
+                            {!round.isFinal && (
+                              <div className="flex items-center gap-2 text-sm">
+                                <span>Avanzan:</span>
+                                {editMode ? (
+                                  <select
+                                    value={round.competitorsToAdvance}
+                                    onChange={(e) => {
+                                      const newValue = e.target.value === 'all' ? 'all' : parseInt(e.target.value) || 0;
+                                      handleUpdateCompetitorsToAdvance(category.id, round.roundNumber, newValue);
+                                    }}
+                                    className="bg-gray-700 border border-gray-600 rounded px-2 py-1"
+                                  >
+                                    <option value="0">Ninguno</option>
+                                    <option value="4">4 competidores</option>
+                                    <option value="8">8 competidores</option>
+                                    <option value="10">10 competidores</option>
+                                    <option value="12">12 competidores</option>
+                                    <option value="16">16 competidores</option>
+                                    <option value="all">Todos</option>
+                                  </select>
+                                ) : (
+                                  <span className="bg-gray-700 px-2 py-1 rounded">
+                                    {round.competitorsToAdvance === 'all' ? 'Todos' : round.competitorsToAdvance > 0 ? round.competitorsToAdvance : 'Ninguno'}
+                                  </span>
+                                )}
+                              </div>
                             )}
                           </div>
+                        ))}
+                        {editMode && (
+                          <button onClick={() => handleAddRound(category.id)} className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded">
+                            + Añadir ronda
+                          </button>
                         )}
                       </div>
-                    ))}
-                    {editMode && (
-                      <button
-                        onClick={() => handleAddRound(category.id)}
-                        className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded"
-                      >
-                        + Añadir ronda
-                      </button>
+                    </>
+                  )}
+                  {category.format === 'RedBull' && (
+                    <div className="bg-gray-700/30 rounded p-3 text-xs text-gray-400 space-y-1">
+                      <p className="text-gray-300 font-medium">Rondas automáticas</p>
+                      {(category as any).hasSeeding ? (
+                        <>
+                          <p><strong>Clasificación {(category as any).seedingFormat || 'ao5'}</strong> + brackets de eliminación.</p>
+                          <p>Los mejores promedios de la clasificación reciben pase directo (bye).</p>
+                        </>
+                      ) : (
+                        <p>Las rondas se generan al crear los brackets desde <strong>Resultados → Formato RB</strong>.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {category.format === 'RedBull' && editMode && (
+                <>
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">
+                      Generación de brackets
+                    </label>
+                    <select
+                      value={(category as any).bracketMode || 'random'}
+                      onChange={async (e) => {
+                        const mode = e.target.value as 'random' | 'manual';
+                        if (!tournamentId) return;
+                        const ct = await db.tournaments.get(tournamentId);
+                        if (ct) {
+                          ct.categories = ct.categories.map((c: any) =>
+                            c.id === category.id ? { ...c, bracketMode: mode } : c
+                          ) as any;
+                          await db.tournaments.put(ct as any);
+                        }
+                        setCategories(
+                          categories.map((c) =>
+                            c.id === category.id ? { ...c, bracketMode: mode as any } : c
+                          )
+                        );
+                      }}
+                      className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm w-full"
+                    >
+                      <option value="random">Aleatorio</option>
+                      <option value="manual">Manual</option>
+                    </select>
+                  </div>
+                  <div className="mt-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={(category as any).hasSeeding || false}
+                        onChange={async (e) => {
+                          const checked = e.target.checked;
+                          if (!tournamentId) return;
+                          const ct = await db.tournaments.get(tournamentId);
+                          if (ct) {
+                            ct.categories = ct.categories.map((c: any) => {
+                              if (c.id !== category.id) return c;
+                              if (checked) {
+                                c.hasSeeding = true;
+                                c.seedingFormat = (category as any).seedingFormat || 'ao5';
+                                c.rounds = [
+                                  { num: 1, format: c.seedingFormat || 'ao5', results: [], competitorsToAdvance: 'all', isFinal: false, isSeeding: true },
+                                  { num: 2, format: 'rb', results: [], competitorsToAdvance: 'all', isFinal: true, matches: [], bracketMode: c.bracketMode || 'random' }
+                                ];
+                              } else {
+                                c.hasSeeding = false;
+                                c.seedingFormat = undefined;
+                                c.rounds = [
+                                  { num: 1, format: 'rb', results: [], competitorsToAdvance: 'all', isFinal: true, matches: [], bracketMode: c.bracketMode || 'random' }
+                                ];
+                              }
+                              return c;
+                            }) as any;
+                            await db.tournaments.put(ct as any);
+                          }
+                          setCategories(
+                            categories.map((c) => {
+                              if (c.id !== category.id) return c;
+                              return {
+                                ...c,
+                                hasSeeding: checked,
+                                seedingFormat: checked ? ((category as any).seedingFormat || 'ao5') : undefined,
+                                rounds: checked
+                                  ? [
+                                      { roundNumber: 1, format: ((category as any).seedingFormat || 'ao5'), competitorsToAdvance: 'all', isFinal: false, isSeeding: true },
+                                      { roundNumber: 2, format: 'rb' as any, competitorsToAdvance: 'all', isFinal: true }
+                                    ]
+                                  : [
+                                      { roundNumber: 1, format: 'rb' as any, competitorsToAdvance: 'all', isFinal: true }
+                                    ]
+                              };
+                            })
+                          );
+                        }}
+                        className="w-4 h-4 bg-gray-700 border-gray-600 rounded"
+                      />
+                      <span className="text-xs text-gray-400">Ronda de clasificación previa</span>
+                    </label>
+                    {(category as any).hasSeeding && (
+                      <div className="mt-2 ml-6">
+                        <select
+                          value={(category as any).seedingFormat || 'ao5'}
+                          onChange={async (e) => {
+                            const fmt = e.target.value as 'ao3' | 'ao5';
+                            if (!tournamentId) return;
+                            const ct = await db.tournaments.get(tournamentId);
+                            if (ct) {
+                              ct.categories = ct.categories.map((c: any) => {
+                                if (c.id !== category.id) return c;
+                                c.seedingFormat = fmt;
+                                if (c.rounds && c.rounds[0] && c.rounds[0].isSeeding) {
+                                  c.rounds[0].format = fmt;
+                                }
+                                return c;
+                              }) as any;
+                              await db.tournaments.put(ct as any);
+                            }
+                            setCategories(
+                              categories.map((c) => {
+                                if (c.id !== category.id) return c;
+                                const newRounds = [...(c.rounds || [])];
+                                if (newRounds[0] && newRounds[0].isSeeding) {
+                                  newRounds[0] = { ...newRounds[0], format: fmt };
+                                }
+                                return { ...c, seedingFormat: fmt, rounds: newRounds };
+                              })
+                            );
+                          }}
+                          className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-xs w-full"
+                        >
+                          <option value="ao5">AO5</option>
+                          <option value="ao3">AO3</option>
+                        </select>
+                      </div>
                     )}
                   </div>
-                </div>
+                </>
               )}
 
               <div className="flex justify-between items-center">

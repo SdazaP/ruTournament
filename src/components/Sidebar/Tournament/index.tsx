@@ -326,13 +326,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                           </li>
                           <li>
                             <NavLink
-                              to="#"
-                              onClick={(e) => e.preventDefault()}
-                              className={'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out cursor-not-allowed opacity-50'}
-                              title="Próximamente"
+                              to="results/RB"
+                              className={({ isActive }) =>
+                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
+                                (isActive && '!text-white')
+                              }
                             >
                               <FaTrophy size={18} />
-                              Formato RB (Próximamente)
+                              Formato RB
                             </NavLink>
                           </li>
                         </ul>
@@ -386,13 +387,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                           </li>
                           <li>
                             <NavLink
-                              to="#"
-                              onClick={(e) => e.preventDefault()}
-                              className={'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out cursor-not-allowed opacity-50'}
-                              title="Próximamente"
+                              to="view/resultsRB"
+                              className={({ isActive }) =>
+                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
+                                (isActive && '!text-white')
+                              }
                             >
                               <FaMedal size={18} />
-                              Resultados RB (Próximamente)
+                              Resultados RB
                             </NavLink>
                           </li>
                         </ul>

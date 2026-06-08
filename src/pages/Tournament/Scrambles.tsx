@@ -174,6 +174,11 @@ const Scrambles = () => {
   const handleGenerateScrambles = async () => {
     if (!currentCategoryObj || !currentRoundObj || !id || !ready) return;
 
+    if (currentCategoryObj.format === 'redbull') {
+      await handleGenerateScramblesWithoutGroups();
+      return;
+    }
+
     if (!currentRoundObj.groups || currentRoundObj.groups.length === 0) {
       setShowGroupAlert(true);
       return;
@@ -321,6 +326,7 @@ const Scrambles = () => {
           (r: any) => r.num === selectedRound,
         );
         if (rndIdx >= 0) {
+          tournament.categories[catIdx].rounds[rndIdx].scrambles = [];
           if (tournament.categories[catIdx].rounds[rndIdx].groups) {
             tournament.categories[catIdx].rounds[rndIdx].groups = tournament.categories[catIdx].rounds[rndIdx].groups.map((g: any) => ({ ...g, scrambles: [] }));
           }
@@ -338,6 +344,7 @@ const Scrambles = () => {
             if (r.roundNumber !== selectedRound) return r;
             return {
               ...r,
+              scrambles: [],
               groups: (r.groups ?? []).map(g => ({ ...g, scrambles: [] }))
             };
           }),
