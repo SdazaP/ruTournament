@@ -13,10 +13,9 @@ import {
   FiEye,
   FiList,
   FiTrendingUp,
-  FiGrid,
   FiChevronLeft
 } from 'react-icons/fi';
-import { FaCube, FaMedal, FaTrophy, FaSyncAlt, FaLayerGroup, FaClock } from 'react-icons/fa';
+import { FaCube, FaSyncAlt, FaLayerGroup, FaClock } from 'react-icons/fa';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -147,13 +146,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 </NavLink>
               </li>
               {/* <!-- Menu Item Participantes / Staffing --> */}
-              <SidebarLinkGroup activeCondition={pathname.includes('competitors') || pathname.includes('staffing')}>
+              <SidebarLinkGroup activeCondition={pathname.includes('competitors') || pathname.includes('staffing') || pathname.includes('groups')}>
                 {(handleClick, open) => {
                   return (
                     <React.Fragment>
                       <NavLink
                         to="#"
-                        className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${(pathname.includes('competitors') || pathname.includes('staffing')) &&
+                        className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${(pathname.includes('competitors') || pathname.includes('staffing') || pathname.includes('groups')) &&
                           'bg-graydark dark:bg-meta-4'
                           }`}
                         onClick={(e) => {
@@ -201,6 +200,18 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                               Roles por categorías
                             </NavLink>
                           </li>
+                          <li>
+                            <NavLink
+                              to="groups"
+                              className={({ isActive }) =>
+                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
+                                (isActive && '!text-white')
+                              }
+                            >
+                              <FaLayerGroup size={18} />
+                              Generador de Horarios
+                            </NavLink>
+                          </li>
                         </ul>
                       </div>
                       {/* <!-- Dropdown Menu End --> */}
@@ -208,13 +219,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   );
                 }}
               </SidebarLinkGroup>
-              <SidebarLinkGroup activeCondition={pathname.includes('categories') || pathname.includes('scrambles') || pathname.includes('groups') || pathname.includes('schedule')}>
+              <SidebarLinkGroup activeCondition={pathname.includes('categories') || pathname.includes('scrambles') || pathname.includes('schedule')}>
                 {(handleClick, open) => {
                   return (
                     <React.Fragment>
                       <NavLink
                         to="#"
-                        className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${(pathname.includes('categories') || pathname.includes('scrambles') || pathname.includes('groups') || pathname.includes('schedule')) &&
+                        className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${(pathname.includes('categories') || pathname.includes('scrambles') || pathname.includes('schedule')) &&
                           'bg-graydark dark:bg-meta-4'
                           }`}
                         onClick={(e) => {
@@ -264,18 +275,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                           </li>
                           <li>
                             <NavLink
-                              to="groups"
-                              className={({ isActive }) =>
-                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
-                                (isActive && '!text-white')
-                              }
-                            >
-                              <FaLayerGroup size={18} />
-                              Generador de Horarios
-                            </NavLink>
-                          </li>
-                          <li>
-                            <NavLink
                               to="scrambles"
                               className={({ isActive }) =>
                                 'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
@@ -293,129 +292,32 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 }}
               </SidebarLinkGroup>
 
-              {/* <!-- Menu Item Resultados --> */}
-              <SidebarLinkGroup activeCondition={pathname.includes('results')}>
-                {(handleClick, open) => {
-                  return (
-                    <React.Fragment>
-                      <NavLink
-                        to="#"
-                        className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${pathname.includes('results') &&
-                          'bg-graydark dark:bg-meta-4'
-                          }`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          sidebarExpanded
-                            ? handleClick()
-                            : setSidebarExpanded(true);
-                        }}
-                      >
-                        <FiTrendingUp size={18} />
-                        Gestionar Resultados
-                        <FiChevronDown
-                          className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current ${open && 'rotate-180'
-                            }`}
-                          size={20}
-                        />
-                      </NavLink>
-                      {/* <!-- Dropdown Menu Start --> */}
-                      <div
-                        className={`translate transform overflow-hidden ${!open && 'hidden'
-                          }`}
-                      >
-                        <ul className="mt-4 mb-5.5 flex flex-col gap-2.5 pl-6">
-                          <li>
-                            <NavLink
-                              to="results/WCA"
-                              className={({ isActive }) =>
-                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
-                                (isActive && '!text-white')
-                              }
-                            >
-                              <FaCube size={18} />
-                              Formato WCA
-                            </NavLink>
-                          </li>
-                          <li>
-                            <NavLink
-                              to="results/RB"
-                              className={({ isActive }) =>
-                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
-                                (isActive && '!text-white')
-                              }
-                            >
-                              <FaTrophy size={18} />
-                              Formato RB
-                            </NavLink>
-                          </li>
-                        </ul>
-                      </div>
-                      {/* <!-- Dropdown Menu End --> */}
-                    </React.Fragment>
-                  );
-                }}
-              </SidebarLinkGroup>
-              <SidebarLinkGroup activeCondition={pathname.includes('view')}>
-                {(handleClick, open) => {
-                  return (
-                    <React.Fragment>
-                      <NavLink
-                        to="#"
-                        className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${pathname.includes('view') &&
-                          'bg-graydark dark:bg-meta-4'
-                          }`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          sidebarExpanded
-                            ? handleClick()
-                            : setSidebarExpanded(true);
-                        }}
-                      >
-                        <FiEye size={18} />
-                        Ver Resultados
-                        <FiChevronDown
-                          className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current ${open && 'rotate-180'
-                            }`}
-                          size={20}
-                        />
-                      </NavLink>
-                      {/* <!-- Dropdown Menu Start --> */}
-                      <div
-                        className={`translate transform overflow-hidden ${!open && 'hidden'
-                          }`}
-                      >
-                        <ul className="mt-4 mb-5.5 flex flex-col gap-2.5 pl-6">
-                          <li>
-                            <NavLink
-                              to="view/resultsWCA"
-                              className={({ isActive }) =>
-                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
-                                (isActive && '!text-white')
-                              }
-                            >
-                              <FiList size={18} />
-                              Resultados WCA
-                            </NavLink>
-                          </li>
-                          <li>
-                            <NavLink
-                              to="view/resultsRB"
-                              className={({ isActive }) =>
-                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ' +
-                                (isActive && '!text-white')
-                              }
-                            >
-                              <FaMedal size={18} />
-                              Resultados RB
-                            </NavLink>
-                          </li>
-                        </ul>
-                      </div>
-                      {/* <!-- Dropdown Menu End --> */}
-                    </React.Fragment>
-                  );
-                }}
-              </SidebarLinkGroup>
+              {/* <!-- Menu Item Gestionar Resultados --> */}
+              <li>
+                <NavLink
+                  to="results"
+                  className={({ isActive }) =>
+                    'group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ' +
+                    (isActive && 'bg-graydark dark:bg-meta-4')
+                  }
+                >
+                  <FiTrendingUp size={18} />
+                  Gestionar Resultados
+                </NavLink>
+              </li>
+              {/* <!-- Menu Item Ver Resultados --> */}
+              <li>
+                <NavLink
+                  to="view/results"
+                  className={({ isActive }) =>
+                    'group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ' +
+                    (isActive && 'bg-graydark dark:bg-meta-4')
+                  }
+                >
+                  <FiEye size={18} />
+                  Ver Resultados
+                </NavLink>
+              </li>
             </ul>
           </div>
 

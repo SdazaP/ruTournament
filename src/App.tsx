@@ -18,10 +18,8 @@ import Staffing from './pages/Tournament/Staffing';
 import Groups from './pages/Tournament/Groups';
 import Categories from './pages/Tournament/Categories';
 import Scrambles from './pages/Tournament/Scrambles';
-import ResultsWCA from './pages/Tournament/ResultsWCA';
-import ResultsRB from './pages/Tournament/ResultsRB';
-import ResultsViewRB from './pages/Tournament/Results/ResultsViewRB';
-import ResultsViewWCA from './pages/Tournament/Results/ResultsViewWCA';
+import Results from './pages/Tournament/Results';
+import ResultsView from './pages/Tournament/ResultsView';
 import Schedule from './pages/Tournament/Schedule';
 import HomePage from './pages/HomePage';
 
@@ -170,38 +168,20 @@ function App() {
                     }
                   />
                   <Route
-                    path='results/WCA'
+                    path='results'
                     element={
                       <>
-                        <PageTitle title="WCA Results" />
-                        <ResultsWCA />
+                        <PageTitle title="Gestionar Resultados | ruTournament" />
+                        <Results />
                       </>
                     }
                   />
                   <Route
-                    path='results/RB'
+                    path='view/results'
                     element={
                       <>
-                        <PageTitle title="Red Bull Results" />
-                        <ResultsRB />
-                      </>
-                    }
-                  />
-                  <Route
-                    path='view/resultsRB'
-                    element={
-                      <>
-                        <PageTitle title="View Red Bull Results" />
-                        <ResultsViewRB />
-                      </>
-                    }
-                  />
-                  <Route
-                    path='view/resultsWCA/:categoryId?'
-                    element={
-                      <>
-                        <PageTitle title="View WCA Results" />
-                        <ResultsViewWCA />
+                        <PageTitle title="Ver Resultados | ruTournament" />
+                        <ResultsView />
                       </>
                     }
                   />

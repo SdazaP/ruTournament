@@ -27,8 +27,9 @@ type Category = {
   rounds: Round[];
 };
 
-const ResultsViewWCA = () => {
-  const { id, categoryId } = useParams();
+const ResultsViewWCA = ({ initialCategoryId }: { initialCategoryId?: string }) => {
+  const { id, categoryId: paramCategoryId } = useParams();
+  const categoryId = initialCategoryId || paramCategoryId;
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedRound, setSelectedRound] = useState<number>(1);
