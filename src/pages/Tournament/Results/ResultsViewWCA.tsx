@@ -48,7 +48,9 @@ const ResultsViewWCA = () => {
         return;
       }
 
-      const loadedCategories: Category[] = tournament.categories.map((category: any) => {
+      const loadedCategories: Category[] = tournament.categories
+        .filter((c: any) => !c.format || c.format === 'wca')
+        .map((category: any) => {
         const rounds: Round[] = (category.rounds || []).map((round: any) => {
           const participants: Participant[] = tournament.competitors
             .filter((comp: any) => (comp.categories || []).includes(category.id as string))

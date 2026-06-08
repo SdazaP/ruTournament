@@ -63,8 +63,8 @@ export const calculateRulesStats = (times: TimeRecord[], format: 'ao3' | 'ao5') 
   }
 
   return { 
-    best: best > 0 ? Math.floor(best * 100) / 100 : -1, 
-    average: average > 0 ? Math.floor(average * 100) / 100 : -1 
+    best: best > 0 ? Math.round(best * 100) / 100 : -1, 
+    average: average > 0 ? Math.round(average * 100) / 100 : -1 
   };
 };
 
@@ -185,7 +185,9 @@ const ResultsWCA = () => {
         return;
       }
 
-    const selectedCategories = tournament.categories.map((cat) => {
+    const selectedCategories = tournament.categories
+      .filter((cat) => !cat.format || cat.format === 'wca')
+      .map((cat) => {
       const categoryRounds = (cat.rounds || [])
         .filter((round) => round.num && round.format) // Agregado
         .map((round, _, allRounds) => {
