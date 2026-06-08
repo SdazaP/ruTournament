@@ -258,7 +258,7 @@ const ResultsViewWCA = ({ initialCategoryId }: { initialCategoryId?: string }) =
                 <thead>
                   <tr className="bg-gray-700">
                     <th className="px-4 py-3 text-left w-12">#</th>
-                    <th className="px-4 py-3 text-left">Participante</th>
+                    <th className="px-4 py-3 text-left">Competidor</th>
                     {currentRound.format === 'ao5' && (
                       <>
                         <th className="px-2 py-3 text-center">T1</th>

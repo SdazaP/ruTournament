@@ -670,7 +670,7 @@ const ResultsWCA = () => {
                   <th className="px-4 py-3 text-left min-w-[180px] w-1/4">
                     <div className="flex items-center gap-2">
                       <MdPeople className="text-blue-400" />
-                      <span>Participante</span>
+                      <span>Competidor</span>
                     </div>
                   </th>
 

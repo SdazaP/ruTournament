@@ -294,7 +294,7 @@ const Staffing = () => {
                         <td className="p-4">
                           <span className={`font-medium block flex items-center gap-2 ${hasNoGlobalRoles ? 'text-red-400' : 'text-white'}`}>
                             {competitor.name}
-                            {hasNoGlobalRoles && <FaExclamationTriangle size={12} title="Sin roles globales" className="text-red-500" />}
+                            {hasNoGlobalRoles && <></>}
                           </span>
                         </td>
                         <td className="p-4 text-center">

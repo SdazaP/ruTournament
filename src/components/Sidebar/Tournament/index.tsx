@@ -134,7 +134,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
             </h3>
 
             <ul className="mb-6 flex flex-col gap-1.5">
-              {/* <!-- Menu Item Participantes --> */}
+              {/* Inicio */}
               <li>
                 <NavLink
                   to={`/dashboard/tournament/${id}`}
@@ -145,7 +145,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   Inicio
                 </NavLink>
               </li>
-              {/* <!-- Menu Item Participantes / Staffing --> */}
+              {/* Administrar Competidores */}
               <SidebarLinkGroup activeCondition={pathname.includes('competitors') || pathname.includes('staffing') || pathname.includes('groups')}>
                 {(handleClick, open) => {
                   return (
@@ -185,7 +185,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                               }
                             >
                               <FaCube size={18} />
-                              Categorías y roles
+                              Competidores
                             </NavLink>
                           </li>
                           <li>
@@ -197,7 +197,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                               }
                             >
                               <FiAward size={18} />
-                              Roles por categorías
+                              Roles de competencia
                             </NavLink>
                           </li>
                           <li>
@@ -236,7 +236,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                         }}
                       >
                         <FiList size={18} />
-                        Administrar Categorías
+                        Administrar <br />Categorías
                         <FiChevronDown
                           className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current ${open && 'rotate-180'
                             }`}
@@ -258,7 +258,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                               }
                             >
                               <FiCalendar size={18} />
-                              Categorías y Horarios
+                              Categorías
                             </NavLink>
                           </li>
                           <li>

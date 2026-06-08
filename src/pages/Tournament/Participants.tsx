@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft, FaExclamationTriangle, FaInfoCircle, FaGavel, FaRunning, FaRandom, FaLock } from 'react-icons/fa';
+import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft, FaExclamationTriangle, FaLock } from 'react-icons/fa';
 import { db } from '../../common/db';
 import { useTournamentStatus } from '../../hooks/useTournamentStatus';
 
@@ -8,10 +8,7 @@ type Participant = {
   id: string;
   name: string;
   categories: string[];
-  roles?: string[];
 };
-
-const AVAILABLE_ROLES = ['judge', 'runner', 'scrambler'];
 
 const Participants = () => {
   const { id: tournamentId } = useParams();
@@ -31,7 +28,6 @@ const Participants = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
   const [categoryToRemove, setCategoryToRemove] = useState<{participantId: string, categoryId: string, participantName: string, categoryName: string} | null>(null);
-  const [roleToRemove, setRoleToRemove] = useState<{participantId: string, role: string, participantName: string} | null>(null);
 
   // Cargar datos del torneo
   useEffect(() => {
@@ -54,7 +50,6 @@ const Participants = () => {
     }
   }, [tournamentId]);
 
-  // Filtrar participantes
   const filteredParticipants = participants.filter(participant => {
     const matchesSearch = participant.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === '' || participant.categories.some(catId => {
@@ -67,7 +62,6 @@ const Participants = () => {
   const handleAdd = async () => {
     if (newParticipant.name.trim() === '' || !newParticipant.category || !tournamentId) return;
     
-    // Encontrar el ID de la categoría seleccionada
     const selectedCategory = tournament.categories.find((cat: any) => cat.name === newParticipant.category);
     if (!selectedCategory) return;
     
@@ -75,10 +69,8 @@ const Participants = () => {
       id: Date.now().toString(),
       name: newParticipant.name,
       categories: [selectedCategory.id],
-      roles: []
     };
     
-    // Actualizar Dexie
     const currentTournament = await db.tournaments.get(tournamentId);
     if (currentTournament) {
       currentTournament.competitors = [...(currentTournament.competitors || []), newParticipantObj];
@@ -92,7 +84,6 @@ const Participants = () => {
   const handleDelete = async (id: string) => {
     if (!tournamentId) return;
     
-    // Actualizar Dexie
     const currentTournament = await db.tournaments.get(tournamentId);
     if (currentTournament) {
       currentTournament.competitors = (currentTournament.competitors || []).filter((p: any) => p.id !== id);
@@ -106,11 +97,9 @@ const Participants = () => {
   const handleAddCategory = async (participantId: string, categoryName: string) => {
     if (!editMode || !tournamentId) return;
     
-    // Encontrar el ID de la categoría seleccionada
     const selectedCategory = tournament.categories.find((cat: any) => cat.name === categoryName);
     if (!selectedCategory) return;
     
-    // Actualizar Dexie
     const currentTournament = await db.tournaments.get(tournamentId);
     if (currentTournament) {
       currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
@@ -138,7 +127,6 @@ const Participants = () => {
     if (!editMode || !tournamentId || !categoryToRemove) return;
     const { participantId, categoryId } = categoryToRemove;
     
-    // Actualizar Dexie
     const currentTournament = await db.tournaments.get(tournamentId);
     if (currentTournament) {
       currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
@@ -159,54 +147,9 @@ const Participants = () => {
     setCategoryToRemove(null);
   };
 
-  const handleAddRole = async (participantId: string, role: string) => {
-    if (!editMode || !tournamentId) return;
-    
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
-        if (p.id === participantId) {
-          return { ...p, roles: [...(p.roles || []), role] };
-        }
-        return p;
-      });
-      await db.tournaments.put(currentTournament as any);
-    }
-    
-    setParticipants(participants.map(p => 
-      p.id === participantId ? { ...p, roles: [...(p.roles || []), role] } : p
-    ));
-  };
-
-  const handleRemoveRoleClick = (participantId: string, role: string, participantName: string) => {
-    setRoleToRemove({ participantId, role, participantName });
-  };
-
-  const confirmRemoveRole = async () => {
-    if (!editMode || !tournamentId || !roleToRemove) return;
-    const { participantId, role } = roleToRemove;
-    
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
-        if (p.id === participantId) {
-          return { ...p, roles: (p.roles || []).filter((r:string) => r !== role) };
-        }
-        return p;
-      });
-      await db.tournaments.put(currentTournament as any);
-    }
-    
-    setParticipants(participants.map(p => 
-      p.id === participantId ? { ...p, roles: (p.roles || []).filter(r => r !== role) } : p
-    ));
-    setRoleToRemove(null);
-  };
-
   const handleNameChange = async (participantId: string, newName: string) => {
     if (!editMode || !tournamentId) return;
     
-    // Actualizar Dexie
     const currentTournament = await db.tournaments.get(tournamentId);
     if (currentTournament) {
       currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
@@ -321,51 +264,14 @@ const Participants = () => {
         </div>
       )}
 
-      {/* Leyenda de Roles */}
-      <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 mb-6">
-        <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
-          <FaInfoCircle /> Significado de los roles de Staff
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex bg-gray-750 p-3 rounded-lg border border-gray-600 items-start gap-3">
-            <div className="bg-blue-900/50 text-blue-400 p-2 rounded-full flex-shrink-0">
-              <FaGavel size={16} />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-blue-300 capitalize">Judge (Juez)</h4>
-              <p className="text-xs text-gray-400 mt-1">Llama al competidor, supervisa que siga las normas de inspección/resolución y firma los tiempos oficiales.</p>
-            </div>
-          </div>
-          <div className="flex bg-gray-750 p-3 rounded-lg border border-gray-600 items-start gap-3">
-            <div className="bg-green-900/50 text-green-400 p-2 rounded-full flex-shrink-0">
-              <FaRunning size={16} />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-green-300 capitalize">Runner (Corredor)</h4>
-              <p className="text-xs text-gray-400 mt-1">Lleva los cubos revueltos desde la mesa de Scramblers a las estaciones de los Jueces.</p>
-            </div>
-          </div>
-          <div className="flex bg-gray-750 p-3 rounded-lg border border-gray-600 items-start gap-3">
-            <div className="bg-purple-900/50 text-purple-400 p-2 rounded-full flex-shrink-0">
-              <FaRandom size={16} />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-purple-300 capitalize">Scrambler (Mezclador)</h4>
-              <p className="text-xs text-gray-400 mt-1">Aplica las mezclas oficiales a cada cubo usando un cover, asegurando que no se filtre información.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Tabla de competidores */}
       <div className="overflow-x-auto rounded-lg border border-gray-700 mb-8">
         <table className="w-full">
           <thead className="bg-gray-750">
             <tr>
-              <th className="p-3 text-left w-1/4">Nombre</th>
-              <th className="p-3 text-left w-1/3">Categorías</th>
-              <th className="p-3 text-left w-1/4">Roles</th>
-              {editMode && <th className="p-3 text-right">Acciones</th>}
+              <th className="p-3 text-left w-2/5">Nombre</th>
+              <th className="p-3 text-left w-2/5">Categorías</th>
+              {editMode && <th className="p-3 text-right w-1/5">Acciones</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-700">
@@ -424,43 +330,6 @@ const Participants = () => {
                       </select>
                     )}
                   </td>
-                  <td className="p-3 align-top">
-                    <div className="flex flex-wrap gap-2 mb-2">
-                       {(participant.roles || []).map((role) => (
-                        <div key={role} className="flex items-center bg-blue-900/50 text-blue-300 border border-blue-700/50 rounded-full px-3 py-1">
-                          <span className="text-sm capitalize">{role}</span>
-                          {editMode && (
-                            <button 
-                              onClick={() => handleRemoveRoleClick(participant.id, role, participant.name)}
-                              className="ml-2 text-blue-400 hover:text-red-400 text-xs"
-                              title="Eliminar rol"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    {editMode && (
-                      <select
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            handleAddRole(participant.id, e.target.value);
-                            e.target.value = '';
-                          }
-                        }}
-                        className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        title="Añadir rol"
-                      >
-                        <option value="">Añadir rol...</option>
-                        {AVAILABLE_ROLES
-                          .filter(role => !(participant.roles || []).includes(role))
-                          .map((role) => (
-                            <option key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
-                          ))}
-                      </select>
-                    )}
-                  </td>
                   {editMode && (
                     <td className="p-3 text-right">
                       <button
@@ -476,7 +345,7 @@ const Participants = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={editMode ? 4 : 3} className="p-4 text-center text-gray-400">
+                <td colSpan={editMode ? 3 : 2} className="p-4 text-center text-gray-400">
                   No se encontraron competidores
                 </td>
               </tr>
@@ -495,12 +364,12 @@ const Participants = () => {
               </div>
               <h3 className="text-xl font-bold text-center text-white mb-2">Eliminar Competidor</h3>
               <p className="text-gray-400 text-center text-sm mb-4">
-                ¿Estás seguro que deseas expulsar del torneo a <span className="font-semibold">{participantToDelete.name}</span>? Perderá todos sus registros y roles de staff en los grupos seleccionados.
+                ¿Estás seguro que deseas expulsar del torneo a <span className="font-semibold">{participantToDelete.name}</span>? Perderá todos sus registros.
               </p>
               <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-400 mb-6 flex items-start gap-2">
                 <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
                 <span>
-                  <strong>Nota:</strong> Si este participante ya tenía lugar en los Horarios/Grupos, su nombre aparecerá temporalmente como "Desconocido". Recuerda <strong>re-generar los horarios</strong> de sus categorías para equilibrar nuevamente.
+                  <strong>Nota:</strong> Si este competidor ya tenía lugar en los Horarios/Grupos, su nombre aparecerá temporalmente como "Desconocido". Recuerda <strong>re-generar los horarios</strong> de sus categorías para equilibrar nuevamente.
                 </span>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -559,43 +428,6 @@ const Participants = () => {
         </div>
       )}
 
-      {/* Modal de confirmación para remover rol */}
-      {roleToRemove && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
-          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
-            <div className="p-6">
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
-                <FaTrash size={20} />
-              </div>
-              <h3 className="text-xl font-bold text-center text-white mb-2">Remover Rol de WCA</h3>
-              <p className="text-gray-400 text-center text-sm mb-4">
-                ¿Confirmas que deseas quitarle el rol de <strong>{roleToRemove.role}</strong> a la persona <span className="font-semibold">{roleToRemove.participantName}</span>? Ya no será tomado en cuenta para futuros sorteos.
-              </p>
-              <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-400 mb-6 flex items-start gap-2">
-                <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
-                <span>
-                  <strong>Importante:</strong> Si se le había asignado para ser staff en un horario generado, aparecerá como "Desconocido". Para ajustar y asignar a alguien más será necesario regenerar tu distribución.
-                </span>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => setRoleToRemove(null)}
-                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={confirmRemoveRole}
-                  className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
-                >
-                  Sí, Retirar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Notificación del modo edición */}
       {editMode && (
         <div className="fixed bottom-4 right-4 bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-bounce">
@@ -606,7 +438,7 @@ const Participants = () => {
       {/* Footer Area */}
       <div className="mt-12 pt-6 border-t border-gray-700 pb-8">
         <div className="bg-gray-800/50 rounded-lg p-5 mb-6 text-sm text-gray-400">
-          <h4 className="font-semibold text-gray-300 mb-2">💡 ¿Cómo funciona esta sección?</h4>
+          <h4 className="font-semibold text-gray-300 mb-2">¿Cómo funciona esta sección?</h4>
           <p>
             Desde aquí puedes gestionar a todos los competidores de tu torneo. 
             Utiliza el botón <strong>Activar Edición</strong> en la parte superior para habilitar modificaciones en los nombres de los competidores o gestionar las categorías en las que participan. 
