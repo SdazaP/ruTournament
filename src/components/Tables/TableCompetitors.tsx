@@ -11,6 +11,8 @@ interface TableCompetitorsProps {
   onAddRow: () => void;
   onChange: (index: number, field: keyof CompetitorData, value: any) => void;
   onRemove: (index: number) => void;
+  nameErrors?: Record<number, string>;
+  onNameBlur?: (index: number) => void;
 }
 
 const TableCompetitors: React.FC<TableCompetitorsProps> = ({ 
@@ -18,7 +20,9 @@ const TableCompetitors: React.FC<TableCompetitorsProps> = ({
   categories, 
   onAddRow, 
   onChange, 
-  onRemove 
+  onRemove,
+  nameErrors = {},
+  onNameBlur,
 }) => {
   return (
     <div className="w-full bg-gray-800">
@@ -49,14 +53,18 @@ const TableCompetitors: React.FC<TableCompetitorsProps> = ({
             className="grid min-w-[500px] grid-cols-3 border-b border-gray-750 hover:bg-gray-750/30 transition-colors last:border-0"
           >
             {/* Input para el nombre del competidor */}
-            <div className="flex items-center justify-center p-3">
+            <div className="flex flex-col justify-center p-3">
               <input
                 type="text"
                 placeholder="Nombre del competidor"
                 value={competitor.name}
                 onChange={(e) => onChange(index, 'name', e.target.value)}
-                className="w-full rounded-md border border-gray-600 bg-gray-900 p-2.5 text-sm text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all placeholder-gray-500"
+                onBlur={() => onNameBlur?.(index)}
+                className={`w-full rounded-md border bg-gray-900 p-2.5 text-sm text-white focus:outline-none transition-all placeholder-gray-500 ${nameErrors[index] ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : 'border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'}`}
               />
+              {nameErrors[index] && (
+                <p className="text-red-400 text-xs mt-1">{nameErrors[index]}</p>
+              )}
             </div>
 
             {/* Categorías (Multiple) */}

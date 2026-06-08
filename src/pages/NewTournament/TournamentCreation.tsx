@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import TableCompetitors from '../../components/Tables/TableCompetitors';
 import { db } from '../../common/db';
+import { isDuplicateName, findDuplicateNames } from '../../common/validation';
 import { FaTrophy, FaLayerGroup, FaUsers, FaArrowRight, FaArrowLeft, FaCheck, FaEdit, FaClock, FaTrash, FaLock, FaRandom } from 'react-icons/fa';
 import { MdCategory, MdOutlineTimer } from 'react-icons/md';
 import { BsTrophyFill, BsGraphUp } from 'react-icons/bs';
@@ -48,6 +49,7 @@ export default function TournamentCreation() {
 
   const [configurePhase, setConfigurePhase] = useState<'list' | 'config'>('list');
   const [configuringIndex, setConfiguringIndex] = useState(0);
+  const [competitorNameErrors, setCompetitorNameErrors] = useState<Record<number, string>>({});
   const [newCatName, setNewCatName] = useState('3x3');
   const [newCatFormat, setNewCatFormat] = useState<'WCA' | 'RedBull'>('WCA');
 
@@ -177,6 +179,30 @@ export default function TournamentCreation() {
       copy[index] = { ...copy[index], [field]: value };
       return copy;
     });
+    if (field === 'name') {
+      setCompetitorNameErrors(prev => {
+        if (!prev[index]) return prev;
+        const next = { ...prev };
+        delete next[index];
+        return next;
+      });
+    }
+  };
+
+  const handleValidateName = (index: number) => {
+    const name = competitors[index]?.name;
+    if (!name || !name.trim()) return;
+    const allNames = competitors.map((c) => c.name);
+    if (isDuplicateName(name, allNames, index)) {
+      setCompetitorNameErrors((prev) => ({ ...prev, [index]: 'Ya existe un competidor con ese nombre' }));
+    } else {
+      setCompetitorNameErrors((prev) => {
+        if (!prev[index]) return prev;
+        const next = { ...prev };
+        delete next[index];
+        return next;
+      });
+    }
   };
 
   const handleRemoveCompetitor = (index: number) => {
@@ -184,6 +210,13 @@ export default function TournamentCreation() {
   };
 
   const handleFinalize = async () => {
+    const validCompetitors = competitors.filter(comp => comp.name.trim() !== '');
+    const dupNames = findDuplicateNames(validCompetitors.map(c => c.name));
+    if (dupNames.length > 0) {
+      alert(`Hay competidores duplicados: ${dupNames.join(', ')}. Corrige los nombres antes de finalizar.`);
+      return;
+    }
+
     const tournamentId = Date.now().toString();
 
     const builtCategories = categories.map((cat, index) => {
@@ -218,8 +251,7 @@ export default function TournamentCreation() {
       return categoryObj;
     });
 
-    const builtCompetitors = competitors
-      .filter(comp => comp.name.trim() !== '')
+    const builtCompetitors = validCompetitors
       .map((comp, ci) => {
         const foundCategoryIds = comp.categories.map(catName =>
           builtCategories.find(c => c.name === catName)?.id
@@ -527,6 +559,8 @@ export default function TournamentCreation() {
                 onAddRow={handleAddCompetitor}
                 onChange={handleUpdateCompetitor}
                 onRemove={handleRemoveCompetitor}
+                nameErrors={competitorNameErrors}
+                onNameBlur={handleValidateName}
               />
             </div>
           </div>
