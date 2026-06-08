@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaTrash, FaPlus, FaMinus } from 'react-icons/fa';
+import CategoryToggle from '../CategoryToggle';
 interface CompetitorData {
   name: string;
   categories: string[];
@@ -68,37 +69,18 @@ const TableCompetitors: React.FC<TableCompetitorsProps> = ({
             </div>
 
             {/* Categorías (Multiple) */}
-            <div className="flex flex-col justify-center p-3">
-              <div className="flex flex-wrap gap-1.5 mb-2 min-h-[28px] items-center">
-                {competitor.categories.map((cat, iCat) => (
-                  <div key={iCat} className="flex items-center bg-blue-600/20 border border-blue-500/30 rounded-full px-2.5 py-1 max-w-full">
-                    <span className="text-xs text-blue-300 font-medium truncate">{cat}</span>
-                    <button 
-                      onClick={() => onChange(index, 'categories', competitor.categories.filter((c: string) => c !== cat))}
-                      className="ml-1.5 text-blue-400 hover:text-red-400 focus:outline-none text-sm leading-none"
-                      title="Quitar"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <select
-                value=""
-                onChange={(e) => {
-                  if (e.target.value && !competitor.categories.includes(e.target.value)) {
-                    onChange(index, 'categories', [...competitor.categories, e.target.value]);
+            <div className="flex items-center p-3">
+              <CategoryToggle
+                categories={categories}
+                selected={competitor.categories}
+                onToggle={(cat) => {
+                  if (competitor.categories.includes(cat)) {
+                    onChange(index, 'categories', competitor.categories.filter((c: string) => c !== cat));
+                  } else {
+                    onChange(index, 'categories', [...competitor.categories, cat]);
                   }
                 }}
-                className="w-full rounded-md border border-gray-600 bg-gray-900 p-2 text-sm text-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all cursor-pointer"
-              >
-                <option value="">Añadir categoría...</option>
-                {categories.filter((c: string) => !competitor.categories.includes(c)).map((category, i) => (
-                  <option key={i} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
 
             {/* Acciones */}

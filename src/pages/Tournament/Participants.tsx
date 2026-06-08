@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft, FaExclamationTriangle, FaLock, FaUsers } from 'react-icons/fa';
 import { db } from '../../common/db';
 import { isDuplicateName } from '../../common/validation';
+import CategoryToggle from '../../components/CategoryToggle';
 import { useTournamentStatus } from '../../hooks/useTournamentStatus';
 
 type Participant = {
@@ -271,15 +272,13 @@ const Participants = () => {
             )}
           </div>
           
-          <select
-            value={newParticipant.category}
-            onChange={(e) => setNewParticipant({...newParticipant, category: e.target.value})}
-            className="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            {categories.map((category, index) => (
-              <option key={index} value={category}>{category}</option>
-            ))}
-          </select>
+          <div className="flex-1 flex flex-col gap-2">
+            <CategoryToggle
+              categories={categories}
+              selected={newParticipant.category ? [newParticipant.category] : []}
+              onToggle={(cat) => setNewParticipant({ ...newParticipant, category: newParticipant.category === cat ? '' : cat })}
+            />
+          </div>
           
           <button
             onClick={handleAdd}
@@ -326,44 +325,19 @@ const Participants = () => {
                     )}
                   </td>
                   <td className="p-3">
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {participant.categories.map((categoryId) => (
-                        <div key={categoryId} className="flex items-center bg-gray-700 rounded-full px-3 py-1">
-                          <span className="text-sm">{getCategoryName(categoryId)}</span>
-                          {editMode && (
-                            <button 
-                              onClick={() => handleRemoveCategoryClick(participant.id, categoryId, participant.name, getCategoryName(categoryId))}
-                              className="ml-2 text-gray-400 hover:text-red-400 text-xs"
-                              title="Eliminar categoría"
-                            >
-                              ×
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    {editMode && (
-                      <select
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            handleAddCategory(participant.id, e.target.value);
-                            e.target.value = '';
-                          }
-                        }}
-                        className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        title="Añadir categoría"
-                      >
-                        <option value="">Añadir categoría...</option>
-                        {categories
-                          .filter(catName => {
-                            const cat = tournament.categories.find((c: any) => c.name === catName);
-                            return cat && !participant.categories.includes(cat.id);
-                          })
-                          .map((category, index) => (
-                            <option key={index} value={category}>{category}</option>
-                          ))}
-                      </select>
-                    )}
+                    <CategoryToggle
+                      categories={categories}
+                      selected={participant.categories.map((catId) => getCategoryName(catId))}
+                      onToggle={(catName) => {
+                        const cat = tournament.categories.find((c: any) => c.name === catName);
+                        if (!cat) return;
+                        if (participant.categories.includes(cat.id)) {
+                          handleRemoveCategoryClick(participant.id, cat.id, participant.name, catName);
+                        } else {
+                          handleAddCategory(participant.id, catName);
+                        }
+                      }}
+                    />
                   </td>
                   {editMode && (
                     <td className="p-3 text-right">

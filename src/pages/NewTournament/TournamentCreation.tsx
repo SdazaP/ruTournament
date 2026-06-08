@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import TableCompetitors from '../../components/Tables/TableCompetitors';
 import { db } from '../../common/db';
 import { isDuplicateName, findDuplicateNames } from '../../common/validation';
+import { WCA_EVENT_CONFIG } from '../../common/wcaEvents';
 import { FaTrophy, FaLayerGroup, FaUsers, FaArrowRight, FaArrowLeft, FaCheck, FaEdit, FaClock, FaTrash, FaLock, FaRandom } from 'react-icons/fa';
 import { MdCategory, MdOutlineTimer } from 'react-icons/md';
 import { BsTrophyFill, BsGraphUp } from 'react-icons/bs';
@@ -50,7 +51,7 @@ export default function TournamentCreation() {
   const [configurePhase, setConfigurePhase] = useState<'list' | 'config'>('list');
   const [configuringIndex, setConfiguringIndex] = useState(0);
   const [competitorNameErrors, setCompetitorNameErrors] = useState<Record<number, string>>({});
-  const [newCatName, setNewCatName] = useState('3x3');
+  const [customCatName, setCustomCatName] = useState('');
   const [newCatFormat, setNewCatFormat] = useState<'WCA' | 'RedBull'>('WCA');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -58,18 +59,27 @@ export default function TournamentCreation() {
     setTournamentData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleAddCategory = () => {
+  const handleAddCategoryForEvent = (eventName: string) => {
     if (categories.length >= 10) return;
-    const used = categories.map(c => c.name);
-    if (used.includes(newCatName)) return;
     setCategories(prev => [...prev, {
-      name: newCatName, format: newCatFormat,
+      name: eventName, format: 'WCA',
       startTime: '10:00', endTime: '11:00',
       rounds: [{ roundNumber: 1, format: 'ao5', competitorsToAdvance: 'all', isFinal: true }],
       bracketMode: 'random', hasSeeding: false, seedingFormat: 'ao5',
     }]);
-    const next = PREDEFINED_CATEGORIES.find(c => ![...used, newCatName].includes(c)) || '';
-    setNewCatName(next);
+  };
+
+  const handleAddCustomCategory = () => {
+    if (categories.length >= 10) return;
+    const name = customCatName.trim();
+    if (!name || categories.some(c => c.name.toLowerCase() === name.toLowerCase())) return;
+    setCategories(prev => [...prev, {
+      name, format: newCatFormat,
+      startTime: '10:00', endTime: '11:00',
+      rounds: [{ roundNumber: 1, format: 'ao5', competitorsToAdvance: 'all', isFinal: true }],
+      bracketMode: 'random', hasSeeding: false, seedingFormat: 'ao5',
+    }]);
+    setCustomCatName('');
   };
 
   const handleRemoveCategory = (idx: number) => {
@@ -361,57 +371,80 @@ export default function TournamentCreation() {
         {currentStep === 2 && configurePhase === 'list' && (
           <div className="animate-fade-in">
             <h2 className="text-2xl font-bold mb-2 text-gray-200">Categorías y Eventos</h2>
-            <p className="text-gray-400 mb-6 border-b border-gray-700 pb-4">Añade los eventos y luego configura cada uno</p>
+            <p className="text-gray-400 mb-6 border-b border-gray-700 pb-4">
+              Selecciona los eventos del torneo ({categories.length}/10)
+            </p>
 
-            <div className="flex flex-col md:flex-row gap-3 mb-4">
-              <select value={newCatName || PREDEFINED_CATEGORIES.find(c => !categories.some(cat => cat.name === c)) || 'Otros'}
-                onChange={(e) => setNewCatName(e.target.value)} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
-                {PREDEFINED_CATEGORIES.map(c => (
-                  <option key={c} value={c} disabled={categories.some(cat => cat.name === c)}>{c} {categories.some(cat => cat.name === c) ? '(Ya agregada)' : ''}</option>
-                ))}
-                <option value="Otros">Otros...</option>
-              </select>
-              {!PREDEFINED_CATEGORIES.includes(newCatName) && (
-                <input type="text" placeholder="Nombre personalizado..." value={newCatName || ''} onChange={(e) => setNewCatName(e.target.value)}
-                  className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
-              )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+              {PREDEFINED_CATEGORIES.map((event) => {
+                const config = WCA_EVENT_CONFIG[event];
+                const added = categories.find(c => c.name === event);
+                const atLimit = !added && categories.length >= 10;
+                return (
+                  <button
+                    key={event}
+                    onClick={() => {
+                      if (added) {
+                        handleRemoveCategory(categories.indexOf(added));
+                      } else if (!atLimit) {
+                        handleAddCategoryForEvent(event);
+                      }
+                    }}
+                    disabled={atLimit}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-all ${
+                      added
+                        ? (added.format === 'WCA'
+                            ? 'bg-blue-600/20 border-blue-500/50 text-white'
+                            : 'bg-red-600/20 border-red-500/50 text-white')
+                        : atLimit
+                          ? 'bg-gray-800 border-gray-700 text-gray-600 opacity-40 cursor-not-allowed'
+                          : 'bg-gray-800 border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300 opacity-70 hover:opacity-100 cursor-pointer'
+                    }`}
+                  >
+                    <span className={`text-xl font-bold ${added && config ? config.color : ''}`}>
+                      {config?.abbr || event}
+                    </span>
+                    <span className="text-[11px] leading-tight text-center">{event}</span>
+                    {added && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                        added.format === 'WCA' ? 'bg-blue-600 text-blue-200' : 'bg-red-600 text-red-200'
+                      }`}>
+                        {added.format === 'WCA' ? 'WCA' : 'RB'}
+                      </span>
+                    )}
+                    {!added && !atLimit && (
+                      <span className="text-[10px] text-gray-600">Agregar</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex gap-3 mb-6">
+              <input type="text" placeholder="Otra categoría personalizada..."
+                value={customCatName}
+                onChange={(e) => setCustomCatName(e.target.value)}
+                className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
               <select value={newCatFormat} onChange={(e) => setNewCatFormat(e.target.value as 'WCA' | 'RedBull')}
-                className="flex-1 md:max-w-[150px] bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+                className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm">
                 <option value="WCA">WCA</option>
                 <option value="RedBull">Red Bull</option>
               </select>
-              <button onClick={handleAddCategory} disabled={categories.length >= 10 || categories.some(c => c.name === newCatName)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${categories.length >= 10 || categories.some(c => c.name === newCatName) ? 'bg-gray-600 opacity-50 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
+              <button onClick={handleAddCustomCategory}
+                disabled={!customCatName.trim() || categories.length >= 10 || categories.some(c => c.name.toLowerCase() === customCatName.trim().toLowerCase())}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
                 + Añadir
               </button>
             </div>
 
-            <div className="overflow-hidden rounded-lg border border-gray-700">
-              <table className="w-full">
-                <thead className="bg-gray-750">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Evento</th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Formato</th>
-                    <th className="px-4 py-3 text-center text-sm font-medium text-gray-400 w-16"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-700">
-                  {categories.map((cat, i) => (
-                    <tr key={i} className="hover:bg-gray-750/50">
-                      <td className="px-4 py-3 font-medium text-sm">{cat.name}</td>
-                      <td className="px-4 py-3 text-sm">
-                        <span className={`px-2 py-0.5 rounded text-xs ${cat.format === 'WCA' ? 'bg-blue-900/40 text-blue-300' : 'bg-red-900/40 text-red-300'}`}>{cat.format === 'WCA' ? 'WCA' : 'Red Bull'}</span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <button onClick={() => categories.length > 1 && handleRemoveCategory(i)} disabled={categories.length <= 1}
-                          className={`text-sm ${categories.length <= 1 ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-red-400'}`}>×</button>
-                      </td>
-                    </tr>
-                  ))}
-                  {categories.length === 0 && <tr><td colSpan={3} className="px-4 py-8 text-center text-gray-500">Sin categorías</td></tr>}
-                </tbody>
-              </table>
-            </div>
+            {categories.length > 0 && (
+              <div className="flex justify-end">
+                <button onClick={startConfigure}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+                  Configurar categorías <FaArrowRight />
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -433,6 +466,33 @@ export default function TournamentCreation() {
                   <input type="time" value={categories[configuringIndex]?.endTime || '11:00'}
                     onChange={(e) => handleUpdateSchedule('endTime', e.target.value)}
                     className="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                </div>
+              </div>
+
+              {/* Formato */}
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">Formato</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleUpdateFormat('WCA')}
+                    className={`px-4 py-1.5 rounded text-sm transition-colors ${
+                      categories[configuringIndex]?.format === 'WCA'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                    }`}
+                  >
+                    WCA
+                  </button>
+                  <button
+                    onClick={() => handleUpdateFormat('RedBull')}
+                    className={`px-4 py-1.5 rounded text-sm transition-colors ${
+                      categories[configuringIndex]?.format === 'RedBull'
+                        ? 'bg-red-600 text-white'
+                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                    }`}
+                  >
+                    Red Bull
+                  </button>
                 </div>
               </div>
 
@@ -463,7 +523,7 @@ export default function TournamentCreation() {
                               <option value="16">16</option>
                               <option value="all">Todos</option>
                             </select>
-                          </div>
+              </div>
                         )}
                         {categories[configuringIndex]?.rounds.length > 1 && (
                           <button onClick={() => handleDeleteRound(ri)} className="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded ml-auto">×</button>
