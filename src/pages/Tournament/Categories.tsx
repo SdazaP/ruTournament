@@ -9,6 +9,9 @@ import {
   FaArrowLeft,
   FaLock,
   FaClock,
+  FaSave,
+  FaUndo,
+  FaExclamationTriangle,
 } from 'react-icons/fa';
 import { db } from '../../common/db';
 import { useTournamentStatus } from '../../hooks/useTournamentStatus';
@@ -60,6 +63,9 @@ const Categories = () => {
   });
 
   const [editMode, setEditMode] = useState(false);
+  const [originalCategories, setOriginalCategories] = useState<Category[]>([]);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showFormatWarning, setShowFormatWarning] = useState<{id: string, name: string, from: string, to: string, participants: number, hasResults: boolean} | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<{id: string, name: string} | null>(null);
   const [roundToDelete, setRoundToDelete] = useState<{id: string, roundNumber: number, name: string} | null>(null);
   const icons = ['3x3', '2x2', '4x4', '5x5', '6x6', '7x7', 'OH', 'Clock', 'Mega', 'Pyr', 'Skewb', 'Sq1'];
@@ -143,10 +149,12 @@ const Categories = () => {
     }
 
     // Actualizar Dexie
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.categories = [...(currentTournament.categories || []), categoryToAdd] as any;
-      await db.tournaments.put(currentTournament as any);
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.categories = [...(currentTournament.categories || []), categoryToAdd] as any;
+        await db.tournaments.put(currentTournament as any);
+      }
     }
 
     // Actualizar estado local
@@ -190,17 +198,18 @@ const Categories = () => {
     if (!tournamentId || !categoryToDelete) return;
     const { id } = categoryToDelete;
 
-    // Actualizar Dexie
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.categories = currentTournament.categories.filter((cat: any) => cat.id !== id);
-      if (currentTournament.competitors) {
-        currentTournament.competitors = currentTournament.competitors.map((comp: any) => ({
-          ...comp,
-          categories: comp.categories.filter((catId: string) => catId !== id),
-        }));
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.categories = currentTournament.categories.filter((cat: any) => cat.id !== id);
+        if (currentTournament.competitors) {
+          currentTournament.competitors = currentTournament.competitors.map((comp: any) => ({
+            ...comp,
+            categories: comp.categories.filter((catId: string) => catId !== id),
+          }));
+        }
+        await db.tournaments.put(currentTournament as any);
       }
-      await db.tournaments.put(currentTournament as any);
     }
 
     setCategories(categories.filter((category) => category.id !== id));
@@ -214,16 +223,18 @@ const Categories = () => {
   ) => {
     if (!tournamentId) return;
 
-    // Actualizar Dexie
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.categories = currentTournament.categories.map((cat: any) => {
-        if (cat.id === id) {
-          return { ...cat, [field]: value };
-        }
-        return cat;
-      }) as any;
-      await db.tournaments.put(currentTournament as any);
+    if (!editMode) {
+      // Actualizar Dexie
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.categories = currentTournament.categories.map((cat: any) => {
+          if (cat.id === id) {
+            return { ...cat, [field]: value };
+          }
+          return cat;
+        }) as any;
+        await db.tournaments.put(currentTournament as any);
+      }
     }
 
     // Actualizar estado local
@@ -240,15 +251,17 @@ const Categories = () => {
   const handleUpdateRoom = async (id: string, value: string) => {
     if (!tournamentId) return;
 
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.categories = currentTournament.categories.map((cat: any) => {
-        if (cat.id === id) {
-          return { ...cat, room: value };
-        }
-        return cat;
-      }) as any;
-      await db.tournaments.put(currentTournament as any);
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.categories = currentTournament.categories.map((cat: any) => {
+          if (cat.id === id) {
+            return { ...cat, room: value };
+          }
+          return cat;
+        }) as any;
+        await db.tournaments.put(currentTournament as any);
+      }
     }
 
     setCategories(
@@ -264,45 +277,47 @@ const Categories = () => {
   const handleUpdateFormat = async (id: string, format: 'WCA' | 'RedBull') => {
     if (!tournamentId) return;
 
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.categories = currentTournament.categories.map((cat: any) => {
-        if (cat.id === id) {
-          return {
-            ...cat,
-            format: format.toLowerCase(),
-            ...(format === 'WCA' && !cat.rounds
-              ? { 
-                  rounds: [{ 
-                    num: 1, 
-                    format: 'ao5',
-                    results: [],
-                    competitorsToAdvance: 'all',
-                    isFinal: true 
-                  }] 
-                }
-              : {}),
-            ...(format === 'RedBull'
-              ? { 
-                  rounds: [{ 
-                    num: 1, 
-                    format: 'rb',
-                    results: [],
-                    competitorsToAdvance: 'all',
-                    isFinal: true,
-                    matches: [],
-                    bracketMode: 'random'
-                  }],
-                  bracketMode: 'random',
-                  hasSeeding: false,
-                  seedingFormat: 'ao5'
-                }
-              : {}),
-          };
-        }
-        return cat;
-      }) as any;
-      await db.tournaments.put(currentTournament as any);
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.categories = currentTournament.categories.map((cat: any) => {
+          if (cat.id === id) {
+            return {
+              ...cat,
+              format: format.toLowerCase(),
+              ...(format === 'WCA' && !cat.rounds
+                ? { 
+                    rounds: [{ 
+                      num: 1, 
+                      format: 'ao5',
+                      results: [],
+                      competitorsToAdvance: 'all',
+                      isFinal: true 
+                    }] 
+                  }
+                : {}),
+              ...(format === 'RedBull'
+                ? { 
+                    rounds: [{ 
+                      num: 1, 
+                      format: 'rb',
+                      results: [],
+                      competitorsToAdvance: 'all',
+                      isFinal: true,
+                      matches: [],
+                      bracketMode: 'random'
+                    }],
+                    bracketMode: 'random',
+                    hasSeeding: false,
+                    seedingFormat: 'ao5'
+                  }
+                : {}),
+            };
+          }
+          return cat;
+        }) as any;
+        await db.tournaments.put(currentTournament as any);
+      }
     }
 
     setCategories(
@@ -341,22 +356,24 @@ const Categories = () => {
   ) => {
     if (!tournamentId) return;
 
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.categories = currentTournament.categories.map((cat: any) => {
-        if (cat.id === id && cat.rounds) {
-          return {
-            ...cat,
-            rounds: cat.rounds.map((round: any) =>
-              round.num === roundNumber
-                ? { ...round, competitorsToAdvance: value }
-                : round
-            ),
-          };
-        }
-        return cat;
-      }) as any;
-      await db.tournaments.put(currentTournament as any);
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.categories = currentTournament.categories.map((cat: any) => {
+          if (cat.id === id && cat.rounds) {
+            return {
+              ...cat,
+              rounds: cat.rounds.map((round: any) =>
+                round.num === roundNumber
+                  ? { ...round, competitorsToAdvance: value }
+                  : round
+              ),
+            };
+          }
+          return cat;
+        }) as any;
+        await db.tournaments.put(currentTournament as any);
+      }
     }
 
     setCategories(
@@ -379,36 +396,30 @@ const Categories = () => {
   const handleAddRound = async (id: string) => {
     if (!tournamentId) return;
 
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.categories = currentTournament.categories.map((cat: any) => {
-        if (cat.id === id && cat.format === 'wca') {
-          const lastRound = cat.rounds?.[cat.rounds.length - 1];
-          const newRoundNumber = lastRound ? lastRound.num + 1 : 1;
-          const isFinal = true;
-
-          const updatedRounds = cat.rounds?.map((round: any) => ({
-            ...round,
-            isFinal: false
-          })) || [];
-
-          return {
-            ...cat,
-            rounds: [
-              ...updatedRounds,
-              {
-                num: newRoundNumber,
-                format: 'ao5',
-                competitorsToAdvance: 0,
-                isFinal,
-                results: []
-              },
-            ],
-          };
-        }
-        return cat;
-      }) as any;
-      await db.tournaments.put(currentTournament as any);
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.categories = currentTournament.categories.map((cat: any) => {
+          if (cat.id === id && cat.format === 'wca') {
+            const lastRound = cat.rounds?.[cat.rounds.length - 1];
+            const newRoundNumber = lastRound ? lastRound.num + 1 : 1;
+            const isFinal = true;
+            const updatedRounds = cat.rounds?.map((round: any) => ({
+              ...round,
+              isFinal: false
+            })) || [];
+            return {
+              ...cat,
+              rounds: [
+                ...updatedRounds,
+                { num: newRoundNumber, format: 'ao5', competitorsToAdvance: 0, isFinal, results: [] },
+              ],
+            };
+          }
+          return cat;
+        }) as any;
+        await db.tournaments.put(currentTournament as any);
+      }
     }
 
     setCategories(
@@ -449,26 +460,21 @@ const Categories = () => {
     if (!tournamentId || !roundToDelete) return;
     const { id, roundNumber } = roundToDelete;
 
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.categories = currentTournament.categories.map((cat: any) => {
-        if (cat.id === id && cat.format === 'wca' && cat.rounds) {
-          const filteredRounds = cat.rounds.filter(
-            (round: any) => round.num !== roundNumber,
-          );
-
-          if (filteredRounds.length > 0) {
-            filteredRounds[filteredRounds.length - 1].isFinal = true;
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.categories = currentTournament.categories.map((cat: any) => {
+          if (cat.id === id && cat.format === 'wca' && cat.rounds) {
+            const filteredRounds = cat.rounds.filter((round: any) => round.num !== roundNumber);
+            if (filteredRounds.length > 0) {
+              filteredRounds[filteredRounds.length - 1].isFinal = true;
+            }
+            return { ...cat, rounds: filteredRounds };
           }
-
-          return {
-            ...cat,
-            rounds: filteredRounds
-          };
-        }
-        return cat;
-      }) as any;
-      await db.tournaments.put(currentTournament as any);
+          return cat;
+        }) as any;
+        await db.tournaments.put(currentTournament as any);
+      }
     }
 
     setCategories(
@@ -497,20 +503,22 @@ const Categories = () => {
   ) => {
     if (!tournamentId) return;
 
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.categories = currentTournament.categories.map((cat: any) => {
-        if (cat.id === id && cat.format === 'wca' && cat.rounds) {
-          return {
-            ...cat,
-            rounds: cat.rounds.map((round: any) =>
-              round.num === roundNumber ? { ...round, format } : round,
-            ),
-          };
-        }
-        return cat;
-      }) as any;
-      await db.tournaments.put(currentTournament as any);
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.categories = currentTournament.categories.map((cat: any) => {
+          if (cat.id === id && cat.format === 'wca' && cat.rounds) {
+            return {
+              ...cat,
+              rounds: cat.rounds.map((round: any) =>
+                round.num === roundNumber ? { ...round, format } : round,
+              ),
+            };
+          }
+          return cat;
+        }) as any;
+        await db.tournaments.put(currentTournament as any);
+      }
     }
 
     // Actualizar estado local
@@ -529,8 +537,133 @@ const Categories = () => {
     );
   };
 
+  const handleFormatClick = (category: Category, newFormat: 'WCA' | 'RedBull') => {
+    if (category.format === newFormat) return;
+    const hasResults = category.rounds?.some((r) => {
+      const dbCat = tournament?.categories?.find((c: any) => c.id === category.id);
+      const dbRound = dbCat?.rounds?.find((rr: any) => rr.num === r.roundNumber);
+      return dbRound?.results?.length > 0 || dbRound?.matches?.length > 0;
+    });
+    if (category.participants > 0 || hasResults) {
+      setShowFormatWarning({
+        id: category.id,
+        name: category.name,
+        from: category.format,
+        to: newFormat,
+        participants: category.participants,
+        hasResults: !!hasResults,
+      });
+    } else {
+      handleUpdateFormat(category.id, newFormat);
+    }
+  };
+
+  const confirmFormatChange = () => {
+    if (showFormatWarning) {
+      handleUpdateFormat(showFormatWarning.id, showFormatWarning.to as 'WCA' | 'RedBull');
+      setShowFormatWarning(null);
+    }
+  };
+
   const toggleEditMode = () => {
-    if (!isFinalized) setEditMode(!editMode);
+    if (isFinalized) return;
+    if (editMode) {
+      const hasChanges = categories.some((cat) => {
+        const orig = originalCategories.find((o) => o.id === cat.id);
+        if (!orig) return true;
+        return cat.startTime !== orig.startTime || cat.endTime !== orig.endTime || cat.room !== orig.room || cat.format !== orig.format || JSON.stringify(cat.rounds) !== JSON.stringify(orig.rounds) || (cat as any).bracketMode !== (orig as any).bracketMode || (cat as any).hasSeeding !== (orig as any).hasSeeding || (cat as any).seedingFormat !== (orig as any).seedingFormat;
+      }) || categories.length !== originalCategories.length;
+      if (hasChanges) {
+        setShowConfirmModal(true);
+      } else {
+        setEditMode(false);
+        setOriginalCategories([]);
+      }
+    } else {
+      setOriginalCategories(JSON.parse(JSON.stringify(categories)));
+      setEditMode(true);
+    }
+  };
+
+  const changedCount = !editMode
+    ? 0
+    : categories.filter((cat) => {
+        const orig = originalCategories.find((o) => o.id === cat.id);
+        if (!orig) return true;
+        return cat.startTime !== orig.startTime || cat.endTime !== orig.endTime || cat.room !== orig.room || cat.format !== orig.format || JSON.stringify(cat.rounds) !== JSON.stringify(orig.rounds) || (cat as any).bracketMode !== (orig as any).bracketMode || (cat as any).hasSeeding !== (orig as any).hasSeeding || (cat as any).seedingFormat !== (orig as any).seedingFormat;
+      }).length + Math.max(0, categories.length - originalCategories.length);
+
+  const handleSaveAll = async () => {
+    if (!tournamentId) return;
+    const t = await db.tournaments.get(tournamentId);
+    if (t) {
+      const originalIds = originalCategories.map((c) => c.id);
+      const currentIds = categories.map((c) => c.id);
+      const deletedIds = originalIds.filter((id) => !currentIds.includes(id));
+
+      if (deletedIds.length > 0 && t.competitors) {
+        t.competitors = t.competitors.map((comp: any) => ({
+          ...comp,
+          categories: comp.categories.filter((catId: string) => !deletedIds.includes(catId)),
+        }));
+      }
+
+      t.categories = categories.map((cat) => {
+        const existing = t.categories.find((c: any) => c.id === cat.id);
+        if (existing) {
+          return {
+            ...existing,
+            name: cat.name,
+            format: cat.format.toLowerCase(),
+            startTime: cat.startTime,
+            endTime: cat.endTime,
+            room: cat.room || '',
+            rounds: cat.rounds?.map((r) => ({
+              num: r.roundNumber,
+              format: r.format,
+              competitorsToAdvance: r.competitorsToAdvance,
+              isFinal: r.isFinal,
+              isSeeding: r.isSeeding || false,
+              results: existing.rounds?.find((er: any) => er.num === r.roundNumber)?.results || [],
+              matches: existing.rounds?.find((er: any) => er.num === r.roundNumber)?.matches || [],
+            })) || [],
+            bracketMode: (cat as any).bracketMode || existing.bracketMode,
+            hasSeeding: (cat as any).hasSeeding,
+            seedingFormat: (cat as any).seedingFormat,
+          };
+        }
+        return {
+          id: cat.id,
+          name: cat.name,
+          format: cat.format.toLowerCase(),
+          startTime: cat.startTime,
+          endTime: cat.endTime,
+          room: cat.room || '',
+          rounds: cat.rounds?.map((r) => ({
+            num: r.roundNumber,
+            format: r.format,
+            results: [],
+            competitorsToAdvance: r.competitorsToAdvance,
+            isFinal: r.isFinal,
+            isSeeding: r.isSeeding || false,
+          })) || [],
+          bracketMode: (cat as any).bracketMode || 'random',
+          hasSeeding: (cat as any).hasSeeding || false,
+          seedingFormat: (cat as any).seedingFormat || 'ao5',
+        };
+      }) as any;
+      await db.tournaments.put(t as any);
+    }
+    setEditMode(false);
+    setShowConfirmModal(false);
+    setOriginalCategories([]);
+  };
+
+  const handleDiscardAll = () => {
+    setCategories(JSON.parse(JSON.stringify(originalCategories)));
+    setEditMode(false);
+    setShowConfirmModal(false);
+    setOriginalCategories([]);
   };
 
   return (
@@ -834,7 +967,7 @@ const Categories = () => {
                   </label>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleUpdateFormat(category.id, 'WCA')}
+                      onClick={() => handleFormatClick(category, 'WCA')}
                       className={`px-3 py-1 rounded text-sm ${
                         category.format === 'WCA'
                           ? 'bg-blue-600'
@@ -844,7 +977,7 @@ const Categories = () => {
                       WCA
                     </button>
                     <button
-                      onClick={() => handleUpdateFormat(category.id, 'RedBull')}
+                      onClick={() => handleFormatClick(category, 'RedBull')}
                       className={`px-3 py-1 rounded text-sm ${
                         category.format === 'RedBull'
                           ? 'bg-blue-600'
@@ -954,12 +1087,14 @@ const Categories = () => {
                       onChange={async (e) => {
                         const mode = e.target.value as 'random' | 'manual';
                         if (!tournamentId) return;
-                        const ct = await db.tournaments.get(tournamentId);
-                        if (ct) {
-                          ct.categories = ct.categories.map((c: any) =>
-                            c.id === category.id ? { ...c, bracketMode: mode } : c
-                          ) as any;
-                          await db.tournaments.put(ct as any);
+                        if (!editMode) {
+                          const ct = await db.tournaments.get(tournamentId);
+                          if (ct) {
+                            ct.categories = ct.categories.map((c: any) =>
+                              c.id === category.id ? { ...c, bracketMode: mode } : c
+                            ) as any;
+                            await db.tournaments.put(ct as any);
+                          }
                         }
                         setCategories(
                           categories.map((c) =>
@@ -981,27 +1116,29 @@ const Categories = () => {
                         onChange={async (e) => {
                           const checked = e.target.checked;
                           if (!tournamentId) return;
-                          const ct = await db.tournaments.get(tournamentId);
-                          if (ct) {
-                            ct.categories = ct.categories.map((c: any) => {
-                              if (c.id !== category.id) return c;
-                              if (checked) {
-                                c.hasSeeding = true;
-                                c.seedingFormat = (category as any).seedingFormat || 'ao5';
-                                c.rounds = [
-                                  { num: 1, format: c.seedingFormat || 'ao5', results: [], competitorsToAdvance: 'all', isFinal: false, isSeeding: true },
-                                  { num: 2, format: 'rb', results: [], competitorsToAdvance: 'all', isFinal: true, matches: [], bracketMode: c.bracketMode || 'random' }
-                                ];
-                              } else {
-                                c.hasSeeding = false;
-                                c.seedingFormat = undefined;
-                                c.rounds = [
-                                  { num: 1, format: 'rb', results: [], competitorsToAdvance: 'all', isFinal: true, matches: [], bracketMode: c.bracketMode || 'random' }
-                                ];
-                              }
-                              return c;
-                            }) as any;
-                            await db.tournaments.put(ct as any);
+                          if (!editMode) {
+                            const ct = await db.tournaments.get(tournamentId);
+                            if (ct) {
+                              ct.categories = ct.categories.map((c: any) => {
+                                if (c.id !== category.id) return c;
+                                if (checked) {
+                                  c.hasSeeding = true;
+                                  c.seedingFormat = (category as any).seedingFormat || 'ao5';
+                                  c.rounds = [
+                                    { num: 1, format: c.seedingFormat || 'ao5', results: [], competitorsToAdvance: 'all', isFinal: false, isSeeding: true },
+                                    { num: 2, format: 'rb', results: [], competitorsToAdvance: 'all', isFinal: true, matches: [], bracketMode: c.bracketMode || 'random' }
+                                  ];
+                                } else {
+                                  c.hasSeeding = false;
+                                  c.seedingFormat = undefined;
+                                  c.rounds = [
+                                    { num: 1, format: 'rb', results: [], competitorsToAdvance: 'all', isFinal: true, matches: [], bracketMode: c.bracketMode || 'random' }
+                                  ];
+                                }
+                                return c;
+                              }) as any;
+                              await db.tournaments.put(ct as any);
+                            }
                           }
                           setCategories(
                             categories.map((c) => {
@@ -1033,17 +1170,19 @@ const Categories = () => {
                           onChange={async (e) => {
                             const fmt = e.target.value as 'ao3' | 'ao5';
                             if (!tournamentId) return;
-                            const ct = await db.tournaments.get(tournamentId);
-                            if (ct) {
-                              ct.categories = ct.categories.map((c: any) => {
-                                if (c.id !== category.id) return c;
-                                c.seedingFormat = fmt;
-                                if (c.rounds && c.rounds[0] && c.rounds[0].isSeeding) {
-                                  c.rounds[0].format = fmt;
-                                }
-                                return c;
-                              }) as any;
-                              await db.tournaments.put(ct as any);
+                            if (!editMode) {
+                              const ct = await db.tournaments.get(tournamentId);
+                              if (ct) {
+                                ct.categories = ct.categories.map((c: any) => {
+                                  if (c.id !== category.id) return c;
+                                  c.seedingFormat = fmt;
+                                  if (c.rounds && c.rounds[0] && c.rounds[0].isSeeding) {
+                                    c.rounds[0].format = fmt;
+                                  }
+                                  return c;
+                                }) as any;
+                                await db.tournaments.put(ct as any);
+                              }
                             }
                             setCategories(
                               categories.map((c) => {
@@ -1100,6 +1239,85 @@ const Categories = () => {
           © 2026 ruTournament - Sebastian Daza Pérez
         </div>
       </div>
+
+      {/* Modal de Confirmación de Cambios */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
+                <FaSave size={22} />
+              </div>
+              <h3 className="text-xl font-bold text-center text-white mb-2">Guardar Cambios</h3>
+              <p className="text-gray-400 text-center text-sm mb-6">
+                Se modificaron <strong className="text-white">{changedCount}</strong> {changedCount === 1 ? 'categoría' : 'categorías'}. ¿Qué deseas hacer con los cambios?
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={handleSaveAll}
+                  className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
+                >
+                  <FaCheck /> Guardar Cambios
+                </button>
+                <button
+                  onClick={handleDiscardAll}
+                  className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
+                >
+                  <FaUndo /> Descartar Cambios
+                </button>
+                <button
+                  onClick={() => setShowConfirmModal(false)}
+                  className="w-full py-2.5 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors font-medium text-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Advertencia de Cambio de Formato */}
+      {showFormatWarning && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
+                <FaExclamationTriangle size={22} />
+              </div>
+              <h3 className="text-xl font-bold text-center text-white mb-2">Cambiar Formato</h3>
+              <p className="text-gray-400 text-center text-sm mb-4">
+                <strong>{showFormatWarning.name}</strong> tiene <strong>{showFormatWarning.participants} competidor(es)</strong>{showFormatWarning.hasResults ? ' y resultados registrados' : ''}.
+                Cambiar de <strong>{showFormatWarning.from}</strong> a <strong>{showFormatWarning.to}</strong> reiniciará la configuración de rondas{showFormatWarning.hasResults ? ' y se perderán los resultados actuales' : ''}.
+              </p>
+              <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-400 mb-6 flex items-start gap-2">
+                <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
+                <span>Esta acción no se puede deshacer tras guardar los cambios.</span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setShowFormatWarning(null)}
+                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmFormatChange}
+                  className="flex-1 py-2.5 px-4 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
+                >
+                  Cambiar de Todos Modos
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editMode && (
+        <div className="fixed bottom-4 right-4 bg-yellow-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 animate-bounce z-50">
+          <FaEdit /> Modo edición activado
+        </div>
+      )}
 
       {/* Modal de Confirmación de Categoría */}
       {categoryToDelete && (
