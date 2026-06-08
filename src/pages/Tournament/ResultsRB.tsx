@@ -232,7 +232,7 @@ const ResultsRB = () => {
 
     const catCompIds = countCatParticipants(tourneyObj);
     if (catCompIds.length < 2) {
-      alert('Se necesitan al menos 2 competidores inscritos en esta categoria para generar brackets.');
+      alert('Se necesitan al menos 2 competidores inscritos en esta categoría para generar brackets.');
       return;
     }
 

@@ -27,7 +27,7 @@ const TableTournament: React.FC<TableTournamentProps> = ({
       "3x3 OH",
       "Clock", "Megaminx", "Pyraminx", "Skewb", "Square-1",
     ],
-    rounds: ["Final directa", "2 rondas", "3 Rondas", "4 Rondas", "5 Rondas"],
+    rounds: ["Final directa", "2 Rondas", "3 Rondas", "4 Rondas", "5 Rondas"],
     mode: ["WCA"],
     avg_modes: ["ao5", "mo3"],
   };

@@ -587,7 +587,7 @@ const Groups = () => {
                 </div>
                 <h3 className="text-xl font-bold text-center text-white mb-2">Sin Competidores</h3>
                 <p className="text-gray-400 text-center text-sm mb-6">
-                  No hay competidores inscritos en esta categoría. Para generar grupos primero debes agregar participantes y asignarlos a sus categorías.
+                  No hay competidores inscritos en esta categoría. Para generar grupos primero debes agregar competidores y asignarlos a sus categorías.
                 </p>
                 <div className="flex flex-col gap-2">
                   <button

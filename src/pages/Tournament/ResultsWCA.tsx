@@ -719,7 +719,7 @@ const ResultsWCA = () => {
                         editMode ? 'hover:bg-gray-700/50' : ''
                       }`}
                     >
-                      {/* Nombre del participante */}
+                      {/* Nombre del competidor */}
                       <td className="px-4 py-3 truncate max-w-[180px] font-medium">
                         {participant.name}
                       </td>

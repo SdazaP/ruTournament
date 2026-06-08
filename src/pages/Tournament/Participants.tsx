@@ -233,7 +233,7 @@ const Participants = () => {
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h2 className="text-xl sm:text-2xl font-bold">
-          Participantes {tournament ? `de "${tournament.name}"` : ''}
+          Competidores {tournament ? `de "${tournament.name}"` : ''}
         </h2>
         <button
           onClick={() => !isFinalized && setEditMode(!editMode)}
@@ -256,7 +256,7 @@ const Participants = () => {
       {isFinalized && (
         <div className="mb-6 bg-gray-700/40 border border-gray-600 rounded-lg px-4 py-3 flex items-center gap-3 text-gray-300 text-sm">
           <FaLock className="text-gray-400 flex-shrink-0" />
-          <span><strong className="text-white">Torneo Finalizado.</strong> No se pueden agregar, editar ni eliminar participantes. Reactiva el torneo desde el Panel.</span>
+          <span><strong className="text-white">Torneo Finalizado.</strong> No se pueden agregar, editar ni eliminar competidores. Reactiva el torneo desde el Panel.</span>
         </div>
       )}
       
@@ -287,16 +287,16 @@ const Participants = () => {
         </select>
         
         <div className="text-sm text-gray-400 flex items-center">
-          {filteredParticipants.length} {filteredParticipants.length === 1 ? 'participante' : 'participantes'} encontrados
+          {filteredParticipants.length} {filteredParticipants.length === 1 ? 'competidor' : 'competidores'} encontrados
         </div>
       </div>
 
-      {/* Formulario para agregar nuevo participante */}
+      {/* Formulario para agregar nuevo competidor */}
       {categories.length > 0 && !isFinalized && (
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <input
             type="text"
-            placeholder="Nombre del participante"
+            placeholder="Nombre del competidor"
             value={newParticipant.name}
             onChange={(e) => setNewParticipant({...newParticipant, name: e.target.value})}
             className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -357,7 +357,7 @@ const Participants = () => {
         </div>
       </div>
 
-      {/* Tabla de participantes */}
+      {/* Tabla de competidores */}
       <div className="overflow-x-auto rounded-lg border border-gray-700 mb-8">
         <table className="w-full">
           <thead className="bg-gray-750">
@@ -466,7 +466,7 @@ const Participants = () => {
                       <button
                         onClick={() => setParticipantToDelete(participant)}
                         className="text-red-500 hover:text-red-400 px-3 py-1 rounded hover:bg-gray-700 transition-colors flex items-center gap-1 mx-auto"
-                        title="Eliminar participante"
+                        title="Eliminar competidor"
                       >
                         <FaTrash /> Eliminar
                       </button>
@@ -477,7 +477,7 @@ const Participants = () => {
             ) : (
               <tr>
                 <td colSpan={editMode ? 4 : 3} className="p-4 text-center text-gray-400">
-                  No se encontraron participantes
+                  No se encontraron competidores
                 </td>
               </tr>
             )}
@@ -493,7 +493,7 @@ const Participants = () => {
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
                 <FaTrash size={20} />
               </div>
-              <h3 className="text-xl font-bold text-center text-white mb-2">Eliminar Participante</h3>
+              <h3 className="text-xl font-bold text-center text-white mb-2">Eliminar Competidor</h3>
               <p className="text-gray-400 text-center text-sm mb-4">
                 ¿Estás seguro que deseas expulsar del torneo a <span className="font-semibold">{participantToDelete.name}</span>? Perderá todos sus registros y roles de staff en los grupos seleccionados.
               </p>

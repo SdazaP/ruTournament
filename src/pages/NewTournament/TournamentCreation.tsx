@@ -518,7 +518,7 @@ export default function TournamentCreation() {
         {currentStep === 3 && (
           <div className="animate-fade-in">
             <h2 className="text-2xl font-bold mb-2 text-gray-200">Competidores</h2>
-            <p className="text-gray-400 mb-6 border-b border-gray-700 pb-4">Registra a los participantes y asígnales sus categorías</p>
+            <p className="text-gray-400 mb-6 border-b border-gray-700 pb-4">Registra a los competidores y asígnales sus categorías</p>
             
             <div className="w-full overflow-hidden rounded-lg">
               <TableCompetitors 

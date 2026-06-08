@@ -473,8 +473,8 @@ const TournamentWelcome = () => {
                 </div>
                 <span className="text-sm font-medium">{category.name}</span>
                 <span className="text-xs text-gray-400 mt-1">
-                  {category.participants}{' '}
-                  {category.participants === 1 ? 'participante' : 'participantes'}
+{category.participants}{' '}
+                   {category.participants === 1 ? 'competidor' : 'competidores'}
                 </span>
               </Link>
             ))}
@@ -485,7 +485,7 @@ const TournamentWelcome = () => {
         <div className="bg-gray-800 rounded-xl p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
             <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 whitespace-nowrap">
-              <MdPeople className="text-lg sm:text-xl" /> Participantes ({participants.length})
+              <MdPeople className="text-lg sm:text-xl" /> Competidores ({participants.length})
             </h2>
             <Link
               to={`/dashboard/tournament/${id}/competitors`}
@@ -495,7 +495,7 @@ const TournamentWelcome = () => {
                   : 'hover:bg-blue-700'
               }`}
             >
-              + Gestionar participantes
+              + Gestionar competidores
             </Link>
           </div>
 
@@ -523,7 +523,7 @@ const TournamentWelcome = () => {
                 {participants.length > 5 && (
                   <tr>
                     <td colSpan={2} className="py-3 px-4 text-center text-sm text-gray-400">
-                      + {participants.length - 5} participantes más
+                      + {participants.length - 5} competidores más
                     </td>
                   </tr>
                 )}

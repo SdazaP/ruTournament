@@ -1000,10 +1000,10 @@ const Categories = () => {
 
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-400">
-                  {category.participants}{' '}
-                  {category.participants === 1
-                    ? 'participante'
-                    : 'participantes'}
+{category.participants}{' '}
+                   {category.participants === 1
+                     ? 'competidor'
+                     : 'competidores'}
                 </span>
               </div>
             </div>
