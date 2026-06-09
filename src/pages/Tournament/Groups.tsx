@@ -8,7 +8,7 @@ import { useTournamentStatus } from '../../hooks/useTournamentStatus';
 const Groups = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isFinalized } = useTournamentStatus(id);
+  const { isFinalized, status } = useTournamentStatus(id);
   const [competitors, setCompetitors] = useState<CompetitorLocal[]>([]);
   const [categories, setCategories] = useState<CategoryLocal[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -257,6 +257,15 @@ const Groups = () => {
           </h2>
         </div>
       </div>
+
+      {status === 'proximamente' && (
+        <div className="mb-6 bg-blue-900/20 border border-blue-700/40 rounded-lg px-4 py-3 flex items-center gap-3 text-blue-300 text-sm">
+          <FaClock className="flex-shrink-0" />
+          <span>
+            <strong className="text-white">Torneo Próximamente.</strong> Puedes generar horarios pero la carga de resultados está deshabilitada hasta que actives el torneo.
+          </span>
+        </div>
+      )}
 
       {categories.length === 0 ? (
         <div className="text-center py-16 text-gray-400 flex flex-col items-center gap-3">

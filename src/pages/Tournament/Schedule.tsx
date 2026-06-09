@@ -56,7 +56,7 @@ const snapTo5 = (mins: number): number => Math.round(mins / 5) * 5;
 
 const Schedule = () => {
   const { id: tournamentId } = useParams();
-  const { isFinalized } = useTournamentStatus(tournamentId);
+  const { isFinalized, status } = useTournamentStatus(tournamentId);
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [rooms, setRooms] = useState<string[]>([]);
   const [selectedRoom, setSelectedRoom] = useState('__all__');
@@ -509,6 +509,15 @@ const Schedule = () => {
               )}
             </span>
           ))}
+        </div>
+      )}
+
+      {status === 'proximamente' && (
+        <div className="mb-6 bg-blue-900/20 border border-blue-700/40 rounded-lg px-4 py-3 flex items-center gap-3 text-blue-300 text-sm">
+          <FaClock className="flex-shrink-0" />
+          <span>
+            <strong className="text-white">Torneo Próximamente.</strong> Puedes planificar el cronograma pero la carga de resultados está deshabilitada hasta que actives el torneo.
+          </span>
         </div>
       )}
 
