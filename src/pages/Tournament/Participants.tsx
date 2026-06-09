@@ -392,6 +392,7 @@ const Participants = () => {
                       categories={categories}
                       selected={participant.categories.map((catId) => getCategoryName(catId))}
                       onToggle={(catName) => {
+                        if (!editMode) return;
                         const cat = tournament.categories.find((c: any) => c.name === catName);
                         if (!cat) return;
                         if (participant.categories.includes(cat.id)) {
