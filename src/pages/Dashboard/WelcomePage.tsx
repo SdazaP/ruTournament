@@ -1,7 +1,17 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaBook } from 'react-icons/fa';
+import { db } from '../../common/db';
 
 const WelcomePage = () => {
+  const [tournaments, setTournaments] = useState<any[]>([]);
+
+  useEffect(() => {
+    db.tournaments.toArray().then((all) => {
+      setTournaments(all.sort((a, b) => Number(b.id) - Number(a.id)).slice(0, 3));
+    });
+  }, []);
+
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       {/* Header */}
@@ -62,73 +72,46 @@ const WelcomePage = () => {
         </div>
       </div>
 
-      {/* Latest Tournaments */}
+      {/* Torneos Recientes */}
       <div className="max-w-6xl mx-auto mb-16">
         <h2 className="text-2xl font-bold dark:text-white mb-6">Torneos Recientes</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Tournament Card 1 */}
-          <div className="dark:bg-gray-800 bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
-                T1
-              </div>
-              <h2 className="dark:text-white text-xl font-semibold">
-                Torneo de Verano
-              </h2>
-            </div>
-            <p className="dark:text-gray-300 mb-4">
-              Competencia anual de verano con los mejores equipos de la región.
-            </p>
-            <Link 
-              to="/dashboard" 
-              className="text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              Ver detalles →
-            </Link>
+        {tournaments.length === 0 ? (
+          <div className="text-center py-8 text-gray-400 dark:text-gray-500 bg-gray-800/30 dark:bg-white/5 rounded-xl border border-dashed border-gray-700 dark:border-gray-300 p-8">
+            <p className="mb-4">No hay torneos aún</p>
+            <Link to="new-tournament" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">Crear primer torneo →</Link>
           </div>
-
-          {/* Tournament Card 2 */}
-          <div className="dark:bg-gray-800 bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
-                T2
-              </div>
-              <h2 className="dark:text-white text-xl font-semibold">
-                Campeonato Local
-              </h2>
-            </div>
-            <p className="dark:text-gray-300 mb-4">
-              Torneo clasificatorio para el campeonato nacional de este año.
-            </p>
-            <Link 
-              to="/dashboard" 
-              className="text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              Ver detalles →
-            </Link>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {tournaments.map((t) => {
+              const initials = t.name.split(' ').map((w: string) => w[0]).join('').substring(0, 2).toUpperCase();
+              const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-amber-500', 'bg-red-500', 'bg-cyan-500'];
+              const colorIdx = tournaments.indexOf(t) % colors.length;
+              return (
+                <Link to={`/dashboard/tournament/${t.id}`} key={t.id}
+                  className="dark:bg-gray-800 bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow block">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className={`w-12 h-12 ${colors[colorIdx]} rounded-full flex items-center justify-center text-white font-bold text-sm`}>
+                      {initials}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h2 className="dark:text-white text-lg font-semibold truncate">{t.name}</h2>
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${
+                        t.status === 'activo' ? 'bg-green-600/20 text-green-400' :
+                        t.status === 'proximamente' ? 'bg-blue-600/20 text-blue-400' :
+                        'bg-gray-600/20 text-gray-400'
+                      }`}>{t.status === 'proximamente' ? 'próximamente' : t.status}</span>
+                    </div>
+                  </div>
+                  <p className="dark:text-gray-300 text-sm mb-1">{t.date || 'Sin fecha'} · {t.location || 'Sin ubicación'}</p>
+                  <p className="dark:text-gray-400 text-sm mb-4">
+                    {(t.categories?.length || 0)} categorías · {(t.competitors?.length || 0)} competidores
+                  </p>
+                  <span className="text-blue-600 dark:text-blue-400 hover:underline text-sm">Entrar al panel →</span>
+                </Link>
+              );
+            })}
           </div>
-
-          {/* Tournament Card 3 */}
-          <div className="dark:bg-gray-800 bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-                T3
-              </div>
-              <h2 className="dark:text-white text-xl font-semibold">
-                Copa Amistad
-              </h2>
-            </div>
-            <p className="dark:text-gray-300 mb-4">
-              Evento amistoso para promover el deporte y la camaradería.
-            </p>
-            <Link 
-              to="/dashboard" 
-              className="text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              Ver detalles →
-            </Link>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Call to Action */}
