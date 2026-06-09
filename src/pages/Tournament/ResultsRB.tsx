@@ -756,12 +756,12 @@ const ResultsRB = () => {
 
   return (
     <div className="text-white p-4 md:p-6 lg:p-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div className="flex items-center gap-3">
           <GiLaurelsTrophy className="text-red-500 text-2xl" />
           <h2 className="text-xl sm:text-2xl font-bold">Resultados Red Bull</h2>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
             onClick={() => {
               if (!canEdit) return;
@@ -835,7 +835,7 @@ const ResultsRB = () => {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="flex-1 min-w-[150px]">
           <label className="block text-xs sm:text-sm text-gray-400 mb-1 flex items-center gap-2">
             <MdCategory className="text-blue-400" /> Categoría
@@ -876,7 +876,7 @@ const ResultsRB = () => {
 
       {currentRound?.isSeeding && currentCategory && (
         <div className="mb-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-3">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
             <div className="flex items-center gap-2">
               <MdLeaderboard className="text-blue-400" />
               <h3 className="font-bold text-lg">Clasificación — {currentCategory.name} ({currentRound.format?.toUpperCase()})</h3>
@@ -884,7 +884,7 @@ const ResultsRB = () => {
             {canEdit && currentRound.results && currentRound.results.length > 0 && (
               <button
                 onClick={() => setShowGenerateConfirm(true)}
-                className="w-full md:w-auto px-4 py-2 text-sm bg-green-600 hover:bg-green-700 rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-4 py-2 text-sm bg-green-600 hover:bg-green-700 rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 <FaRandom /> Generar Brackets con Clasificación
               </button>
@@ -927,7 +927,7 @@ const ResultsRB = () => {
                   <FaInfoCircle className="text-yellow-400" /> Editando:{' '}
                   {competitors.find(c => c.id === editingSeedingId)?.name || editingSeedingId}
                 </span>
-        <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <button onClick={saveSeedingResults} className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm flex items-center gap-2"><FaSave /> Guardar</button>
                   <button onClick={cancelSeedingEdit} className="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm flex items-center gap-2"><FaTimes /> Cancelar</button>
                 </div>

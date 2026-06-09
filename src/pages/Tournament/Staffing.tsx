@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { FaUserShield, FaInfoCircle, FaExclamationTriangle, FaEdit, FaTimes, FaGavel, FaRunning, FaRandom, FaLock } from 'react-icons/fa';
+import { FaUserShield, FaInfoCircle, FaExclamationTriangle, FaEdit, FaTimes, FaGavel, FaRunning, FaRandom, FaLock, FaSave, FaUndo, FaCheck } from 'react-icons/fa';
 import { MdCategory } from 'react-icons/md';
 import { db } from '../../common/db';
 import { useTournamentStatus } from '../../hooks/useTournamentStatus';
@@ -35,6 +35,8 @@ const Staffing = () => {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [editMode, setEditMode] = useState(false);
+  const [originalCompetitors, setOriginalCompetitors] = useState<Competitor[]>([]);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   // Estado para el modal de confirmación
   const [confirmModal, setConfirmModal] = useState<{
@@ -95,9 +97,6 @@ const Staffing = () => {
   const executeToggleRole = async (competitorId: string, role: string) => {
     if (!id || !selectedCategory) return;
 
-    const currentTournament = await db.tournaments.get(id);
-    if (!currentTournament) return;
-
     let updatedCompetitors = [...competitors];
 
     updatedCompetitors = updatedCompetitors.map(comp => {
@@ -112,7 +111,6 @@ const Staffing = () => {
           newRolesForCategory = rolesForCategory.filter(r => r !== role);
         } else {
           newRolesForCategory = [...rolesForCategory, role];
-          // Si le activamos localmente un rol que no tiene a nivel global, se lo asignamos también a nivel global
           if (!newGlobalRoles.includes(role)) {
             newGlobalRoles = [...newGlobalRoles, role];
           }
@@ -130,12 +128,60 @@ const Staffing = () => {
       return comp;
     });
 
-    // Actualizar Base de Datos Local
-    currentTournament.competitors = updatedCompetitors as any;
-    await db.tournaments.put(currentTournament as any);
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(id);
+      if (currentTournament) {
+        currentTournament.competitors = updatedCompetitors as any;
+        await db.tournaments.put(currentTournament as any);
+      }
+    }
 
-    // Actualizar Estado
     setCompetitors(updatedCompetitors);
+  };
+
+  const changedCount = !editMode ? 0 : (() => {
+    let count = 0;
+    for (const c of competitors) {
+      const orig = originalCompetitors.find(o => o.id === c.id);
+      if (!orig) { count++; continue; }
+      if (JSON.stringify(c.roles) !== JSON.stringify(orig.roles)) { count++; continue; }
+      if (JSON.stringify(c.assignedRoles) !== JSON.stringify(orig.assignedRoles)) { count++; continue; }
+    }
+    return count;
+  })();
+
+  const handleToggleEditMode = () => {
+    if (isFinalized) return;
+    if (editMode) {
+      if (changedCount > 0) {
+        setShowExitModal(true);
+      } else {
+        setEditMode(false);
+        setOriginalCompetitors([]);
+      }
+    } else {
+      setOriginalCompetitors(JSON.parse(JSON.stringify(competitors)));
+      setEditMode(true);
+    }
+  };
+
+  const handleSaveAll = async () => {
+    if (!id) return;
+    const t = await db.tournaments.get(id);
+    if (t) {
+      t.competitors = competitors as any;
+      await db.tournaments.put(t as any);
+    }
+    setEditMode(false);
+    setShowExitModal(false);
+    setOriginalCompetitors([]);
+  };
+
+  const handleDiscardAll = () => {
+    setCompetitors(JSON.parse(JSON.stringify(originalCompetitors)));
+    setEditMode(false);
+    setShowExitModal(false);
+    setOriginalCompetitors([]);
   };
 
 
@@ -152,17 +198,17 @@ const Staffing = () => {
   return (
     <div className="text-white p-4 md:p-6 lg:p-8">
       {/* Encabezado */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
             <FaUserShield className="text-blue-400" /> Asignación de Roles / Staff
           </h2>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
           {/* Botón de Edición */}
           <button
-            onClick={() => !isFinalized && setEditMode(!editMode)}
+            onClick={handleToggleEditMode}
             disabled={isFinalized}
             title={isFinalized ? 'El torneo está Finalizado.' : ''}
             className={`px-4 py-2 w-full sm:w-auto rounded-lg transition-colors flex items-center justify-center gap-2 ${
@@ -404,6 +450,32 @@ const Staffing = () => {
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
               >
                 Asignar Rol
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación de salida */}
+      {showExitModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-gray-800 rounded-xl max-w-md w-full p-6 shadow-2xl border border-gray-700">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
+              <FaSave size={22} />
+            </div>
+            <h3 className="text-xl font-bold text-center text-white mb-2">Guardar Cambios</h3>
+            <p className="text-gray-400 text-center text-sm mb-6">
+              Se modificaron <strong className="text-white">{changedCount}</strong> {changedCount === 1 ? 'competidor' : 'competidores'}. ¿Qué deseas hacer con los cambios?
+            </p>
+            <div className="flex flex-col gap-2">
+              <button onClick={handleSaveAll} className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2">
+                <FaCheck /> Guardar Cambios
+              </button>
+              <button onClick={handleDiscardAll} className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2">
+                <FaUndo /> Descartar Cambios
+              </button>
+              <button onClick={() => setShowExitModal(false)} className="w-full py-2.5 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors font-medium text-sm">
+                Cancelar
               </button>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../../common/db';
-import { FaEdit, FaSave, FaTimes, FaInfoCircle, FaLock } from 'react-icons/fa';
+import { FaEdit, FaSave, FaTimes, FaInfoCircle, FaLock, FaUsers, FaLayerGroup } from 'react-icons/fa';
 import { useTournamentStatus } from '../../hooks/useTournamentStatus';
 import {
   MdOutlineTimer,
@@ -476,12 +476,12 @@ const ResultsWCA = () => {
   return (
     <div className="text-white p-4 md:p-6 lg:p-8">
       {/* Encabezado y controles */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
         <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
           <MdLeaderboard className="text-blue-400" /> Resultados
         </h2>
 
-        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           {/* Botón de edición */}
           <button
             onClick={() => canUploadResults && setEditMode(!editMode)}
@@ -500,7 +500,7 @@ const ResultsWCA = () => {
           </button>
 
           {/* Selectores */}
-          <div className="flex flex-col md:flex-row gap-3 flex-1">
+          <div className="flex flex-col sm:flex-row gap-3 flex-1">
             <div className="flex-1 min-w-[150px]">
               <label className="block text-xs sm:text-sm text-gray-400 mb-1 flex items-center gap-1">
                 <MdCategory size={14} /> Categoría
@@ -546,6 +546,23 @@ const ResultsWCA = () => {
           </div>
         </div>
       </div>
+
+      {/* Info del evento */}
+      {currentCategory && currentRound && (
+        <div className="mb-4 bg-gray-800/50 rounded-lg p-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-gray-300 border border-gray-700">
+          <span className="flex items-center gap-1.5"><FaUsers className="text-blue-400" size={14} /><strong className="text-white">{currentRound.participants.length}</strong> competidores</span>
+          <span className="text-gray-600">|</span>
+          <span className="flex items-center gap-1.5"><MdOutlineTimer className="text-blue-400" size={14} />Formato: <strong className="text-white">{currentRound.format.toUpperCase()}</strong></span>
+          <span className="text-gray-600">|</span>
+          <span className="flex items-center gap-1.5"><FaLayerGroup className="text-blue-400" size={14} />Ronda {currentRound.roundNumber} de {currentCategory.rounds.length}</span>
+          {currentRound.competitorsToAdvance !== 'all' && currentRound.competitorsToAdvance > 0 && currentRound.roundNumber < currentCategory.rounds.length && (
+            <>
+              <span className="text-gray-600">|</span>
+              <span>Avanzan <strong className="text-white">{currentRound.competitorsToAdvance}</strong></span>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Banner de bloqueo de resultados */}
       {!canUploadResults && (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft, FaExclamationTriangle, FaLock, FaUsers } from 'react-icons/fa';
+import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft, FaExclamationTriangle, FaLock, FaUsers, FaSave, FaUndo } from 'react-icons/fa';
 import { db } from '../../common/db';
 import { isDuplicateName } from '../../common/validation';
 import CategoryToggle from '../../components/CategoryToggle';
@@ -26,6 +26,8 @@ const Participants = () => {
   });
 
   const [editMode, setEditMode] = useState(false);
+  const [originalParticipants, setOriginalParticipants] = useState<Participant[]>([]);
+  const [showExitModal, setShowExitModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [participantToDelete, setParticipantToDelete] = useState<Participant | null>(null);
@@ -82,10 +84,12 @@ const Participants = () => {
       categories: [selectedCategory.id],
     };
     
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.competitors = [...(currentTournament.competitors || []), newParticipantObj];
-      await db.tournaments.put(currentTournament as any);
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.competitors = [...(currentTournament.competitors || []), newParticipantObj];
+        await db.tournaments.put(currentTournament as any);
+      }
     }
     
     setParticipants([...participants, newParticipantObj]);
@@ -95,10 +99,12 @@ const Participants = () => {
   const handleDelete = async (id: string) => {
     if (!tournamentId) return;
     
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.competitors = (currentTournament.competitors || []).filter((p: any) => p.id !== id);
-      await db.tournaments.put(currentTournament as any);
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.competitors = (currentTournament.competitors || []).filter((p: any) => p.id !== id);
+        await db.tournaments.put(currentTournament as any);
+      }
     }
     
     setParticipants(participants.filter(p => p.id !== id));
@@ -111,15 +117,17 @@ const Participants = () => {
     const selectedCategory = tournament.categories.find((cat: any) => cat.name === categoryName);
     if (!selectedCategory) return;
     
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
-        if (p.id === participantId && !p.categories.includes(selectedCategory.id)) {
-          return { ...p, categories: [...p.categories, selectedCategory.id] };
-        }
-        return p;
-      });
-      await db.tournaments.put(currentTournament as any);
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
+          if (p.id === participantId && !p.categories.includes(selectedCategory.id)) {
+            return { ...p, categories: [...p.categories, selectedCategory.id] };
+          }
+          return p;
+        });
+        await db.tournaments.put(currentTournament as any);
+      }
     }
     
     setParticipants(participants.map(p => {
@@ -138,18 +146,20 @@ const Participants = () => {
     if (!editMode || !tournamentId || !categoryToRemove) return;
     const { participantId, categoryId } = categoryToRemove;
     
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
-        if (p.id === participantId) {
-          return { 
-            ...p, 
-            categories: (p.categories || []).filter((c: string) => c !== categoryId) 
-          };
-        }
-        return p;
-      });
-      await db.tournaments.put(currentTournament as any);
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
+          if (p.id === participantId) {
+            return { 
+              ...p, 
+              categories: (p.categories || []).filter((c: string) => c !== categoryId) 
+            };
+          }
+          return p;
+        });
+        await db.tournaments.put(currentTournament as any);
+      }
     }
     
     setParticipants(participants.map(p => 
@@ -169,15 +179,17 @@ const Participants = () => {
     }
     setEditNameError(null);
     
-    const currentTournament = await db.tournaments.get(tournamentId);
-    if (currentTournament) {
-      currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
-        if (p.id === participantId) {
-          return { ...p, name: newName };
-        }
-        return p;
-      });
-      await db.tournaments.put(currentTournament as any);
+    if (!editMode) {
+      const currentTournament = await db.tournaments.get(tournamentId);
+      if (currentTournament) {
+        currentTournament.competitors = (currentTournament.competitors || []).map((p: any) => {
+          if (p.id === participantId) {
+            return { ...p, name: newName };
+          }
+          return p;
+        });
+        await db.tournaments.put(currentTournament as any);
+      }
     }
     
     setParticipants(participants.map(p => 
@@ -190,6 +202,46 @@ const Participants = () => {
     return category?.name || categoryId;
   };
 
+  const changedCount = !editMode ? 0 : participants.length !== originalParticipants.length ? Math.abs(participants.length - originalParticipants.length) : participants.filter((p) => {
+    const orig = originalParticipants.find((o) => o.id === p.id);
+    if (!orig) return true;
+    return p.name !== orig.name || JSON.stringify(p.categories) !== JSON.stringify(orig.categories);
+  }).length;
+
+  const handleToggleEditMode = () => {
+    if (isFinalized) return;
+    if (editMode) {
+      if (changedCount > 0) {
+        setShowExitModal(true);
+      } else {
+        setEditMode(false);
+        setOriginalParticipants([]);
+      }
+    } else {
+      setOriginalParticipants(JSON.parse(JSON.stringify(participants)));
+      setEditMode(true);
+    }
+  };
+
+  const handleSaveAll = async () => {
+    if (!tournamentId) return;
+    const t = await db.tournaments.get(tournamentId);
+    if (t) {
+      t.competitors = participants as any;
+      await db.tournaments.put(t as any);
+    }
+    setEditMode(false);
+    setShowExitModal(false);
+    setOriginalParticipants([]);
+  };
+
+  const handleDiscardAll = () => {
+    setParticipants(JSON.parse(JSON.stringify(originalParticipants)));
+    setEditMode(false);
+    setShowExitModal(false);
+    setOriginalParticipants([]);
+  };
+
   return (
     <div className="min-h-screen text-white p-4 sm:p-6 relative">
 
@@ -198,7 +250,7 @@ const Participants = () => {
           <FaUsers className="text-blue-400" /> Competidores
         </h2>
         <button
-          onClick={() => !isFinalized && setEditMode(!editMode)}
+          onClick={handleToggleEditMode}
           disabled={isFinalized}
           title={isFinalized ? 'El torneo está Finalizado. No se pueden realizar modificaciones.' : ''}
           className={`px-4 py-2 w-full sm:w-auto rounded-lg transition-colors flex items-center justify-center gap-2 ${
@@ -375,6 +427,12 @@ const Participants = () => {
               <p className="text-gray-400 text-center text-sm mb-4">
                 ¿Estás seguro que deseas expulsar del torneo a <span className="font-semibold">{participantToDelete.name}</span>? Perderá todos sus registros.
               </p>
+              {tournament?.categories?.some((cat: any) => cat.rounds?.some((r: any) => r.results?.some((res: any) => res.idCompetitor === participantToDelete.id))) && (
+                <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-3 text-xs text-red-400 mb-4 flex items-start gap-2">
+                  <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
+                  <span><strong>Este competidor tiene resultados registrados.</strong> Al eliminarlo se perderán definitivamente sus tiempos en todas las rondas.</span>
+                </div>
+              )}
               <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-400 mb-6 flex items-start gap-2">
                 <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
                 <span>
@@ -430,6 +488,34 @@ const Participants = () => {
                   className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex justify-center"
                 >
                   Sí, Retirar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación de salida */}
+      {showExitModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+            <div className="p-6">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
+                <FaSave size={22} />
+              </div>
+              <h3 className="text-xl font-bold text-center text-white mb-2">Guardar Cambios</h3>
+              <p className="text-gray-400 text-center text-sm mb-6">
+                Se modificaron <strong className="text-white">{changedCount}</strong> {changedCount === 1 ? 'competidor' : 'competidores'}. ¿Qué deseas hacer con los cambios?
+              </p>
+              <div className="flex flex-col gap-2">
+                <button onClick={handleSaveAll} className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2">
+                  <FaCheck /> Guardar Cambios
+                </button>
+                <button onClick={handleDiscardAll} className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2">
+                  <FaUndo /> Descartar Cambios
+                </button>
+                <button onClick={() => setShowExitModal(false)} className="w-full py-2.5 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors font-medium text-sm">
+                  Cancelar
                 </button>
               </div>
             </div>
