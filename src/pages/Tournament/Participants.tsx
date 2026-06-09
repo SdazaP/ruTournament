@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft, FaExclamationTriangle, FaLock, FaUsers, FaSave, FaUndo } from 'react-icons/fa';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { FaSearch, FaTrash, FaEdit, FaTimes, FaCheck, FaArrowLeft, FaExclamationTriangle, FaLock, FaUsers, FaSave, FaUndo, FaPlus } from 'react-icons/fa';
 import { db } from '../../common/db';
 import { isDuplicateName } from '../../common/validation';
 import CategoryToggle from '../../components/CategoryToggle';
@@ -246,9 +246,20 @@ const Participants = () => {
     <div className="min-h-screen text-white p-4 sm:p-6 relative">
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-          <FaUsers className="text-blue-400" /> Competidores
-        </h2>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <FaUsers className="text-blue-400" /> Competidores
+          </h2>
+          {!isFinalized && (
+            <Link
+              to={`/dashboard/tournament/${tournamentId}/categories`}
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border border-gray-600"
+              title="Añadir categoría"
+            >
+              <FaPlus size={12} /> <span className="hidden sm:inline">Añadir categoría</span>
+            </Link>
+          )}
+        </div>
         <button
           onClick={handleToggleEditMode}
           disabled={isFinalized}
