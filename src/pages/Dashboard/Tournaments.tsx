@@ -1,10 +1,33 @@
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../common/db';
+import { FaSearch } from 'react-icons/fa';
 
 const Tournaments = () => {
   const tournaments = useLiveQuery(() => db.tournaments.toArray());
   const loading = tournaments === undefined;
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+
+  const allCategories = useMemo(() => {
+    if (!tournaments) return [];
+    const cats = new Set<string>();
+    tournaments.forEach((t) => t.categories?.forEach((c: any) => cats.add(c.name)));
+    return [...cats].sort();
+  }, [tournaments]);
+
+  const filteredTournaments = useMemo(() => {
+    if (!tournaments) return [];
+    return tournaments.filter((t) => {
+      const matchName = !searchTerm || t.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchStatus = statusFilter === 'all' || t.status === statusFilter;
+      const matchCategory = categoryFilter === 'all' || t.categories?.some((c: any) => c.name === categoryFilter);
+      return matchName && matchStatus && matchCategory;
+    });
+  }, [tournaments, searchTerm, statusFilter, categoryFilter]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -68,8 +91,56 @@ const Tournaments = () => {
         Torneos
       </h1>
 
+      {tournaments.length > 0 && (
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaSearch className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Buscar torneo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+            >
+              <option value="all">Todos los estados</option>
+              <option value="activo">Activo</option>
+              <option value="proximamente">Próximamente</option>
+              <option value="finalizado">Finalizado</option>
+            </select>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+            >
+              <option value="all">Todas las categorías</option>
+              {allCategories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+          <p className="text-sm text-gray-400 mb-4">
+            {filteredTournaments.length} de {tournaments.length} {tournaments.length === 1 ? 'torneo encontrado' : 'torneos encontrados'}
+          </p>
+        </>
+      )}
+
+      {filteredTournaments.length === 0 && tournaments.length > 0 && (
+        <div className="text-center py-8 text-gray-400">
+          <p>No se encontraron torneos con esos filtros.</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {tournaments.map((tournament) => (
+        {filteredTournaments.map((tournament) => (
           <Link
             to={`/dashboard/tournament/${tournament.id}`}
             key={tournament.id}
