@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import TableCompetitors from '../../components/Tables/TableCompetitors';
 import { db } from '../../common/db';
 import { isDuplicateName, findDuplicateNames } from '../../common/validation';
@@ -30,13 +30,27 @@ const PREDEFINED_CATEGORIES = [
   "3x3 OH", "Clock", "Megaminx", "Pyraminx", "Skewb", "Square-1",
 ];
 
+const MEXICAN_STATES = [
+  'Aguascalientes, Ags.', 'Baja California, BC', 'Baja California Sur, BCS',
+  'Campeche, Camp.', 'Chiapas, Chis.', 'Chihuahua, Chih.',
+  'Ciudad de México, CDMX', 'Coahuila, Coah.', 'Colima, Col.',
+  'Durango, Dgo.', 'Guanajuato, Gto.', 'Guerrero, Gro.',
+  'Hidalgo, Hgo.', 'Jalisco, Jal.', 'Estado de México, Edomex',
+  'Michoacán, Mich.', 'Morelos, Mor.', 'Nayarit, Nay.',
+  'Nuevo León, NL', 'Oaxaca, Oax.', 'Puebla, Pue.',
+  'Querétaro, Qro.', 'Quintana Roo, QRoo', 'San Luis Potosí, SLP',
+  'Sinaloa, Sin.', 'Sonora, Son.', 'Tabasco, Tab.',
+  'Tamaulipas, Tamps.', 'Tlaxcala, Tlax.', 'Veracruz, Ver.',
+  'Yucatán, Yuc.', 'Zacatecas, Zac.',
+];
+
 export default function TournamentCreation() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [tournamentData, setTournamentData] = useState({
     name: '',
     description: '',
-    location: 'Tlaxcala, México',
+    location: 'Tlaxcala, Tlax.',
     status: 'activo' as string,
   });
   const [categories, setCategories] = useState<CategoryData[]>([
@@ -342,14 +356,16 @@ export default function TournamentCreation() {
                 
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium text-gray-400">Ubicación</label>
-                  <input
+                  <select
                     name="location"
-                    type="text"
                     value={tournamentData.location}
-                    onChange={handleInputChange}
-                    placeholder="Ej. Centro de Convenciones"
+                    onChange={(e) => setTournamentData(prev => ({ ...prev, location: e.target.value }))}
                     className="w-full rounded-lg border border-gray-600 bg-gray-900 p-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  />
+                  >
+                    <option value="">Seleccionar estado...</option>
+                    {MEXICAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                    <option value="Otro">Otro (especificar)</option>
+                  </select>
                 </div>
               </div>
               
@@ -375,7 +391,7 @@ export default function TournamentCreation() {
               Selecciona los eventos del torneo ({categories.length}/10)
             </p>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 mb-6">
               {PREDEFINED_CATEGORIES.map((event) => {
                 const config = WCA_EVENT_CONFIG[event];
                 const added = categories.find(c => c.name === event);
@@ -420,31 +436,35 @@ export default function TournamentCreation() {
               })}
             </div>
 
-            <div className="flex gap-3 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <input type="text" placeholder="Otra categoría personalizada..."
                 value={customCatName}
                 onChange={(e) => setCustomCatName(e.target.value)}
                 className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
               <select value={newCatFormat} onChange={(e) => setNewCatFormat(e.target.value as 'WCA' | 'RedBull')}
-                className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm">
+                className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm w-full sm:w-auto">
                 <option value="WCA">WCA</option>
                 <option value="RedBull">Red Bull</option>
               </select>
               <button onClick={handleAddCustomCategory}
                 disabled={!customCatName.trim() || categories.length >= 10 || categories.some(c => c.name.toLowerCase() === customCatName.trim().toLowerCase())}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-4 py-2 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 rounded-lg text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
                 + Añadir
               </button>
             </div>
 
-            {categories.length > 0 && (
-              <div className="flex justify-end mb-6">
+            <div className="mt-8 flex flex-col sm:flex-row justify-between gap-4 w-full">
+              <button onClick={() => setCurrentStep(1)}
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border border-gray-600">
+                <FaArrowLeft size={12} /> Información
+              </button>
+              {categories.length > 0 && (
                 <button onClick={startConfigure}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+                  className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
                   Configurar categorías <FaArrowRight />
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
@@ -598,11 +618,11 @@ export default function TournamentCreation() {
                   <FaArrowLeft /> Anterior
                 </button>
               ) : (
-                <button onClick={backToPhaseA} className="flex items-center justify-center gap-2 px-4 py-2 w-full sm:w-auto bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm">
+                <button onClick={backToPhaseA} className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border border-gray-600">
                   <FaArrowLeft /> Volver a lista
                 </button>
               )}
-              <button onClick={saveAndNext} className="flex items-center justify-center gap-2 px-6 py-2 w-full sm:w-auto bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm">
+              <button onClick={saveAndNext} className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
                 {configuringIndex + 1 < categories.length ? (
                   <>Siguiente <FaArrowRight /></>
                 ) : (
@@ -634,16 +654,14 @@ export default function TournamentCreation() {
       </div>
 
       {/* Footer Navigation */}
-      <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="mt-8 flex flex-col sm:flex-row justify-between gap-4 w-full">
         <div>
           {currentStep === 1 ? (
-             <Link to="/dashboard" className="inline-block">
-               <button className="px-6 py-2.5 bg-gray-700 text-gray-300 font-medium rounded-lg hover:bg-gray-600 transition-colors">
-                 Cancelar
-               </button>
-             </Link>
+             <button onClick={() => navigate('/dashboard')} className="px-6 py-2.5 w-full sm:w-auto bg-gray-700 text-gray-300 font-medium rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center">
+               Cancelar
+             </button>
           ) : currentStep === 3 ? (
-             <button onClick={() => setCurrentStep(2)} className="flex items-center gap-2 px-6 py-2.5 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors">
+             <button onClick={() => setCurrentStep(2)} className="flex items-center justify-center gap-2 px-6 py-2.5 w-full sm:w-auto bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors">
                <FaArrowLeft /> Atrás
              </button>
           ) : null}
@@ -652,13 +670,13 @@ export default function TournamentCreation() {
         <div>
           {currentStep === 1 && (
              <button onClick={() => setCurrentStep(2)} disabled={!tournamentData.name.trim()}
-               className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+               className="flex items-center justify-center gap-2 px-6 py-2.5 w-full sm:w-auto bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                Siguiente <FaArrowRight />
              </button>
           )}
           {currentStep === 3 && (
              <button onClick={handleFinalize} disabled={competitors.every(c => !c.name.trim())}
-               className="flex items-center gap-2 px-8 py-2.5 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-900/20">
+               className="flex items-center justify-center gap-2 px-8 py-2.5 w-full sm:w-auto bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-900/20">
                <FaCheck /> Finalizar y Crear
              </button>
           )}

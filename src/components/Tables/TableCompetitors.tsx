@@ -104,10 +104,10 @@ const TableCompetitors: React.FC<TableCompetitorsProps> = ({
       </div>
 
       {/* Botones de acción */}
-      <div className="mt-4 flex flex-wrap items-center justify-end gap-3 p-2">
+      <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 p-2">
         <button
           onClick={onAddRow}
-          className="flex items-center gap-2 rounded-lg bg-blue-500/10 border border-blue-500/30 px-4 py-2 text-sm text-blue-400 font-medium hover:bg-blue-600 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex items-center justify-center gap-2 rounded-lg bg-blue-500/10 border border-blue-500/30 px-4 py-2 w-full sm:w-auto text-sm text-blue-400 font-medium hover:bg-blue-600 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <FaPlus />
           Añadir Competidor
@@ -116,7 +116,7 @@ const TableCompetitors: React.FC<TableCompetitorsProps> = ({
         {competitors.length > 1 && (
           <button
             onClick={() => onRemove(competitors.length - 1)}
-            className="flex items-center gap-2 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-2 text-sm text-red-400 font-medium hover:bg-red-600 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="flex items-center justify-center gap-2 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-2 w-full sm:w-auto text-sm text-red-400 font-medium hover:bg-red-600 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-red-500"
           >
             <FaMinus />
             Eliminar Último
