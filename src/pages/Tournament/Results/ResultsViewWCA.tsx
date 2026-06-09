@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import { db } from '../../../common/db';
 
 import { BsTrophyFill, BsGraphUp } from 'react-icons/bs';
+import { FaUsers, FaLayerGroup } from 'react-icons/fa';
+import { MdOutlineTimer } from 'react-icons/md';
 import { calculateRulesStats, normalizeTime, formatTimeDisplay, sortWCA, formatSecondsToDisplay } from '../ResultsWCA';
 import { TimeRecord } from '../../../common/db';
 
@@ -142,7 +144,7 @@ const ResultsViewWCA = ({ initialCategoryId }: { initialCategoryId?: string }) =
 
       {/* Selectores */}
       <div className="max-w-4xl mx-auto bg-gray-800 rounded-xl p-4 mb-8 shadow-lg">
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           {/* Selector de categoría */}
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-300 mb-1">Categoría</label>
@@ -182,6 +184,17 @@ const ResultsViewWCA = ({ initialCategoryId }: { initialCategoryId?: string }) =
           </div>
         </div>
       </div>
+
+      {/* Info del evento */}
+      {currentCategory && currentRound && (
+        <div className="mb-4 bg-gray-800/50 rounded-lg p-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-gray-300 border border-gray-700 max-w-6xl mx-auto">
+          <span className="flex items-center gap-1.5"><FaUsers className="text-blue-400" size={14} /><strong className="text-white">{currentRound.participants.length}</strong> competidores</span>
+          <span className="text-gray-600">|</span>
+          <span className="flex items-center gap-1.5"><MdOutlineTimer className="text-blue-400" size={14} />Formato: <strong className="text-white">{currentRound.format.toUpperCase()}</strong></span>
+          <span className="text-gray-600">|</span>
+          <span className="flex items-center gap-1.5"><FaLayerGroup className="text-blue-400" size={14} />Ronda {currentRound.roundNumber} de {currentCategory.rounds.length}</span>
+        </div>
+      )}
 
       {/* Resultados */}
       <div className="max-w-6xl mx-auto">

@@ -13,6 +13,8 @@ import {
   FaClock,
   FaExclamationTriangle,
   FaTrophy,
+  FaUndo,
+  FaCheck,
 } from 'react-icons/fa';
 import { MdCategory, MdPeople } from 'react-icons/md';
 import { db } from '../../common/db';
@@ -63,6 +65,8 @@ const TournamentWelcome = () => {
   const [deleteInputName, setDeleteInputName] = useState('');
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<Tournament['status'] | null>(null);
+  const [originalTournament, setOriginalTournament] = useState<Tournament | null>(null);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   // Cargar datos del torneo
   useEffect(() => {
@@ -136,20 +140,39 @@ const TournamentWelcome = () => {
     if (!tournament) return;
     await db.tournaments.put(tournament as any);
     setEditMode(false);
+    setOriginalTournament(null);
+    setShowExitModal(false);
+  };
+
+  const handleDiscardChanges = () => {
+    if (originalTournament) {
+      setTournament(originalTournament);
+    }
+    setEditMode(false);
+    setOriginalTournament(null);
+    setShowExitModal(false);
   };
 
   // Manejar el toggle del botón Editar / Cancelar
   const handleEditToggle = () => {
     if (!editMode) {
+      setOriginalTournament(JSON.parse(JSON.stringify(tournament)));
       setEditMode(true);
     } else {
-      // Cancelando edición: descartar cambios locales
-      if (id) {
-        db.tournaments.get(id).then(t => {
-          if (t) setTournamentData(t as unknown as Tournament);
-        });
+      if (tournament && originalTournament) {
+        const hasChanges = tournament.name !== originalTournament.name ||
+          tournament.description !== originalTournament.description ||
+          tournament.date !== originalTournament.date ||
+          tournament.location !== originalTournament.location ||
+          tournament.logo !== originalTournament.logo ||
+          tournament.status !== originalTournament.status;
+        if (hasChanges) {
+          setShowExitModal(true);
+          return;
+        }
       }
       setEditMode(false);
+      setOriginalTournament(null);
     }
   };
 
@@ -220,23 +243,23 @@ const TournamentWelcome = () => {
   return (
     <div className="min-h-screen text-white p-6 mx-auto">
       {/* Encabezado con botones */}
-      <div className="flex justify-between items-center mt-6 mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-6 mb-4 gap-4">
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <FaTrophy className="text-blue-400" /> Panel del Torneo
         </h1>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           {editMode && (
             <>
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition"
+                className="flex items-center justify-center gap-2 px-4 py-2 w-full sm:w-auto bg-red-600 rounded-lg hover:bg-red-700 transition"
                 title="Eliminar este torneo permanentemente"
               >
                 <FaTrash /> Eliminar
               </button>
               <button
                 onClick={saveChanges}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700 transition"
+                className="flex items-center justify-center gap-2 px-4 py-2 w-full sm:w-auto bg-green-600 rounded-lg hover:bg-green-700 transition"
               >
                 <FaSave /> Guardar
               </button>
@@ -244,7 +267,7 @@ const TournamentWelcome = () => {
           )}
           <button
             onClick={handleEditToggle}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+            className={`flex items-center justify-center gap-2 px-4 py-2 w-full sm:w-auto rounded-lg transition-colors ${
               editMode
                 ? 'bg-yellow-600 hover:bg-yellow-700'
                 : 'bg-blue-600 hover:bg-blue-700'
@@ -445,13 +468,13 @@ const TournamentWelcome = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Categorías */}
         <div className="bg-gray-800 rounded-xl p-6">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
             <h2 className="text-2xl font-bold flex items-center gap-2">
               <MdCategory /> Categorías ({categories.length})
             </h2>
             <Link
               to={`/dashboard/tournament/${id}/categories`}
-              className={`px-4 py-2 bg-blue-600 rounded-lg text-sm transition-all flex items-center gap-2 ${
+              className={`px-4 py-2 w-full sm:w-auto bg-blue-600 rounded-lg text-sm transition-all flex items-center justify-center gap-2 ${
                 editMode 
                   ? 'opacity-50 pointer-events-none cursor-not-allowed grayscale' 
                   : 'hover:bg-blue-700'
@@ -634,6 +657,32 @@ const TournamentWelcome = () => {
                 }`}
               >
                 Sí, Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación de salida */}
+      {showExitModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
+              <FaSave size={22} />
+            </div>
+            <h3 className="text-xl font-bold text-center text-white mb-2">Guardar Cambios</h3>
+            <p className="text-gray-400 text-center text-sm mb-6">
+              Tienes cambios sin guardar en la información del torneo. ¿Qué deseas hacer?
+            </p>
+            <div className="flex flex-col gap-2">
+              <button onClick={saveChanges} className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2">
+                <FaCheck /> Guardar Cambios
+              </button>
+              <button onClick={handleDiscardChanges} className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2">
+                <FaUndo /> Descartar Cambios
+              </button>
+              <button onClick={() => setShowExitModal(false)} className="w-full py-2.5 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors font-medium text-sm">
+                Cancelar
               </button>
             </div>
           </div>

@@ -250,7 +250,7 @@ const Groups = () => {
   return (
     <div className="text-white p-4 md:p-6 lg:p-8">
       {/* Encabezado */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
             <FaLayerGroup className="text-blue-400" /> Generación de Grupos y Roles

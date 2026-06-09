@@ -366,7 +366,7 @@ const Scrambles = () => {
     <div className="text-white p-4 md:p-6 lg:p-8">
 
       {/* Encabezado */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
             <FaSyncAlt className="text-blue-400" /> Generador de Mezclas
@@ -379,7 +379,7 @@ const Scrambles = () => {
         </div>
 
         {/* Selectores */}
-        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <div className="flex-1 min-w-[150px]">
             <label className="block text-xs sm:text-sm text-gray-400 mb-1 flex items-center gap-1">
               <MdCategory size={14} /> Categoría
@@ -441,15 +441,15 @@ const Scrambles = () => {
               </p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               {isFinalized ? (
-                <span className="px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 bg-gray-700 opacity-60 cursor-not-allowed text-gray-300">
+                <span className="px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 bg-gray-700 opacity-60 cursor-not-allowed text-gray-300">
                   <FaLock /> Torneo Finalizado — Sin acceso
                 </span>
               ) : hasScrambles ? (
                 <button
                   onClick={handleDeleteScrambles}
-                  className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded-lg text-sm flex items-center gap-2 transition-colors"
+                  className="px-3 py-1.5 w-full sm:w-auto bg-red-600 hover:bg-red-700 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
                 >
                   <FaTrash /> <span className="hidden sm:inline">Limpiar Todo</span>
                 </button>
@@ -457,7 +457,7 @@ const Scrambles = () => {
                 <button
                   onClick={handleGenerateScrambles}
                   disabled={isGenerating || !ready}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors ${isGenerating || !ready
+                  className={`px-4 py-2 w-full sm:w-auto rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${isGenerating || !ready
                     ? 'bg-gray-600 cursor-not-allowed opacity-70'
                     : 'bg-green-600 hover:bg-green-700 text-white'
                     }`}

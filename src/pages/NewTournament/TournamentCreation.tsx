@@ -438,7 +438,7 @@ export default function TournamentCreation() {
             </div>
 
             {categories.length > 0 && (
-              <div className="flex justify-end">
+              <div className="flex justify-end mb-6">
                 <button onClick={startConfigure}
                   className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
                   Configurar categorías <FaArrowRight />
@@ -592,13 +592,19 @@ export default function TournamentCreation() {
             </div>
 
             {/* Navegación fase B */}
-            <div className="mt-8 flex justify-between border-t border-gray-700 pt-4">
-              <button onClick={backToPhaseA} className="flex items-center gap-2 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm">
-                <FaArrowLeft /> Volver a lista
-              </button>
-              <button onClick={saveAndNext} className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm">
+            <div className="mt-8 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 border-t border-gray-700 pt-4">
+              {configuringIndex > 0 ? (
+                <button onClick={() => setConfiguringIndex(prev => prev - 1)} className="flex items-center justify-center gap-2 px-4 py-2 w-full sm:w-auto bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm">
+                  <FaArrowLeft /> Anterior
+                </button>
+              ) : (
+                <button onClick={backToPhaseA} className="flex items-center justify-center gap-2 px-4 py-2 w-full sm:w-auto bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm">
+                  <FaArrowLeft /> Volver a lista
+                </button>
+              )}
+              <button onClick={saveAndNext} className="flex items-center justify-center gap-2 px-6 py-2 w-full sm:w-auto bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm">
                 {configuringIndex + 1 < categories.length ? (
-                  <>Guardar y siguiente <FaArrowRight /></>
+                  <>Siguiente <FaArrowRight /></>
                 ) : (
                   <>Finalizar configuración <FaCheck /></>
                 )}
@@ -636,16 +642,11 @@ export default function TournamentCreation() {
                  Cancelar
                </button>
              </Link>
-          ) : currentStep === 2 && configurePhase === 'list' ? (
-             <button onClick={() => setCurrentStep(1)} className="flex items-center gap-2 px-6 py-2.5 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors">
+          ) : currentStep === 3 ? (
+             <button onClick={() => setCurrentStep(2)} className="flex items-center gap-2 px-6 py-2.5 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors">
                <FaArrowLeft /> Atrás
              </button>
-          ) : (
-             <button onClick={() => { setCurrentStep(prev => prev - 1); setConfigurePhase('list'); }}
-               className="flex items-center gap-2 px-6 py-2.5 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors">
-               <FaArrowLeft /> Atrás
-             </button>
-          )}
+          ) : null}
         </div>
 
         <div>
@@ -653,12 +654,6 @@ export default function TournamentCreation() {
              <button onClick={() => setCurrentStep(2)} disabled={!tournamentData.name.trim()}
                className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                Siguiente <FaArrowRight />
-             </button>
-          )}
-          {currentStep === 2 && configurePhase === 'list' && (
-             <button onClick={startConfigure} disabled={categories.length === 0}
-               className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-               Siguiente: Configurar <FaArrowRight />
              </button>
           )}
           {currentStep === 3 && (

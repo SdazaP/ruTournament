@@ -419,11 +419,11 @@ const Schedule = () => {
             <FaClock className="text-blue-400" /> Cronograma
           </h2>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <select
             value={selectedRoom}
             onChange={(e) => setSelectedRoom(e.target.value)}
-            className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-full sm:w-auto"
           >
             <option value="__all__">Todas las salas</option>
             <option value="">Sin sala</option>
@@ -436,7 +436,7 @@ const Schedule = () => {
           {!isFinalized && (
             <button
               onClick={handleToggleEditMode}
-              className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm ${
+                className={`px-4 py-2 w-full sm:w-auto rounded-lg transition-colors flex items-center justify-center gap-2 text-sm ${
                 editMode
                   ? 'bg-red-600 hover:bg-red-700'
                   : 'bg-blue-600 hover:bg-blue-700'
@@ -449,7 +449,7 @@ const Schedule = () => {
           {!isFinalized && editMode && (
             <button
               onClick={() => setShowAddRoom(!showAddRoom)}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border border-gray-600"
+                className="flex items-center justify-center gap-1.5 px-3 py-2 w-full sm:w-auto text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border border-gray-600"
             >
               <FaPlus size={10} /> Nueva Sala
             </button>

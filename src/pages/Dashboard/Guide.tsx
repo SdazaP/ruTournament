@@ -25,7 +25,7 @@ const Guide = () => {
           </div>
           <Link
             to="/dashboard"
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium whitespace-nowrap text-sm"
+            className="px-4 py-2 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium whitespace-nowrap text-sm flex items-center justify-center"
           >
             ← Volver al Dashboard
           </Link>

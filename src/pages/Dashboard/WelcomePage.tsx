@@ -136,12 +136,12 @@ const WelcomePage = () => {
         <h2 className="text-2xl font-bold dark:text-white mb-6">¿Listo para comenzar?</h2>
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
           <Link to="new-tournament">
-            <button className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors w-full md:w-auto">
+            <button className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors w-full sm:w-auto">
               Crear nuevo torneo +
             </button>
           </Link>
           <Link to="guide">
-            <button className="px-8 py-4 bg-gray-600 dark:bg-gray-700 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2 w-full md:w-auto">
+            <button className="px-8 py-4 bg-gray-600 dark:bg-gray-700 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
               <FaBook /> Guía de Uso del Sistema
             </button>
           </Link>

@@ -669,14 +669,14 @@ const Categories = () => {
 
   return (
     <div className="min-h-screen text-white p-4 sm:p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <FaLayerGroup className="text-blue-400" /> Categorías
           </h2>
           <Link
             to={`/dashboard/tournament/${tournamentId}/schedule`}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border border-gray-600"
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs w-full sm:w-auto bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border border-gray-600"
           >
             <FaClock size={12} /> Ver Cronograma
           </Link>
@@ -685,7 +685,7 @@ const Categories = () => {
           onClick={toggleEditMode}
           disabled={isFinalized}
           title={isFinalized ? 'El torneo está Finalizado.' : ''}
-          className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+          className={`px-4 py-2 w-full sm:w-auto rounded-lg transition-colors flex items-center justify-center gap-2 ${
             isFinalized
               ? 'bg-gray-700 opacity-50 cursor-not-allowed'
               : editMode

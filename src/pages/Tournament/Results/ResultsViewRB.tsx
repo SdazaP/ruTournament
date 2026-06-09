@@ -4,6 +4,7 @@ import { db } from '../../../common/db';
 import { formatSecondsToDisplay, formatTimeDisplay, calculateRulesStats, sortWCA, normalizeTime } from '../ResultsWCA';
 import { MdLeaderboard, MdOutlineTimer, MdPeople } from 'react-icons/md';
 import { BsTrophyFill, BsGraphUp } from 'react-icons/bs';
+import { FaEdit, FaRandom } from 'react-icons/fa';
 
 type RBCompetitor = {
   id: string;
@@ -125,7 +126,7 @@ const ResultsViewRB = () => {
       </header>
 
       <div className="max-w-4xl mx-auto bg-gray-800 rounded-xl p-4 mb-8 shadow-lg">
-        <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-300 mb-1">Categoría</label>
             <select value={selectedCategory} onChange={(e) => { setSelectedCategory(e.target.value); const cat = categories.find((c) => c.id === e.target.value); setSelectedRound(cat?.rounds[0]?.roundNumber || 1); setSelectedMatch(null); }}
@@ -142,6 +143,32 @@ const ResultsViewRB = () => {
           </div>
         </div>
       </div>
+
+      {currentCategory && (
+        <div className="max-w-4xl mx-auto mb-4 bg-gray-800/50 rounded-lg p-3 flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-gray-300 border border-gray-700">
+          <div className="flex items-center gap-1">
+            {currentCategory.rounds[0]?.bracketMode === 'manual' ? (
+              <><FaEdit className="text-blue-400" size={12} /> <span>Modo: <strong className="text-white">Manual</strong></span></>
+            ) : (
+              <><FaRandom className="text-green-400" size={12} /> <span>Modo: <strong className="text-white">Aleatorio</strong></span></>
+            )}
+          </div>
+          <span className="text-gray-600">|</span>
+          <span><strong className="text-white">{allCompetitors.length}</strong> competidores</span>
+          {currentCategory.hasSeeding && currentRound?.isSeeding && (
+            <>
+              <span className="text-gray-600">|</span>
+              <span>Clasificación <strong className="text-white">{(currentCategory as any).seedingFormat || 'ao5'}</strong></span>
+            </>
+          )}
+          {!currentRound?.isSeeding && currentCategory.rounds.length > 1 && currentCategory.rounds.some((r: any) => r.matches?.length > 0) && (
+            <>
+              <span className="text-gray-600">|</span>
+              <span>Eliminación directa — <strong className="text-white">{currentCategory.rounds.filter((r: any) => !r.isSeeding).length} rondas</strong></span>
+            </>
+          )}
+        </div>
+      )}
 
       {currentRound?.isSeeding && currentCategory && (
         <div className="max-w-6xl mx-auto mb-8">
