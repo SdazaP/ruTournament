@@ -58,7 +58,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const handleLogout = () => {
     // Aquí puedes agregar la lógica para cerrar sesión
     console.log('Sesión cerrada');
-    navigate('/login'); // Redirige a la página de login
+    navigate('/');
   };
 
   return (
@@ -73,7 +73,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
 
       <aside
       ref={sidebar}
-      className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${
+      className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden dark:bg-boxdark bg-white duration-300 ease-linear lg:static lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
@@ -121,8 +121,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <li>
                 <NavLink
                   to="/dashboard"
-                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname === '/dashboard' && 'bg-graydark dark:bg-meta-4'
+                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium dark:text-bodydark1 text-gray-900 duration-300 ease-in-out dark:hover:bg-graydark hover:bg-gray-100 ${
+                    pathname === '/dashboard' && 'bg-gray-100 dark:bg-meta-4'
                   }`}
                 >
                   <svg
@@ -144,9 +144,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <li>
                 <NavLink
                   to="/dashboard/tournaments"
-                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium dark:text-bodydark1 text-gray-900 duration-300 ease-in-out dark:hover:bg-graydark hover:bg-gray-100 ${
                     pathname.includes('tournaments') &&
-                    'bg-graydark dark:bg-meta-4'
+                    'bg-gray-100 dark:bg-meta-4'
                   }`}
                 >
                   <svg
@@ -182,9 +182,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <li>
                 <NavLink
                   to="new-tournament"
-                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium dark:text-bodydark1 text-gray-900 duration-300 ease-in-out dark:hover:bg-graydark hover:bg-gray-100 ${
                     pathname.includes('new-tournament') &&
-                    'bg-graydark dark:bg-meta-4'
+                    'bg-gray-100 dark:bg-meta-4'
                   }`}
                 >
                   <svg
