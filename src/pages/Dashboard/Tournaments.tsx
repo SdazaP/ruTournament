@@ -103,13 +103,13 @@ const Tournaments = () => {
                 placeholder="Buscar torneo..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+                className="w-full pl-10 dark:bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+              className="dark:bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
             >
               <option value="all">Todos los estados</option>
               <option value="activo">Activo</option>
@@ -119,7 +119,7 @@ const Tournaments = () => {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+              className="dark:bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
             >
               <option value="all">Todas las categorías</option>
               {allCategories.map((cat) => (

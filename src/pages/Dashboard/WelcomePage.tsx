@@ -124,7 +124,7 @@ const WelcomePage = () => {
             </button>
           </Link>
           <Link to="guide">
-            <button className="px-8 py-4 bg-gray-600 dark:bg-gray-700 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
+            <button className="px-8 py-4 bg-gray-500 dark:bg-gray-700 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
               <FaBook /> Guía de Uso del Sistema
             </button>
           </Link>

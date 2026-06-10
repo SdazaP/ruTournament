@@ -300,7 +300,7 @@ export default function TournamentCreation() {
   ];
 
   return (
-    <div className="min-h-screen text-white p-4 md:p-6 lg:p-8 mx-auto max-w-6xl">
+    <div className="min-h-screen dark:text-bodydark1 text-gray-900 p-4 md:p-6 lg:p-8 mx-auto max-w-6xl">
       {/* Header & Stepper */}
       <div className="mb-8">
         <h1 className="text-3xl sm:text-4xl font-bold mb-6 flex items-center gap-3">
@@ -309,7 +309,7 @@ export default function TournamentCreation() {
         </h1>
         
         <div className="flex items-center justify-between relative max-w-3xl mx-auto">
-          <div className="absolute left-0 top-1/2 -z-10 h-1 w-full -translate-y-1/2 rounded bg-gray-700"></div>
+          <div className="absolute left-0 top-1/2 -z-10 h-1 w-full -translate-y-1/2 rounded dark:bg-gray-700 bg-gray-100"></div>
           <div 
             className="absolute left-0 top-1/2 -z-10 h-1 -translate-y-1/2 rounded bg-blue-500 transition-all duration-300"
             style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
@@ -321,12 +321,12 @@ export default function TournamentCreation() {
                 className={`flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full text-lg sm:text-xl font-bold transition-colors ${
                   currentStep >= step.id 
                     ? 'bg-blue-600 text-white shadow-[0_0_10px_rgba(37,99,235,0.5)]' 
-                    : 'bg-gray-800 text-gray-500 border-2 border-gray-700'
+                    : 'dark:bg-gray-800 bg-white text-gray-500 border-2 dark:border-gray-700 border-gray-200'
                 }`}
               >
                 {step.icon}
               </div>
-              <span className={`text-xs sm:text-sm font-medium ${currentStep >= step.id ? 'text-white' : 'text-gray-500'}`}>
+              <span                 className={`text-xs sm:text-sm font-medium ${currentStep >= step.id ? 'dark:text-white text-gray-900' : 'dark:text-gray-500 text-gray-600'}`}>
                 {step.title}
               </span>
             </div>
@@ -335,10 +335,10 @@ export default function TournamentCreation() {
       </div>
 
       {/* Main Content Card */}
-      <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6 sm:p-8">
+      <div className="dark:bg-gray-800 bg-white rounded-xl shadow-lg border dark:border-gray-700 border-gray-200 p-6 sm:p-8">
         {currentStep === 1 && (
           <div className="animate-fade-in">
-            <h2 className="text-2xl font-bold mb-6 text-gray-200 border-b border-gray-700 pb-4">Información Básica</h2>
+            <h2 className="text-2xl font-bold mb-6 dark:text-gray-200 text-gray-800 border-b dark:border-gray-700 border-gray-200 pb-4">Información Básica</h2>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="flex flex-col gap-4">
@@ -350,7 +350,7 @@ export default function TournamentCreation() {
                     value={tournamentData.name}
                     onChange={handleInputChange}
                     placeholder="Ej. Tlaxcala Open 2026"
-                    className="w-full rounded-lg border border-gray-600 bg-gray-900 p-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-lg border dark:border-gray-600 border-gray-300 dark:bg-gray-900 bg-gray-50 p-3 dark:text-white text-gray-900 outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
                 
@@ -360,7 +360,7 @@ export default function TournamentCreation() {
                     name="location"
                     value={tournamentData.location}
                     onChange={(e) => setTournamentData(prev => ({ ...prev, location: e.target.value }))}
-                    className="w-full rounded-lg border border-gray-600 bg-gray-900 p-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-lg border dark:border-gray-600 border-gray-300 dark:bg-gray-900 bg-gray-50 p-3 dark:text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   >
                     <option value="">Seleccionar estado...</option>
                     {MEXICAN_STATES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -377,7 +377,7 @@ export default function TournamentCreation() {
                   value={tournamentData.description}
                   onChange={handleInputChange}
                   placeholder="Detalles, horarios, reglas especiales..."
-                  className="w-full h-full rounded-lg border border-gray-600 bg-gray-900 p-3 text-white outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+                  className="w-full h-full rounded-lg border dark:border-gray-600 border-gray-300 dark:bg-gray-900 bg-gray-50 p-3 dark:text-white text-gray-900 outline-none transition-all focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
                 ></textarea>
               </div>
             </div>
@@ -386,8 +386,8 @@ export default function TournamentCreation() {
 
         {currentStep === 2 && configurePhase === 'list' && (
           <div className="animate-fade-in">
-            <h2 className="text-2xl font-bold mb-2 text-gray-200">Categorías y Eventos</h2>
-            <p className="text-gray-400 mb-6 border-b border-gray-700 pb-4">
+            <h2 className="text-2xl font-bold mb-2 dark:text-gray-200 text-gray-800">Categorías y Eventos</h2>
+            <p className="text-gray-400 mb-6 border-b dark:border-gray-700 border-gray-200 pb-4">
               Selecciona los eventos del torneo ({categories.length}/10)
             </p>
 
@@ -410,11 +410,11 @@ export default function TournamentCreation() {
                     className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-all ${
                       added
                         ? (added.format === 'WCA'
-                            ? 'bg-blue-600/20 border-blue-500/50 text-white'
-                            : 'bg-red-600/20 border-red-500/50 text-white')
+                            ? 'bg-blue-600/20 border-blue-500/50 text-gray700'
+                            : 'bg-red-600/20 border-red-500/50 text-gray700')
                         : atLimit
-                          ? 'bg-gray-800 border-gray-700 text-gray-600 opacity-40 cursor-not-allowed'
-                          : 'bg-gray-800 border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300 opacity-70 hover:opacity-100 cursor-pointer'
+                          ? 'dark:bg-gray-800 bg-white dark:border-gray-700 border-gray-200 text-gray-600 cursor-not-allowed'
+                          : 'dark:bg-gray-800 bg-white dark:border-gray-700 border-gray-200 text-gray-500 hover:border-gray-500 hover:text-gray-300  cursor-pointer'
                     }`}
                   >
                     <span className={`text-xl font-bold ${added && config ? config.color : ''}`}>
@@ -440,22 +440,22 @@ export default function TournamentCreation() {
               <input type="text" placeholder="Otra categoría personalizada..."
                 value={customCatName}
                 onChange={(e) => setCustomCatName(e.target.value)}
-                className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                className="flex-1 dark:bg-gray-700 bg-gray-100 border dark:border-gray-600 border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
               <select value={newCatFormat} onChange={(e) => setNewCatFormat(e.target.value as 'WCA' | 'RedBull')}
-                className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm w-full sm:w-auto">
+                className="dark:bg-gray-700 bg-gray-100 border dark:border-gray-600 border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-auto">
                 <option value="WCA">WCA</option>
                 <option value="RedBull">Red Bull</option>
               </select>
               <button onClick={handleAddCustomCategory}
                 disabled={!customCatName.trim() || categories.length >= 10 || categories.some(c => c.name.toLowerCase() === customCatName.trim().toLowerCase())}
-                className="px-4 py-2 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 rounded-lg text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                className="px-4 py-2 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-sm whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
                 + Añadir
               </button>
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row justify-between gap-4 w-full">
               <button onClick={() => setCurrentStep(1)}
-                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border border-gray-600">
+                className="flex items-center justify-center gap-2 px-6 py-2.5 dark:bg-gray-700 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors border dark:border-gray-600 border-gray-300">
                 <FaArrowLeft size={12} /> Información
               </button>
               {categories.length > 0 && (
@@ -470,7 +470,7 @@ export default function TournamentCreation() {
 
         {currentStep === 2 && configurePhase === 'config' && (
           <div className="animate-fade-in">
-            <h2 className="text-2xl font-bold mb-2 text-gray-200 border-b border-gray-700 pb-4">
+            <h2 className="text-2xl font-bold mb-2 dark:text-gray-200 text-gray-800 border-b dark:border-gray-700 border-gray-200 pb-4">
               Configurando {categories[configuringIndex]?.name} — {configuringIndex + 1} de {categories.length}
             </h2>
 
@@ -481,11 +481,11 @@ export default function TournamentCreation() {
                 <div className="flex items-center gap-2">
                   <input type="time" value={categories[configuringIndex]?.startTime || '10:00'}
                     onChange={(e) => handleUpdateSchedule('startTime', e.target.value)}
-                    className="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
-                  <span className="text-gray-300">a</span>
+                    className="flex-1 dark:bg-gray-700 bg-gray-100 border dark:border-gray-600 border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  <span className="dark:text-gray-300 text-gray-700">a</span>ndas
                   <input type="time" value={categories[configuringIndex]?.endTime || '11:00'}
                     onChange={(e) => handleUpdateSchedule('endTime', e.target.value)}
-                    className="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                    className="flex-1 dark:bg-gray-700 bg-gray-100 border dark:border-gray-600 border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
                 </div>
               </div>
 
@@ -498,7 +498,7 @@ export default function TournamentCreation() {
                     className={`px-4 py-1.5 rounded text-sm transition-colors ${
                       categories[configuringIndex]?.format === 'WCA'
                         ? 'bg-blue-600 text-white'
-                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                        : 'dark:bg-gray-700 bg-gray-100 text-gray-400 hover:bg-gray-600'
                     }`}
                   >
                     WCA
@@ -508,7 +508,7 @@ export default function TournamentCreation() {
                     className={`px-4 py-1.5 rounded text-sm transition-colors ${
                       categories[configuringIndex]?.format === 'RedBull'
                         ? 'bg-red-600 text-white'
-                        : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                        : 'dark:bg-gray-700 bg-gray-100 text-gray-400 hover:bg-gray-600'
                     }`}
                   >
                     Red Bull
@@ -522,10 +522,10 @@ export default function TournamentCreation() {
                   <label className="text-xs text-gray-400 block mb-2">Rondas</label>
                   <div className="space-y-2">
                     {categories[configuringIndex]?.rounds.map((r, ri) => (
-                      <div key={ri} className="flex items-center gap-2 bg-gray-750 rounded p-2">
-                        <span className="text-sm text-gray-300 min-w-[80px]">{r.isFinal ? '🏆 Final' : `Ronda ${r.roundNumber}`}:</span>
+                      <div key={ri} className="flex items-center gap-2 dark:bg-gray-800 bg-white rounded p-2">
+                        <span className="text-sm dark:text-gray-300 text-gray-800 min-w-[80px]">{r.isFinal ? '🏆 Final' : `Ronda ${r.roundNumber}`}:</span>
                         <select value={r.format} onChange={(e) => handleUpdateRoundFormat(ri, e.target.value as 'ao5' | 'ao3')}
-                          className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm">
+                          className="dark:bg-gray-700 bg-gray-100 border dark:border-gray-600 border-gray-300 rounded px-2 py-1 text-sm">
                           <option value="ao5">AO5</option>
                           <option value="ao3">AO3</option>
                         </select>
@@ -534,7 +534,7 @@ export default function TournamentCreation() {
                           <div className="flex items-center gap-2 text-sm ml-4">
                             <span className="text-gray-500">Avanzan:</span>
                             <select value={r.competitorsToAdvance} onChange={(e) => handleUpdateCompetitorsToAdvance(ri, e.target.value === 'all' ? 'all' : parseInt(e.target.value) || 0)}
-                              className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-sm">
+                              className="dark:bg-gray-700 bg-gray-100 border dark:border-gray-600 border-gray-300 rounded px-2 py-1 text-sm">
                               <option value="0">Ninguno</option>
                               <option value="4">4</option>
                               <option value="8">8</option>
@@ -550,7 +550,7 @@ export default function TournamentCreation() {
                         )}
                       </div>
                     ))}
-                    <button onClick={handleAddRound} className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded">+ Añadir ronda</button>
+                    <button onClick={handleAddRound} className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">+ Añadir ronda</button>
                   </div>
                 </div>
               )}
@@ -562,7 +562,7 @@ export default function TournamentCreation() {
                     <label className="text-xs text-gray-400 block mb-1">Generación de brackets</label>
                     <select value={categories[configuringIndex]?.bracketMode || 'random'}
                       onChange={(e) => updateCurrentCategory('bracketMode', e.target.value as 'random' | 'manual')}
-                      className="bg-gray-700 border border-gray-600 rounded px-3 py-2 text-sm w-full md:w-auto">
+                      className="dark:bg-gray-700 bg-gray-100 border dark:border-gray-600 border-gray-300 rounded px-3 py-2 text-sm w-full md:w-auto">
                       <option value="random">Aleatorio</option>
                       <option value="manual">Manual</option>
                     </select>
@@ -587,21 +587,21 @@ export default function TournamentCreation() {
                             ]}; return copy; });
                           }
                         }}
-                        className="w-4 h-4 bg-gray-700 border-gray-600 rounded" />
+                        className="w-4 h-4 dark:bg-gray-700 bg-gray-100 dark:border-gray-600 border-gray-300 rounded" />
                       <span className="text-xs text-gray-400">Ronda de clasificación previa</span>
                     </label>
                     {categories[configuringIndex]?.hasSeeding && (
                       <div className="mt-2 ml-6">
                         <select value={categories[configuringIndex]?.seedingFormat || 'ao5'}
                           onChange={(e) => updateCurrentCategory('seedingFormat', e.target.value as 'ao3' | 'ao5')}
-                          className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-xs">
+                          className="dark:bg-gray-700 bg-gray-100 border dark:border-gray-600 border-gray-300 rounded px-3 py-1 text-xs">
                           <option value="ao5">AO5</option>
                           <option value="ao3">AO3</option>
                         </select>
                       </div>
                     )}
                   </div>
-                  <div className="bg-gray-700/30 rounded p-3 text-xs text-gray-400">
+                  <div className="dark:bg-gray-700/30 bg-gray-100 rounded p-3 text-xs text-gray-400">
                     {categories[configuringIndex]?.hasSeeding
                       ? <p><strong>Clasificación {categories[configuringIndex].seedingFormat?.toUpperCase()}</strong> + brackets. Mejores promedios reciben pase directo.</p>
                       : <p>Las rondas se generan automáticamente al crear los brackets en <strong>Resultados → Formato RB</strong>.</p>
@@ -612,13 +612,13 @@ export default function TournamentCreation() {
             </div>
 
             {/* Navegación fase B */}
-            <div className="mt-8 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 border-t border-gray-700 pt-4">
+            <div className="mt-8 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 border-t dark:border-gray-700 border-gray-200 pt-4">
               {configuringIndex > 0 ? (
-                <button onClick={() => setConfiguringIndex(prev => prev - 1)} className="flex items-center justify-center gap-2 px-4 py-2 w-full sm:w-auto bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm">
+                <button onClick={() => setConfiguringIndex(prev => prev - 1)} className="flex items-center justify-center gap-2 px-4 py-2 w-full sm:w-auto dark:bg-gray-700 bg-gray-100 dark:text-white text-gray-900 rounded-lg hover:bg-gray-600 text-sm">
                   <FaArrowLeft /> Anterior
                 </button>
               ) : (
-                <button onClick={backToPhaseA} className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border border-gray-600">
+                <button onClick={backToPhaseA} className="flex items-center justify-center gap-2 px-6 py-2.5 dark:bg-gray-700 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors border dark:border-gray-600 border-gray-300">
                   <FaArrowLeft /> Volver a lista
                 </button>
               )}
@@ -635,8 +635,8 @@ export default function TournamentCreation() {
 
         {currentStep === 3 && (
           <div className="animate-fade-in">
-            <h2 className="text-2xl font-bold mb-2 text-gray-200">Competidores</h2>
-            <p className="text-gray-400 mb-6 border-b border-gray-700 pb-4">Registra a los competidores y asígnales sus categorías</p>
+            <h2 className="text-2xl font-bold mb-2 dark:text-gray-200 text-gray-800">Competidores</h2>
+            <p className="text-gray-400 mb-6 border-b dark:border-gray-700 border-gray-200 pb-4">Registra a los competidores y asígnales sus categorías</p>
             
             <div className="w-full overflow-hidden rounded-lg">
               <TableCompetitors 
@@ -657,11 +657,11 @@ export default function TournamentCreation() {
       <div className="mt-8 flex flex-col sm:flex-row justify-between gap-4 w-full">
         <div>
           {currentStep === 1 ? (
-             <button onClick={() => navigate('/dashboard')} className="px-6 py-2.5 w-full sm:w-auto bg-gray-700 text-gray-300 font-medium rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center">
+             <button onClick={() => navigate('/dashboard')} className="px-6 py-2.5 w-full sm:w-auto dark:bg-gray-700 bg-gray-500 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors flex items-center justify-center">
                Cancelar
              </button>
           ) : currentStep === 3 ? (
-             <button onClick={() => setCurrentStep(2)} className="flex items-center justify-center gap-2 px-6 py-2.5 w-full sm:w-auto bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors">
+             <button onClick={() => setCurrentStep(2)} className="flex items-center justify-center gap-2 px-6 py-2.5 w-full sm:w-auto dark:bg-gray-700 bg-gray-100 text-white font-medium rounded-lg hover:bg-gray-600 transition-colors">
                <FaArrowLeft /> Atrás
              </button>
           ) : null}
