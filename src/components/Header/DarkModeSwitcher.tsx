@@ -14,7 +14,7 @@ const DarkModeSwitcher = () => {
           type="checkbox"
           onChange={() => {
             if (typeof setColorMode === 'function') {
-              setColorMode(colorMode === 'dark' ? 'dark' : 'dark');
+              setColorMode(colorMode === 'light' ? 'dark' : 'light');
             }
           }}
           className="dur absolute top-0 z-50 m-0 h-full w-full cursor-pointer opacity-0"

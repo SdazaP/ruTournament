@@ -55,11 +55,11 @@ const Categories = () => {
     room: '',
     participants: 0,
     format: 'WCA' as 'WCA' | 'RedBull',
-    rounds: [{ 
-      roundNumber: 1, 
+    rounds: [{
+      roundNumber: 1,
       format: 'ao5' as 'ao3' | 'ao5',
       competitorsToAdvance: 'all',
-      isFinal: false 
+      isFinal: false
     }],
   });
 
@@ -76,13 +76,11 @@ const Categories = () => {
     "Clock", "Megaminx", "Pyraminx", "Skewb", "Square-1",
   ];
 
-  // Cargar datos del torneo
   useEffect(() => {
     if (tournamentId) {
       db.tournaments.get(tournamentId).then(currentTournament => {
         if (currentTournament) {
           setTournament(currentTournament);
-          // Convertir las categorías del torneo al formato que espera el componente
           const formattedCategories =
             currentTournament.categories?.map((cat: any) => ({
               id: cat.id,
@@ -149,7 +147,6 @@ const Categories = () => {
       categoryToAdd.seedingFormat = 'ao5';
     }
 
-    // Actualizar Dexie
     if (!editMode) {
       const currentTournament = await db.tournaments.get(tournamentId);
       if (currentTournament) {
@@ -158,7 +155,6 @@ const Categories = () => {
       }
     }
 
-    // Actualizar estado local
     const formattedCategory: Category = {
       ...categoryToAdd,
       icon: newCategory.icon || newCategory.name.substring(0, 3),
@@ -182,11 +178,11 @@ const Categories = () => {
       room: '',
       participants: 0,
       format: 'WCA',
-      rounds: [{ 
-        roundNumber: 1, 
+      rounds: [{
+        roundNumber: 1,
         format: 'ao5',
         competitorsToAdvance: 'all',
-        isFinal: false 
+        isFinal: false
       }],
     });
   };
@@ -225,7 +221,6 @@ const Categories = () => {
     if (!tournamentId) return;
 
     if (!editMode) {
-      // Actualizar Dexie
       const currentTournament = await db.tournaments.get(tournamentId);
       if (currentTournament) {
         currentTournament.categories = currentTournament.categories.map((cat: any) => {
@@ -238,7 +233,6 @@ const Categories = () => {
       }
     }
 
-    // Actualizar estado local
     setCategories(
       categories.map((category) => {
         if (category.id === id) {
@@ -287,20 +281,20 @@ const Categories = () => {
               ...cat,
               format: format.toLowerCase(),
               ...(format === 'WCA' && !cat.rounds
-                ? { 
-                    rounds: [{ 
-                      num: 1, 
+                ? {
+                    rounds: [{
+                      num: 1,
                       format: 'ao5',
                       results: [],
                       competitorsToAdvance: 'all',
-                      isFinal: true 
-                    }] 
+                      isFinal: true
+                    }]
                   }
                 : {}),
               ...(format === 'RedBull'
-                ? { 
-                    rounds: [{ 
-                      num: 1, 
+                ? {
+                    rounds: [{
+                      num: 1,
                       format: 'rb',
                       results: [],
                       competitorsToAdvance: 'all',
@@ -326,21 +320,21 @@ const Categories = () => {
         if (category.id === id) {
           const updatedCategory = { ...category, format };
           if (format === 'RedBull') {
-            updatedCategory.rounds = [{ 
-              roundNumber: 1, 
-              format: 'rb',
+            updatedCategory.rounds = [{
+              roundNumber: 1,
+              format: 'rb' as any,
               competitorsToAdvance: 'all',
-              isFinal: true 
+              isFinal: true
             }];
             (updatedCategory as any).bracketMode = 'random';
             (updatedCategory as any).hasSeeding = false;
             (updatedCategory as any).seedingFormat = 'ao5';
           } else if (!updatedCategory.rounds) {
-            updatedCategory.rounds = [{ 
-              roundNumber: 1, 
+            updatedCategory.rounds = [{
+              roundNumber: 1,
               format: 'ao5',
               competitorsToAdvance: 'all',
-              isFinal: true 
+              isFinal: true
             }];
           }
           return updatedCategory;
@@ -522,7 +516,6 @@ const Categories = () => {
       }
     }
 
-    // Actualizar estado local
     setCategories(
       categories.map((category) => {
         if (category.id === id && category.format === 'WCA' && category.rounds) {
@@ -668,7 +661,7 @@ const Categories = () => {
   };
 
   return (
-    <div className="min-h-screen text-white p-4 sm:p-6">
+    <div className="min-h-screen text-gray-900 dark:text-white p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
           <h2 className="text-2xl font-bold flex items-center gap-2">
@@ -676,7 +669,7 @@ const Categories = () => {
           </h2>
           <Link
             to={`/dashboard/tournament/${tournamentId}/schedule`}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs w-full sm:w-auto bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border border-gray-600"
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs w-full sm:w-auto bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors border border-gray-300 dark:border-gray-600"
           >
             <FaClock size={12} /> Ver Cronograma
           </Link>
@@ -687,10 +680,10 @@ const Categories = () => {
           title={isFinalized ? 'El torneo está Finalizado.' : ''}
           className={`px-4 py-2 w-full sm:w-auto rounded-lg transition-colors flex items-center justify-center gap-2 ${
             isFinalized
-              ? 'bg-gray-700 opacity-50 cursor-not-allowed'
+              ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 opacity-50 cursor-not-allowed'
               : editMode
-              ? 'bg-red-600 hover:bg-red-700'
-              : 'bg-blue-600 hover:bg-blue-700'
+              ? 'bg-red-600 hover:bg-red-700 text-white'
+              : 'bg-blue-600 hover:bg-blue-700 text-white'
           }`}
         >
           {isFinalized ? <FaLock /> : null}
@@ -698,15 +691,13 @@ const Categories = () => {
         </button>
       </div>
 
-      {/* Banner de torneo finalizado */}
       {isFinalized && (
-        <div className="mb-6 bg-gray-700/40 border border-gray-600 rounded-lg px-4 py-3 flex items-center gap-3 text-gray-300 text-sm">
-          <FaLock className="text-gray-400 flex-shrink-0" />
-          <span><strong className="text-white">Torneo Finalizado.</strong> No se pueden agregar, editar ni eliminar categorías ni rondas. Reactiva el torneo desde el Panel.</span>
+        <div className="mb-6 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 flex items-center gap-3 text-gray-700 dark:text-gray-300 text-sm">
+          <FaLock className="text-gray-500 dark:text-gray-400 flex-shrink-0" />
+          <span><strong className="text-gray-900 dark:text-white">Torneo Finalizado.</strong> No se pueden agregar, editar ni eliminar categorías ni rondas. Reactiva el torneo desde el Panel.</span>
         </div>
       )}
 
-      {/* Formulario para agregar nueva categoría (solo visible en modo edición) */}
       {editMode && (
         <div className="flex flex-col gap-3 mb-6">
           <div className="flex flex-col md:flex-row gap-3">
@@ -720,10 +711,10 @@ const Categories = () => {
                     setNewCategory({ ...newCategory, name: e.target.value });
                   }
                 }}
-                className={`w-full bg-gray-700 border ${
-                  !PREDEFINED_CATEGORIES.includes(newCategory.name) && categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) 
-                    ? 'border-red-500 focus:ring-red-500' 
-                    : 'border-gray-600 focus:ring-blue-500'
+                className={`w-full bg-white text-gray-900 dark:bg-gray-700 dark:text-white border ${
+                  !PREDEFINED_CATEGORIES.includes(newCategory.name) && categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase())
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
                 } rounded-lg px-4 py-2 focus:outline-none focus:ring-1`}
               >
                 {PREDEFINED_CATEGORIES.map(cat => (
@@ -743,10 +734,10 @@ const Categories = () => {
                     onChange={(e) =>
                       setNewCategory({ ...newCategory, name: e.target.value })
                     }
-                    className={`w-full bg-gray-900 border ${
-                      categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) 
-                        ? 'border-red-500 focus:ring-red-500' 
-                        : 'border-gray-600 focus:ring-blue-500'
+                    className={`w-full bg-white text-gray-900 dark:bg-gray-800 dark:text-white border ${
+                      categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase())
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
                     } rounded-lg px-4 py-2 focus:outline-none focus:ring-1`}
                   />
                   {categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) && newCategory.name.trim() !== '' && (
@@ -761,7 +752,7 @@ const Categories = () => {
               onChange={(e) =>
                 setNewCategory({ ...newCategory, icon: e.target.value })
               }
-              className="flex-1 md:max-w-[200px] bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="flex-1 md:max-w-[200px] bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">Seleccionar icono...</option>
               {icons.map((icon, index) => (
@@ -779,7 +770,7 @@ const Categories = () => {
                   format: e.target.value as 'WCA' | 'RedBull',
                 })
               }
-              className="flex-1 md:max-w-[150px] bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="flex-1 md:max-w-[150px] bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="WCA">Formato WCA</option>
               <option value="RedBull">Red Bull</option>
@@ -794,16 +785,16 @@ const Categories = () => {
                 onChange={(e) =>
                   setNewCategory({ ...newCategory, startTime: e.target.value })
                 }
-                className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="flex-1 bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
-              <span className="text-gray-300">a</span>
+              <span className="text-gray-600 dark:text-gray-300">a</span>
               <input
                 type="time"
                 value={newCategory.endTime}
                 onChange={(e) =>
                   setNewCategory({ ...newCategory, endTime: e.target.value })
                 }
-                className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="flex-1 bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
             <div className="flex-1 md:max-w-[200px]">
@@ -814,7 +805,7 @@ const Categories = () => {
                 onChange={(e) =>
                   setNewCategory({ ...newCategory, room: e.target.value })
                 }
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
 
@@ -822,17 +813,15 @@ const Categories = () => {
               <div className="flex-1 flex flex-col gap-2">
                 {newCategory.rounds.map((round, index) => (
                   <div key={index} className="flex items-center gap-2">
-                    <span className="text-sm">Ronda {round.roundNumber}:</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-200">Ronda {round.roundNumber}:</span>
                     <select
                       value={round.format}
                       onChange={(e) => {
                         const newRounds = [...newCategory.rounds];
-                        newRounds[index].format = e.target.value as
-                          | 'ao3'
-                          | 'ao5';
+                        newRounds[index].format = e.target.value as 'ao3' | 'ao5';
                         setNewCategory({ ...newCategory, rounds: newRounds });
                       }}
-                      className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm"
+                      className="bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-sm"
                     >
                       <option value="ao5">AO5</option>
                       <option value="ao3">AO3</option>
@@ -845,7 +834,7 @@ const Categories = () => {
                           );
                           setNewCategory({ ...newCategory, rounds: newRounds });
                         }}
-                        className="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded"
+                        className="text-xs bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded"
                       >
                         ×
                       </button>
@@ -861,35 +850,34 @@ const Categories = () => {
                 disabled={categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) || newCategory.name.trim() === '' || categories.length >= 10}
                 className={`w-full md:w-[150px] px-4 py-2 rounded-lg transition-colors ${
                   categories.length >= 10 || categories.some(c => c.name.toLowerCase() === newCategory.name.trim().toLowerCase()) || newCategory.name.trim() === ''
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
+                    ? 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
                 }`}
               >
                 Agregar
               </button>
               {categories.length >= 10 && (
-                <span className="text-red-400 text-xs mt-1 text-center font-medium">Límite de 10 alcanzado</span>
+                <span className="text-red-500 dark:text-red-400 text-xs mt-1 text-center font-medium">Límite de 10 alcanzado</span>
               )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Lista de categorías */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {categories.map((category) => (
           <div
             key={category.id}
-            className="bg-gray-750 rounded-lg p-4 hover:bg-gray-700 transition-colors"
+            className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <div className="flex justify-between items-start mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white rounded-full flex items-center justify-center">
                   {category.icon}
                 </div>
                 <div>
-                  <h3 className="font-medium">{category.name}</h3>
-                  <span className="text-xs text-gray-400">
+                  <h3 className="font-medium text-gray-900 dark:text-white">{category.name}</h3>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     {category.format}
                   </span>
                 </div>
@@ -897,7 +885,7 @@ const Categories = () => {
               {editMode && (
                 <button
                   onClick={() => handleDeleteCategory(category.id, category.name)}
-                  className="text-gray-400 hover:text-red-400"
+                  className="text-gray-400 hover:text-red-500 dark:hover:text-red-400"
                 >
                   ×
                 </button>
@@ -906,7 +894,7 @@ const Categories = () => {
 
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-gray-400 block mb-1">
+                <label className="text-xs text-gray-600 dark:text-gray-400 block mb-1">
                   Horario
                 </label>
                 <div className="flex items-center gap-2">
@@ -920,12 +908,12 @@ const Categories = () => {
                         e.target.value,
                       )
                     }
-                    className={`flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm ${
+                    className={`flex-1 bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-sm ${
                       !editMode ? 'cursor-not-allowed opacity-50' : ''
                     }`}
                     disabled={!editMode}
                   />
-                  <span>a</span>
+                  <span className="text-gray-600 dark:text-gray-300">a</span>
                   <input
                     type="time"
                     value={category.endTime}
@@ -936,14 +924,14 @@ const Categories = () => {
                         e.target.value,
                       )
                     }
-                    className={`flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm ${
+                    className={`flex-1 bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-sm ${
                       !editMode ? 'cursor-not-allowed opacity-50' : ''
                     }`}
                     disabled={!editMode}
                   />
                 </div>
                 <div className="mt-2">
-                  <label className="text-xs text-gray-400 block mb-1">
+                  <label className="text-xs text-gray-600 dark:text-gray-400 block mb-1">
                     Sala
                   </label>
                   <input
@@ -953,7 +941,7 @@ const Categories = () => {
                     onChange={(e) =>
                       handleUpdateRoom(category.id, e.target.value)
                     }
-                    className={`w-full bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm ${
+                    className={`w-full bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-sm ${
                       !editMode ? 'cursor-not-allowed opacity-50' : ''
                     }`}
                     disabled={!editMode}
@@ -963,26 +951,26 @@ const Categories = () => {
 
               {editMode && (
                 <div>
-                  <label className="text-xs text-gray-400 block mb-1">
+                  <label className="text-xs text-gray-600 dark:text-gray-400 block mb-1">
                     Formato
                   </label>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleFormatClick(category, 'WCA')}
-                      className={`px-3 py-1 rounded text-sm ${
+                      className={`px-3 py-1 rounded text-sm transition-colors ${
                         category.format === 'WCA'
-                          ? 'bg-blue-600'
-                          : 'bg-gray-700 hover:bg-gray-600'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
                       }`}
                     >
                       WCA
                     </button>
                     <button
                       onClick={() => handleFormatClick(category, 'RedBull')}
-                      className={`px-3 py-1 rounded text-sm ${
+                      className={`px-3 py-1 rounded text-sm transition-colors ${
                         category.format === 'RedBull'
-                          ? 'bg-blue-600'
-                          : 'bg-gray-700 hover:bg-gray-600'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600'
                       }`}
                     >
                       Red Bull
@@ -995,12 +983,12 @@ const Categories = () => {
                 <div>
                   {category.format === 'WCA' && (
                     <>
-                      <label className="text-xs text-gray-400 block mb-1">Rondas</label>
+                      <label className="text-xs text-gray-600 dark:text-gray-400 block mb-1">Rondas</label>
                       <div className="space-y-2">
                         {category.rounds.map((round) => (
                           <div key={round.roundNumber} className="flex flex-col gap-2 p-2 rounded">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm">
+                              <span className="text-sm text-gray-700 dark:text-gray-200">
                                 {round.isFinal ? 'Final' : `Ronda ${round.roundNumber}`}:
                               </span>
                               <select
@@ -1008,25 +996,25 @@ const Categories = () => {
                                 onChange={(e) =>
                                   handleUpdateRoundFormat(category.id, round.roundNumber, e.target.value as 'ao3' | 'ao5')
                                 }
-                                className={`bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm ${!editMode ? 'cursor-not-allowed opacity-50' : ''}`}
+                                className={`bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-sm ${!editMode ? 'cursor-not-allowed opacity-50' : ''}`}
                                 disabled={!editMode}
                               >
                                 <option value="ao5">AO5</option>
                                 <option value="ao3">AO3</option>
                               </select>
                               {round.isFinal && (
-                                <span className="text-xs bg-yellow-600 text-white px-2 py-1 rounded">Final</span>
+                                <span className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-600 dark:text-white px-2 py-1 rounded">Final</span>
                               )}
                               {editMode && category.rounds && category.rounds.length > 1 && (
                                 <button
                                   onClick={() => handleDeleteRound(category.id, round.roundNumber, category.name)}
-                                  className="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded ml-auto"
+                                  className="text-xs bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded ml-auto"
                                 >×</button>
                               )}
                             </div>
                             {!round.isFinal && (
                               <div className="flex items-center gap-2 text-sm">
-                                <span>Avanzan:</span>
+                                <span className="text-gray-700 dark:text-gray-200">Avanzan:</span>
                                 {editMode ? (
                                   <select
                                     value={round.competitorsToAdvance}
@@ -1034,7 +1022,7 @@ const Categories = () => {
                                       const newValue = e.target.value === 'all' ? 'all' : parseInt(e.target.value) || 0;
                                       handleUpdateCompetitorsToAdvance(category.id, round.roundNumber, newValue);
                                     }}
-                                    className="bg-gray-700 border border-gray-600 rounded px-2 py-1"
+                                    className="bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-2 py-1"
                                   >
                                     <option value="0">Ninguno</option>
                                     <option value="4">4 competidores</option>
@@ -1045,7 +1033,7 @@ const Categories = () => {
                                     <option value="all">Todos</option>
                                   </select>
                                 ) : (
-                                  <span className="bg-gray-700 px-2 py-1 rounded">
+                                  <span className="bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 px-2 py-1 rounded">
                                     {round.competitorsToAdvance === 'all' ? 'Todos' : round.competitorsToAdvance > 0 ? round.competitorsToAdvance : 'Ninguno'}
                                   </span>
                                 )}
@@ -1054,16 +1042,17 @@ const Categories = () => {
                           </div>
                         ))}
                         {editMode && (
-                          <button onClick={() => handleAddRound(category.id)} className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded">
+                          <button onClick={() => handleAddRound(category.id)} className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded">
                             + Añadir ronda
                           </button>
                         )}
                       </div>
                     </>
                   )}
+
                   {category.format === 'RedBull' && (
-                    <div className="bg-gray-700/30 rounded p-3 text-xs text-gray-400 space-y-1">
-                      <p className="text-gray-300 font-medium">Rondas automáticas</p>
+                    <div className="bg-gray-100 dark:bg-gray-700 rounded p-3 text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                      <p className="text-gray-800 dark:text-gray-300 font-medium">Rondas automáticas</p>
                       {(category as any).hasSeeding ? (
                         <>
                           <p><strong>Clasificación {(category as any).seedingFormat || 'ao5'}</strong> + brackets de eliminación.</p>
@@ -1080,7 +1069,7 @@ const Categories = () => {
               {category.format === 'RedBull' && editMode && (
                 <>
                   <div>
-                    <label className="text-xs text-gray-400 block mb-1">
+                    <label className="text-xs text-gray-600 dark:text-gray-400 block mb-1">
                       Generación de brackets
                     </label>
                     <select
@@ -1103,12 +1092,13 @@ const Categories = () => {
                           )
                         );
                       }}
-                      className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-sm w-full"
+                      className="bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-sm w-full"
                     >
                       <option value="random">Aleatorio</option>
                       <option value="manual">Manual</option>
                     </select>
                   </div>
+
                   <div className="mt-3">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -1160,9 +1150,9 @@ const Categories = () => {
                             })
                           );
                         }}
-                        className="w-4 h-4 bg-gray-700 border-gray-600 rounded"
+                        className="w-4 h-4 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded"
                       />
-                      <span className="text-xs text-gray-400">Ronda de clasificación previa</span>
+                      <span className="text-xs text-gray-700 dark:text-gray-400">Ronda de clasificación previa</span>
                     </label>
                     {(category as any).hasSeeding && (
                       <div className="mt-2 ml-6">
@@ -1196,7 +1186,7 @@ const Categories = () => {
                               })
                             );
                           }}
-                          className="bg-gray-700 border border-gray-600 rounded px-3 py-1 text-xs w-full"
+                          className="bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-xs w-full"
                         >
                           <option value="ao5">AO5</option>
                           <option value="ao3">AO3</option>
@@ -1208,11 +1198,11 @@ const Categories = () => {
               )}
 
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-400">
-{category.participants}{' '}
-                   {category.participants === 1
-                     ? 'competidor'
-                     : 'competidores'}
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {category.participants}{' '}
+                  {category.participants === 1
+                    ? 'competidor'
+                    : 'competidores'}
                 </span>
               </div>
             </div>
@@ -1221,18 +1211,17 @@ const Categories = () => {
       </div>
 
       {categories.length === 0 && (
-        <div className="text-center py-8 text-gray-400">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           No hay categorías registradas aún
         </div>
       )}
 
-      {/* Footer Area */}
-      <div className="mt-12 pt-6 border-t border-gray-700 pb-8">
-        <div className="bg-gray-800/50 rounded-lg p-5 mb-6 text-sm text-gray-400">
-          <h4 className="font-semibold text-gray-300 mb-2">💡 ¿Cómo funciona esta sección?</h4>
+      <div className="mt-12 pt-6 border-t dark:border-gray-700 border-gray-200 pb-8">
+        <div className="dark:bg-gray-800 bg-gray-100 rounded-lg p-5 mb-6 text-sm text-gray-700 dark:text-gray-400">
+          <h4 className="font-semibold text-gray-900 dark:text-gray-300 mb-2">💡 ¿Cómo funciona esta sección?</h4>
           <p>
-            Aquí puedes añadir y administrar los eventos (categorías) del torneo. 
-            Cada torneo soporta un máximo de 10 categorías activas en total. 
+            Aquí puedes añadir y administrar los eventos (categorías) del torneo.
+            Cada torneo soporta un máximo de 10 categorías activas en total.
             Al <strong>Activar Edición</strong>, podrás añadir y eliminar rondas (ej. pasar de Final a 3 Rondas clasificatorias), así como establecer cuántos competidores avanzan a la próxima ronda de acuerdo con los listados de desempeño.
           </p>
         </div>
@@ -1241,17 +1230,16 @@ const Categories = () => {
         </div>
       </div>
 
-      {/* Modal de Confirmación de Cambios */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-300 dark:border-gray-600 overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
                 <FaSave size={22} />
               </div>
-              <h3 className="text-xl font-bold text-center text-white mb-2">Guardar Cambios</h3>
-              <p className="text-gray-400 text-center text-sm mb-6">
-                Se modificaron <strong className="text-white">{changedCount}</strong> {changedCount === 1 ? 'categoría' : 'categorías'}. ¿Qué deseas hacer con los cambios?
+              <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">Guardar Cambios</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-center text-sm mb-6">
+                Se modificaron <strong className="text-gray-900 dark:text-white">{changedCount}</strong> {changedCount === 1 ? 'categoría' : 'categorías'}. ¿Qué deseas hacer con los cambios?
               </p>
               <div className="flex flex-col gap-2">
                 <button
@@ -1268,7 +1256,7 @@ const Categories = () => {
                 </button>
                 <button
                   onClick={() => setShowConfirmModal(false)}
-                  className="w-full py-2.5 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors font-medium text-sm"
+                  className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 rounded-lg transition-colors font-medium text-sm"
                 >
                   Cancelar
                 </button>
@@ -1278,27 +1266,26 @@ const Categories = () => {
         </div>
       )}
 
-      {/* Modal de Advertencia de Cambio de Formato */}
       {showFormatWarning && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-300 dark:border-gray-600 overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
                 <FaExclamationTriangle size={22} />
               </div>
-              <h3 className="text-xl font-bold text-center text-white mb-2">Cambiar Formato</h3>
-              <p className="text-gray-400 text-center text-sm mb-4">
+              <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">Cambiar Formato</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-center text-sm mb-4">
                 <strong>{showFormatWarning.name}</strong> tiene <strong>{showFormatWarning.participants} competidor(es)</strong>{showFormatWarning.hasResults ? ' y resultados registrados' : ''}.
                 Cambiar de <strong>{showFormatWarning.from}</strong> a <strong>{showFormatWarning.to}</strong> reiniciará la configuración de rondas{showFormatWarning.hasResults ? ' y se perderán los resultados actuales' : ''}.
               </p>
-              <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-400 mb-6 flex items-start gap-2">
+              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/30 dark:border-yellow-700/50 dark:text-yellow-400 rounded-lg p-3 text-xs mb-6 flex items-start gap-2">
                 <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
                 <span>Esta acción no se puede deshacer tras guardar los cambios.</span>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => setShowFormatWarning(null)}
-                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                  className="flex-1 py-2.5 px-4 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 rounded-lg transition-colors font-medium text-sm"
                 >
                   Cancelar
                 </button>
@@ -1320,22 +1307,21 @@ const Categories = () => {
         </div>
       )}
 
-      {/* Modal de Confirmación de Categoría */}
       {categoryToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
-          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-300 dark:border-gray-600 overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
                 <FaTrash size={20} />
               </div>
-              <h3 className="text-xl font-bold text-center text-white mb-2">Eliminar Categoría</h3>
-              <p className="text-gray-400 text-center text-sm mb-6">
+              <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">Eliminar Categoría</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-center text-sm mb-6">
                 ¿Estás seguro de que deseas eliminar la categoría <strong>{categoryToDelete.name}</strong>? Se borrará todo el historial, rondas y competidores de este evento.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => setCategoryToDelete(null)}
-                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                  className="flex-1 py-2.5 px-4 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 rounded-lg transition-colors font-medium text-sm"
                 >
                   Cancelar
                 </button>
@@ -1351,22 +1337,21 @@ const Categories = () => {
         </div>
       )}
 
-      {/* Modal de Confirmación de Ronda */}
       {roundToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
-          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-300 dark:border-gray-600 overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
                 <FaTrash size={20} />
               </div>
-              <h3 className="text-xl font-bold text-center text-white mb-2">Eliminar Ronda</h3>
-              <p className="text-gray-400 text-center text-sm mb-6">
+              <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">Eliminar Ronda</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-center text-sm mb-6">
                 ¿Estás seguro de que deseas eliminar la Ronda {roundToDelete.roundNumber} de <strong>{roundToDelete.name}</strong>? Se perderán los agrupamientos y resultados.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => setRoundToDelete(null)}
-                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                  className="flex-1 py-2.5 px-4 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 rounded-lg transition-colors font-medium text-sm"
                 >
                   Cancelar
                 </button>
@@ -1381,7 +1366,6 @@ const Categories = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

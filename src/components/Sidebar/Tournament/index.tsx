@@ -263,8 +263,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                             <NavLink
                               to="categories"
                               className={({ isActive }) =>
-                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium dark:text-bodydark1 text-gray-900 duration-300 ease-in-out hover:text-white ' +
-                                (isActive && '!text-white')
+                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium dark:text-bodydark1 text-gray-900 duration-300 ease-in-out hover:text-gray-400' +
+                                (isActive && '!text-gray-400')
                               }
                             >
                               <FiCalendar size={18} />
@@ -275,8 +275,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                             <NavLink
                               to="schedule"
                               className={({ isActive }) =>
-                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium dark:text-bodydark1 text-gray-900 duration-300 ease-in-out hover:text-white ' +
-                                (isActive && '!text-white')
+                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium dark:text-bodydark1 text-gray-900 duration-300 ease-in-out hover:text-gray-400 ' +
+                                (isActive && '!text-gray-400')
                               }
                             >
                               <FaClock size={18} />
@@ -287,8 +287,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                             <NavLink
                               to="scrambles"
                               className={({ isActive }) =>
-                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium dark:text-bodydark1 text-gray-900 duration-300 ease-in-out hover:text-white ' +
-                                (isActive && '!text-white')
+                                'group relative flex items-center gap-2.5 rounded-md px-4 font-medium dark:text-bodydark1 text-gray-900 duration-300 ease-in-out hover:text-gray-400 ' +
+                                (isActive && '!text-gray-400')
                               }
                             >
                               <FaSyncAlt size={18} />
@@ -307,7 +307,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 <NavLink
                   to="results"
                   className={({ isActive }) =>
-                    'group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium dark:text-bodydark1 text-gray-900 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ' +
+                    'group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium dark:text-bodydark1 text-gray-900 duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-graydark ' +
                     (isActive && 'bg-gray-100 dark:bg-meta-4')
                   }
                 >
@@ -320,7 +320,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 <NavLink
                   to="view/results"
                   className={({ isActive }) =>
-                    'group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium dark:text-bodydark1 text-gray-900 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ' +
+                    'group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium dark:text-bodydark1 text-gray-900 duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-graydark  ' +
                     (isActive && 'bg-gray-100 dark:bg-meta-4')
                   }
                 >

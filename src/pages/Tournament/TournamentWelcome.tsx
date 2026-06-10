@@ -64,14 +64,17 @@ const TournamentWelcome = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteInputName, setDeleteInputName] = useState('');
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState<Tournament['status'] | null>(null);
-  const [originalTournament, setOriginalTournament] = useState<Tournament | null>(null);
+  const [pendingStatus, setPendingStatus] = useState<
+    Tournament['status'] | null
+  >(null);
+  const [originalTournament, setOriginalTournament] =
+    useState<Tournament | null>(null);
   const [showExitModal, setShowExitModal] = useState(false);
 
   // Cargar datos del torneo
   useEffect(() => {
     if (id) {
-      db.tournaments.get(id).then(foundTournament => {
+      db.tournaments.get(id).then((foundTournament) => {
         if (foundTournament) {
           setTournamentData(foundTournament as unknown as Tournament);
         }
@@ -82,28 +85,31 @@ const TournamentWelcome = () => {
 
   const setTournamentData = (tournamentData: Tournament) => {
     setTournament(tournamentData);
-    
+
     // Procesar participantes
-    const processedParticipants = tournamentData.competitors.map(comp => {
-      const firstCategoryId = comp.categories.length > 0 ? comp.categories[0] : '';
-      const categoryName = tournamentData.categories.find(cat => cat.id === firstCategoryId)?.name || 'Sin categoría';
-      
+    const processedParticipants = tournamentData.competitors.map((comp) => {
+      const firstCategoryId =
+        comp.categories.length > 0 ? comp.categories[0] : '';
+      const categoryName =
+        tournamentData.categories.find((cat) => cat.id === firstCategoryId)
+          ?.name || 'Sin categoría';
+
       return {
         id: comp.id,
         name: comp.name,
         category: categoryName,
-        categoryId: firstCategoryId
+        categoryId: firstCategoryId,
       };
     });
     setParticipants(processedParticipants);
-    
+
     // Procesar categorías
-    const processedCategories = tournamentData.categories.map(cat => ({
+    const processedCategories = tournamentData.categories.map((cat) => ({
       id: cat.id,
       name: cat.name,
-      participants: tournamentData.competitors.filter(comp => 
-        comp.categories.includes(cat.id)
-      ).length
+      participants: tournamentData.competitors.filter((comp) =>
+        comp.categories.includes(cat.id),
+      ).length,
     }));
     setCategories(processedCategories);
   };
@@ -160,7 +166,8 @@ const TournamentWelcome = () => {
       setEditMode(true);
     } else {
       if (tournament && originalTournament) {
-        const hasChanges = tournament.name !== originalTournament.name ||
+        const hasChanges =
+          tournament.name !== originalTournament.name ||
           tournament.description !== originalTournament.description ||
           tournament.date !== originalTournament.date ||
           tournament.location !== originalTournament.location ||
@@ -186,7 +193,7 @@ const TournamentWelcome = () => {
   // Confirmar cambio de estado (viene del modal)
   const confirmStatusChange = async () => {
     if (!tournament || !pendingStatus) return;
-    
+
     // Aplicamos el nuevo estado localmente
     const updated = { ...tournament, status: pendingStatus };
     setTournament(updated);
@@ -195,7 +202,7 @@ const TournamentWelcome = () => {
     if (!editMode) {
       await db.tournaments.put(updated as any);
     }
-    
+
     setShowStatusModal(false);
     setPendingStatus(null);
   };
@@ -205,8 +212,6 @@ const TournamentWelcome = () => {
     setShowStatusModal(false);
     setPendingStatus(null);
   };
-
-
 
   // Eliminar el torneo actual
   const handleDeleteTournament = async () => {
@@ -228,9 +233,11 @@ const TournamentWelcome = () => {
       <div className="min-h-screen text-white p-6 mx-auto flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Torneo no encontrado</h1>
-          <p className="text-gray-400">El torneo solicitado no existe o no se pudo cargar.</p>
-          <Link 
-            to="/dashboard/tournaments" 
+          <p className="text-gray-400">
+            El torneo solicitado no existe o no se pudo cargar.
+          </p>
+          <Link
+            to="/dashboard/tournaments"
             className="mt-4 inline-block px-4 py-2 bg-blue-600 rounded-lg hover:bg-blue-700"
           >
             Volver a torneos
@@ -241,7 +248,7 @@ const TournamentWelcome = () => {
   }
 
   return (
-    <div className="min-h-screen text-white p-6 mx-auto">
+    <div className="min-h-screen dark:text-white text-gray-900 p-6 mx-auto">
       {/* Encabezado con botones */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-6 mb-4 gap-4">
         <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -252,14 +259,14 @@ const TournamentWelcome = () => {
             <>
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className="flex items-center justify-center gap-2 px-4 py-2 w-full sm:w-auto bg-red-600 rounded-lg hover:bg-red-700 transition"
+                className="flex items-center justify-center gap-2 px-4 py-2 text-white w-full sm:w-auto bg-red-600 rounded-lg hover:bg-red-700 transition"
                 title="Eliminar este torneo permanentemente"
               >
                 <FaTrash /> Eliminar
               </button>
               <button
                 onClick={saveChanges}
-                className="flex items-center justify-center gap-2 px-4 py-2 w-full sm:w-auto bg-green-600 rounded-lg hover:bg-green-700 transition"
+                className="flex items-center justify-center gap-2 px-4 py-2 text-white w-full sm:w-auto bg-green-600 rounded-lg hover:bg-green-700 transition"
               >
                 <FaSave /> Guardar
               </button>
@@ -267,7 +274,7 @@ const TournamentWelcome = () => {
           )}
           <button
             onClick={handleEditToggle}
-            className={`flex items-center justify-center gap-2 px-4 py-2 w-full sm:w-auto rounded-lg transition-colors ${
+            className={`flex items-center justify-center gap-2 px-4 py-2 w-full text-white sm:w-auto rounded-lg transition-colors ${
               editMode
                 ? 'bg-yellow-600 hover:bg-yellow-700'
                 : 'bg-blue-600 hover:bg-blue-700'
@@ -281,10 +288,12 @@ const TournamentWelcome = () => {
 
       {/* Banner de estado del torneo */}
       {tournament.status === 'finalizado' && (
-        <div className="mb-6 bg-gray-700/50 border border-gray-600 rounded-lg px-5 py-3 flex items-center gap-3 text-gray-300">
+        <div className="mb-6 dark:bg-gray-700 bg-gray-100/50 border dark:border-gray-600 border-gray-300 rounded-lg px-5 py-3 flex items-center gap-3 text-gray-300">
           <FaLock className="text-gray-400 flex-shrink-0" />
           <span className="text-sm">
-            Este torneo está <strong className="text-white">Finalizado</strong>. No se pueden realizar modificaciones. Para editar, cambia el estado a <strong>Activo</strong>.
+            Este torneo está <strong className="text-white">Finalizado</strong>.
+            No se pueden realizar modificaciones. Para editar, cambia el estado
+            a <strong>Activo</strong>.
           </span>
         </div>
       )}
@@ -292,7 +301,9 @@ const TournamentWelcome = () => {
         <div className="mb-6 bg-blue-900/20 border border-blue-700/40 rounded-lg px-5 py-3 flex items-center gap-3 text-blue-300">
           <FaClock className="flex-shrink-0" />
           <span className="text-sm">
-            Torneo en estado <strong className="text-white">Próximamente</strong>. Puedes editar la información general pero <strong>no subir resultados</strong>.
+            Torneo en estado{' '}
+            <strong className="text-white">Próximamente</strong>. Puedes editar
+            la información general pero <strong>no subir resultados</strong>.
           </span>
         </div>
       )}
@@ -313,7 +324,7 @@ const TournamentWelcome = () => {
               editMode ? 'cursor-pointer' : ''
             }`}
           >
-            <div className="w-full h-full bg-gray-700 rounded-full flex items-center justify-center overflow-hidden">
+            <div className="w-full h-full dark:bg-gray-700 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
               {tournament.logo ? (
                 <img
                   src={tournament.logo}
@@ -348,7 +359,7 @@ const TournamentWelcome = () => {
         </div>
 
         {/* Columna 2: Información General */}
-        <div className="bg-gray-800 rounded-xl p-6">
+        <div className="dark:bg-gray-800 bg-white rounded-xl p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <FaEdit /> Información General
@@ -363,7 +374,7 @@ const TournamentWelcome = () => {
                 type="text"
                 value={tournament.name}
                 onChange={(e) => handleTournamentChange('name', e.target.value)}
-                className={`w-full bg-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
+                className={`w-full dark:bg-gray-700 bg-gray-100 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
                   !editMode ? 'cursor-not-allowed opacity-70' : ''
                 }`}
                 disabled={!editMode}
@@ -378,7 +389,7 @@ const TournamentWelcome = () => {
                 onChange={(e) =>
                   handleTournamentChange('description', e.target.value)
                 }
-                className={`w-full bg-gray-700 rounded-lg px-4 py-3 h-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
+                className={`w-full dark:bg-gray-700 bg-gray-100 rounded-lg px-4 py-3 h-32 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
                   !editMode ? 'cursor-not-allowed opacity-70' : ''
                 }`}
                 disabled={!editMode}
@@ -388,7 +399,7 @@ const TournamentWelcome = () => {
         </div>
 
         {/* Columna 3: Detalles del Evento */}
-        <div className="bg-gray-800 rounded-xl p-6">
+        <div className="dark:bg-gray-800 bg-white rounded-xl p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <FaCalendarAlt /> Detalles del Evento
@@ -401,29 +412,61 @@ const TournamentWelcome = () => {
                 Estado del Evento
               </label>
               <div className="flex gap-2">
-                {([
-                  { key: 'proximamente', label: 'Próx.', icon: FaClock,       activeColor: 'bg-blue-600',  inactiveHover: 'hover:border-blue-500/60' },
-                  { key: 'activo',       label: 'Activo', icon: FaCheckCircle, activeColor: 'bg-green-600', inactiveHover: 'hover:border-green-500/60' },
-                  { key: 'finalizado',  label: 'Final.',  icon: FaLock,       activeColor: 'bg-gray-500',  inactiveHover: 'hover:border-gray-400/60' },
-                ] as const).map(({ key, label, icon: Icon, activeColor, inactiveHover }) => {
-                  const isCurrent = tournament.status === key;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => requestStatusChange(key)}
-                      disabled={!editMode}
-                      title={!editMode ? 'Activa el modo edición para cambiar el estado' : label}
-                      className={`flex-1 flex flex-col items-center gap-0.5 px-2 py-2 rounded-lg text-xs transition-all border ${
-                        isCurrent
-                          ? `${activeColor} border-transparent text-white shadow-md`
-                          : `bg-gray-700/70 border-gray-600 ${editMode ? inactiveHover : ''} text-gray-400 ${editMode ? 'hover:text-white' : ''}`
-                      } ${!editMode ? 'opacity-60 cursor-not-allowed' : ''}`}
-                    >
-                      <Icon size={13} />
-                      <span className="font-medium leading-tight">{label}</span>
-                    </button>
-                  );
-                })}
+                {(
+                  [
+                    {
+                      key: 'proximamente',
+                      label: 'Próx.',
+                      icon: FaClock,
+                      activeColor: 'bg-blue-600',
+                      inactiveHover: 'hover:border-blue-500/60',
+                    },
+                    {
+                      key: 'activo',
+                      label: 'Activo',
+                      icon: FaCheckCircle,
+                      activeColor: 'bg-green-600',
+                      inactiveHover: 'hover:border-green-500/60',
+                    },
+                    {
+                      key: 'finalizado',
+                      label: 'Final.',
+                      icon: FaLock,
+                      activeColor: 'bg-gray-500',
+                      inactiveHover: 'hover:border-gray-400/60',
+                    },
+                  ] as const
+                ).map(
+                  ({ key, label, icon: Icon, activeColor, inactiveHover }) => {
+                    const isCurrent = tournament.status === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => requestStatusChange(key)}
+                        disabled={!editMode}
+                        title={
+                          !editMode
+                            ? 'Activa el modo edición para cambiar el estado'
+                            : label
+                        }
+                        className={`flex-1 flex flex-col items-center gap-0.5 px-2 py-2 rounded-lg text-xs transition-all border ${
+                          isCurrent
+                            ? `${activeColor} border-transparent text-white shadow-md`
+                            : `dark:bg-gray-700 bg-gray-100/70 dark:border-gray-600 border-gray-300 ${
+                                editMode ? inactiveHover : ''
+                              } text-gray-400 ${
+                                editMode ? 'hover:text-white' : ''
+                              }`
+                        } ${!editMode ? 'opacity-60 cursor-not-allowed' : ''}`}
+                      >
+                        <Icon size={13} />
+                        <span className="font-medium leading-tight">
+                          {label}
+                        </span>
+                      </button>
+                    );
+                  },
+                )}
               </div>
             </div>
 
@@ -434,10 +477,8 @@ const TournamentWelcome = () => {
               <input
                 type="date"
                 value={tournament.date}
-                onChange={(e) =>
-                  handleTournamentChange('date', e.target.value)
-                }
-                className={`w-full bg-gray-700 border border-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition [color-scheme:dark] ${
+                onChange={(e) => handleTournamentChange('date', e.target.value)}
+                className={`w-full dark:bg-gray-700 bg-gray-100 border dark:border-gray-700 border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition [color-scheme:dark] ${
                   !editMode ? 'cursor-not-allowed opacity-70' : ''
                 }`}
                 disabled={!editMode}
@@ -454,7 +495,7 @@ const TournamentWelcome = () => {
                 onChange={(e) =>
                   handleTournamentChange('location', e.target.value)
                 }
-                className={`w-full bg-gray-700 border border-gray-700 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
+                className={`w-full dark:bg-gray-700 bg-gray-100 border dark:border-gray-700 border-gray-200 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
                   !editMode ? 'cursor-not-allowed opacity-70' : ''
                 }`}
                 disabled={!editMode}
@@ -467,16 +508,16 @@ const TournamentWelcome = () => {
       {/* Sección de categorías y participantes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Categorías */}
-        <div className="bg-gray-800 rounded-xl p-6">
+        <div className="dark:bg-gray-800 bg-white rounded-xl p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
             <h2 className="text-2xl font-bold flex items-center gap-2">
               <MdCategory /> Categorías ({categories.length})
             </h2>
             <Link
               to={`/dashboard/tournament/${id}/categories`}
-              className={`px-4 py-2 w-full sm:w-auto bg-blue-600 rounded-lg text-sm transition-all flex items-center justify-center gap-2 ${
-                editMode 
-                  ? 'opacity-50 pointer-events-none cursor-not-allowed grayscale' 
+              className={`px-4 py-2 w-full sm:w-auto bg-blue-600 rounded-lg text-sm text-white transition-all flex items-center justify-center gap-2 ${
+                editMode
+                  ? 'opacity-50 pointer-events-none cursor-not-allowed grayscale'
                   : 'hover:bg-blue-700'
               }`}
             >
@@ -488,19 +529,19 @@ const TournamentWelcome = () => {
               <Link
                 key={category.id}
                 to={`/dashboard/tournament/${id}/view/results?tab=wca&category=${category.id}`}
-                className={`flex flex-col items-center p-3 rounded-lg transition-colors bg-gray-750 ${
-                  editMode 
-                    ? 'opacity-50 pointer-events-none cursor-not-allowed' 
-                    : 'hover:bg-gray-700'
+                className={`flex flex-col items-center p-3 rounded-lg transition-colors dark:bg-gray-800 bg-gray-50 ${
+                  editMode
+                    ? 'opacity-50 pointer-events-none cursor-not-allowed'
+                    : 'hover:dark:bg-gray-700 bg-gray-100'
                 }`}
               >
-                <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center mb-2 text-sm">
+                <div className="w-12 h-12 dark:bg-gray-700 bg-gray-100 rounded-full flex items-center justify-center mb-2 text-sm">
                   {category.name.substring(0, 2)}
                 </div>
                 <span className="text-sm font-medium">{category.name}</span>
                 <span className="text-xs text-gray-400 mt-1">
-{category.participants}{' '}
-                   {category.participants === 1 ? 'competidor' : 'competidores'}
+                  {category.participants}{' '}
+                  {category.participants === 1 ? 'competidor' : 'competidores'}
                 </span>
               </Link>
             ))}
@@ -508,16 +549,17 @@ const TournamentWelcome = () => {
         </div>
 
         {/* Participantes */}
-        <div className="bg-gray-800 rounded-xl p-6">
+        <div className="dark:bg-gray-800 bg-white rounded-xl p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
             <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2 whitespace-nowrap">
-              <MdPeople className="text-lg sm:text-xl" /> Competidores ({participants.length})
+              <MdPeople className="text-lg sm:text-xl" /> Competidores (
+              {participants.length})
             </h2>
             <Link
               to={`/dashboard/tournament/${id}/competitors`}
-              className={`px-4 py-2 bg-blue-600 rounded-lg text-sm transition-all flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start ${
-                editMode 
-                  ? 'opacity-50 pointer-events-none cursor-not-allowed grayscale' 
+              className={`px-4 py-2 bg-blue-600 rounded-lg text-sm text-white transition-all flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start ${
+                editMode
+                  ? 'opacity-50 pointer-events-none cursor-not-allowed grayscale'
                   : 'hover:bg-blue-700'
               }`}
             >
@@ -526,29 +568,35 @@ const TournamentWelcome = () => {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-750">
+            <table className="w-full text-sm text-gray-900 dark:text-gray-100">
+              <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  <th className="py-3 px-4 text-left text-sm font-medium">Nombre</th>
-                  <th className="py-3 px-4 text-left text-sm font-medium">Categoría</th>
+                  <th className="py-3 px-4 text-left font-medium">Nombre</th>
+                  <th className="py-3 px-4 text-left font-medium">Categoría</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-700">
+
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {participants.slice(0, 5).map((participant) => (
-                  <tr key={participant.id} className="hover:bg-gray-750">
+                  <tr
+                    key={participant.id}
+                    className="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700"
+                  >
+                    <td className="py-3 px-4">{participant.name}</td>
                     <td className="py-3 px-4">
-                      {participant.name}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="inline-block bg-gray-700 rounded-full px-3 py-1 text-xs">
+                      <span className="inline-block rounded-full px-3 py-1 text-xs bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200">
                         {participant.category}
                       </span>
                     </td>
                   </tr>
                 ))}
+
                 {participants.length > 5 && (
-                  <tr>
-                    <td colSpan={2} className="py-3 px-4 text-center text-sm text-gray-400">
+                  <tr className="bg-white dark:bg-gray-800">
+                    <td
+                      colSpan={2}
+                      className="py-3 px-4 text-center text-sm text-gray-400 dark:text-gray-500"
+                    >
                       + {participants.length - 5} competidores más
                     </td>
                   </tr>
@@ -562,17 +610,19 @@ const TournamentWelcome = () => {
       {/* Modal para eliminar torneo con confirmación textual */}
       {showDeleteModal && tournament && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl relative">
-            <h3 className="text-xl font-bold mb-4 text-white flex items-center gap-2">
+          <div className="dark:bg-gray-800 bg-white border dark:border-gray-700 border-gray-200 rounded-xl p-6 w-full max-w-md shadow-2xl relative">
+            <h3 className="text-xl font-bold mb-4  flex items-center gap-2">
               <FaTrash className="text-red-500" /> Confirmar Eliminación
             </h3>
-            <p className="text-gray-300 mb-4 text-sm">
-              Esta acción no se puede deshacer. Se eliminarán permanentemente el torneo, junto con todas sus categorías, horarios y competidores asociados.
+            <p className="mb-4 text-sm">
+              Esta acción no se puede deshacer. Se eliminarán permanentemente el
+              torneo, junto con todas sus categorías, horarios y competidores
+              asociados.
             </p>
-            <p className="text-gray-400 mb-2 text-sm">
+            <p className="mb-2 text-sm">
               Para proceder, escribe con exactitud el nombre del torneo:
             </p>
-            <div className="bg-gray-900 rounded-lg px-3 py-2 text-center select-all font-mono mb-4 text-gray-300 font-semibold border border-gray-700">
+            <div className="dark:bg-gray-900 bg-gray-50 rounded-lg px-3 py-2 text-center select-all font-mono mb-4 font-semibold border dark:border-gray-700 border-gray-200">
               {tournament.name}
             </div>
             <input
@@ -580,7 +630,7 @@ const TournamentWelcome = () => {
               value={deleteInputName}
               onChange={(e) => setDeleteInputName(e.target.value)}
               placeholder="Escribe el nombre aquí..."
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 mb-6 text-white focus:outline-none focus:ring-2 focus:ring-red-500 transition-all font-mono text-center"
+              className="w-full dark:bg-gray-700 bg-gray-100 border dark:border-gray-600 border-gray-300 rounded-lg px-4 py-3 mb-6 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all font-mono text-center"
             />
             <div className="flex justify-end gap-3">
               <button
@@ -588,18 +638,14 @@ const TournamentWelcome = () => {
                   setShowDeleteModal(false);
                   setDeleteInputName('');
                 }}
-                className="px-5 py-2.5 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors font-medium"
+                className="px-5 py-2.5 dark:bg-gray-700 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleDeleteTournament}
                 disabled={deleteInputName !== tournament.name}
-                className={`px-5 py-2.5 rounded-lg font-bold flex items-center gap-2 transition-all ${
-                  deleteInputName === tournament.name
-                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : 'bg-red-900/40 text-red-300/40 cursor-not-allowed'
-                }`}
+                className="px-5 py-2.5 rounded-lg font-bold flex items-center gap-2 transition-all bg-red-600 hover:bg-red-700 text-white disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-700 dark:disabled:text-gray-500"
               >
                 Eliminar Definitivamente
               </button>
@@ -611,49 +657,76 @@ const TournamentWelcome = () => {
       {/* Modal: Confirmar Cambio de Estado */}
       {showStatusModal && pendingStatus && tournament && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
+          <div className="dark:bg-gray-800 bg-white border dark:border-gray-700 border-gray-200 rounded-xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
               <FaExclamationTriangle size={22} />
             </div>
-            <h3 className="text-xl font-bold text-center text-white mb-2">Cambiar Estado del Torneo</h3>
-            <p className="text-gray-400 text-center text-sm mb-4">
-              ¿Estás seguro de que deseas cambiar el estado de <strong className="text-white">"{tournament.name}"</strong> de <strong>{tournament.status}</strong> a{' '}
-              <strong className={`${
-                pendingStatus === 'activo' ? 'text-green-400' :
-                pendingStatus === 'finalizado' ? 'text-gray-300' : 'text-blue-400'
-              }`}>{pendingStatus}</strong>?
+            <h3 className="text-xl font-bold text-center mb-2">
+              Cambiar Estado del Torneo
+            </h3>
+            <p className=" text-center text-sm mb-4">
+              ¿Estás seguro de que deseas cambiar el estado de{' '}
+              <strong className="bold">"{tournament.name}"</strong> de{' '}
+              <strong>{tournament.status}</strong> a{' '}
+              <strong
+                className={`font-semibold ${
+                  pendingStatus === 'activo'
+                    ? 'text-green-700 dark:text-green-400'
+                    : pendingStatus === 'finalizado'
+                    ? 'text-gray-700 dark:text-gray-300'
+                    : 'text-blue-700 dark:text-blue-400'
+                }`}
+              >
+                {pendingStatus}
+              </strong>
+              ?
             </p>
             {pendingStatus === 'finalizado' && (
-              <div className="bg-red-900/20 border border-red-700/40 rounded-lg p-3 text-xs text-red-300 mb-4 flex items-start gap-2">
+              <div className="bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-700/40 dark:text-red-300 rounded-lg p-3 text-xs mb-4 flex items-start gap-2">
                 <FaLock className="mt-0.5 flex-shrink-0" />
-                <span>El torneo quedará en <strong>solo lectura</strong>. No se podrán realizar ningún tipo de modificaciones hasta que lo reactives.</span>
+                <span>
+                  El torneo quedará en <strong>solo lectura</strong>. No se
+                  podrán realizar ningún tipo de modificaciones hasta que lo
+                  reactives.
+                </span>
               </div>
             )}
+
             {pendingStatus === 'proximamente' && (
-              <div className="bg-blue-900/20 border border-blue-700/40 rounded-lg p-3 text-xs text-blue-300 mb-4 flex items-start gap-2">
+              <div className="bg-blue-50 border border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-700/40 dark:text-blue-300 rounded-lg p-3 text-xs mb-4 flex items-start gap-2">
                 <FaClock className="mt-0.5 flex-shrink-0" />
-                <span>Podrás editar la información del torneo pero <strong>no podrás subir resultados</strong> hasta que lo actives.</span>
+                <span>
+                  Podrás editar la información del torneo pero{' '}
+                  <strong>no podrás subir resultados</strong> hasta que lo
+                  actives.
+                </span>
               </div>
             )}
+
             {pendingStatus === 'activo' && (
-              <div className="bg-green-900/20 border border-green-700/40 rounded-lg p-3 text-xs text-green-300 mb-4 flex items-start gap-2">
+              <div className="bg-green-50 border border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-700/40 dark:text-green-300 rounded-lg p-3 text-xs mb-4 flex items-start gap-2">
                 <FaCheckCircle className="mt-0.5 flex-shrink-0" />
-                <span>El torneo quedará completamente editable, incluyendo la carga de resultados.</span>
+                <span>
+                  El torneo quedará completamente editable, incluyendo la carga
+                  de resultados.
+                </span>
               </div>
             )}
             <div className="flex gap-3">
               <button
                 onClick={cancelStatusChange}
-                className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                className="flex-1 py-2.5 px-4 dark:bg-gray-700 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmStatusChange}
                 className={`flex-1 py-2.5 px-4 text-white rounded-lg transition-colors font-medium text-sm ${
-                  pendingStatus === 'activo' ? 'bg-green-600 hover:bg-green-700' :
-                  pendingStatus === 'finalizado' ? 'bg-gray-600 hover:bg-gray-500' :
-                  'bg-blue-600 hover:bg-blue-700'
+                  pendingStatus === 'activo'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : pendingStatus === 'finalizado'
+                    ? 'bg-gray-600 hover:bg-gray-800'
+                    : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
                 Sí, Confirmar
@@ -666,22 +739,34 @@ const TournamentWelcome = () => {
       {/* Modal de confirmación de salida */}
       {showExitModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 w-full max-w-md shadow-2xl">
+          <div className="dark:bg-gray-800 bg-white border dark:border-gray-700 border-gray-200 rounded-xl p-6 w-full max-w-md shadow-2xl">
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
               <FaSave size={22} />
             </div>
-            <h3 className="text-xl font-bold text-center text-white mb-2">Guardar Cambios</h3>
-            <p className="text-gray-400 text-center text-sm mb-6">
-              Tienes cambios sin guardar en la información del torneo. ¿Qué deseas hacer?
+            <h3 className="text-xl font-bold text-center mb-2">
+              Guardar Cambios
+            </h3>
+            <p className="text-center text-sm mb-6">
+              Tienes cambios sin guardar en la información del torneo. ¿Qué
+              deseas hacer?
             </p>
             <div className="flex flex-col gap-2">
-              <button onClick={saveChanges} className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2">
+              <button
+                onClick={saveChanges}
+                className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
+              >
                 <FaCheck /> Guardar Cambios
               </button>
-              <button onClick={handleDiscardChanges} className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2">
+              <button
+                onClick={handleDiscardChanges}
+                className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
+              >
                 <FaUndo /> Descartar Cambios
               </button>
-              <button onClick={() => setShowExitModal(false)} className="w-full py-2.5 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors font-medium text-sm">
+              <button
+                onClick={() => setShowExitModal(false)}
+                className="w-full py-2.5 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors font-medium text-sm"
+              >
                 Cancelar
               </button>
             </div>

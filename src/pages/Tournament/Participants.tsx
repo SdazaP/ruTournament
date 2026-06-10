@@ -243,7 +243,7 @@ const Participants = () => {
   };
 
   return (
-    <div className="min-h-screen text-white p-4 sm:p-6 relative">
+    <div className="min-h-screen dark:text-white text-gray-900 p-4 sm:p-6 relative">
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div className="flex items-center gap-3 w-full sm:w-auto">
@@ -253,7 +253,7 @@ const Participants = () => {
           {!isFinalized && (
             <Link
               to={`/dashboard/tournament/${tournamentId}/categories`}
-              className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border border-gray-600"
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs dark:bg-gray-700 bg-gray-100 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border dark:border-gray-600 border-gray-300"
               title="Añadir categoría"
             >
               <FaPlus size={12} /> <span className="hidden sm:inline">Añadir categoría</span>
@@ -266,7 +266,7 @@ const Participants = () => {
           title={isFinalized ? 'El torneo está Finalizado. No se pueden realizar modificaciones.' : ''}
           className={`px-4 py-2 w-full sm:w-auto rounded-lg transition-colors flex items-center justify-center gap-2 ${
             isFinalized
-              ? 'bg-gray-700 opacity-50 cursor-not-allowed text-white'
+              ? 'dark:bg-gray-700 bg-gray-100 opacity-50 cursor-not-allowed text-white'
               : editMode
               ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
               : 'bg-blue-600 hover:bg-blue-700 text-white'
@@ -279,7 +279,7 @@ const Participants = () => {
 
       {/* Banner de torneo finalizado */}
       {isFinalized && (
-        <div className="mb-6 bg-gray-700/40 border border-gray-600 rounded-lg px-4 py-3 flex items-center gap-3 text-gray-300 text-sm">
+        <div className="mb-6 dark:dark:bg-gray-700 bg-gray-100/40 bg-gray-200 border dark:border-gray-600 border-gray-300 rounded-lg px-4 py-3 flex items-center gap-3 text-gray-300 text-sm">
           <FaLock className="text-gray-400 flex-shrink-0" />
           <span><strong className="text-white">Torneo Finalizado.</strong> No se pueden agregar, editar ni eliminar competidores. Reactiva el torneo desde el Panel.</span>
         </div>
@@ -296,14 +296,14 @@ const Participants = () => {
             placeholder="Buscar por nombre..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full pl-10 dark:bg-gray-700 bg-gray-100 border dark:border-gray-600 border-gray-300 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
         
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="dark:bg-gray-700 bg-gray-100 border dark:border-gray-600 border-gray-300 rounded-lg px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         >
           <option value="">Todas las categorías</option>
           {categories.map((category, index) => (
@@ -328,7 +328,7 @@ const Participants = () => {
                 setNewParticipant({...newParticipant, name: e.target.value});
                 if (nameError) setNameError(null);
               }}
-              className={`w-full bg-gray-700 border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-600 focus:border-blue-500 focus:ring-blue-500'}`}
+              className={`w-full dark:bg-gray-700 bg-gray-100 border rounded-lg px-4 py-2 focus:outline-none focus:ring-1 ${nameError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'dark:border-gray-600 border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
             />
             {nameError && (
               <p className="text-red-400 text-xs mt-1">{nameError}</p>
@@ -345,7 +345,7 @@ const Participants = () => {
           
           <button
             onClick={handleAdd}
-            className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="bg-green-600 hover:bg-green-700 px-4 py-2 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <FaCheck /> Agregar
           </button>
@@ -353,19 +353,19 @@ const Participants = () => {
       )}
 
       {/* Tabla de competidores */}
-      <div className="overflow-x-auto rounded-lg border border-gray-700 mb-8">
-        <table className="w-full">
-          <thead className="bg-gray-750">
+      <div className="overflow-x-auto rounded-lg border dark:border-gray-700 border-gray-200 mb-8">
+        <table className="w-full text-gray-900 dark:text-gray-100">
+          <thead className="bg-gray-50 dark:bg-gray-800">
             <tr>
               <th className="p-3 text-left w-2/5">Nombre</th>
               <th className="p-3 text-left w-2/5">Categorías</th>
               {editMode && <th className="p-3 text-right w-1/5">Acciones</th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-700">
+          <tbody className="divide-y divide-gray-200 dark:divide-gray-700 ">
             {filteredParticipants.length > 0 ? (
               filteredParticipants.map((participant) => (
-                <tr key={participant.id} className="hover:bg-gray-750">
+                <tr key={participant.id} className="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 ">
                   <td className="p-3">
                     {editMode ? (
                       <div>
@@ -377,7 +377,7 @@ const Participants = () => {
                             if (editNameError) setEditNameError(null);
                           }}
                           onFocus={() => setEditNameError(null)}
-                          className={`w-full bg-gray-700 border rounded px-3 py-2 focus:outline-none focus:ring-1 ${editNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-600 focus:border-blue-500 focus:ring-blue-500'}`}
+                          className={`w-full dark:bg-gray-700 bg-gray-100 border rounded px-3 py-2 focus:outline-none focus:ring-1 ${editNameError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'dark:border-gray-600 border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
                         />
                         {editNameError && (
                           <p className="text-red-400 text-xs mt-1">{editNameError}</p>
@@ -407,7 +407,7 @@ const Participants = () => {
                     <td className="p-3 text-right">
                       <button
                         onClick={() => setParticipantToDelete(participant)}
-                        className="text-red-500 hover:text-red-400 px-3 py-1 rounded hover:bg-gray-700 transition-colors flex items-center gap-1 mx-auto"
+                        className="text-red-500 hover:text-red-400 px-3 py-1 rounded hover:dark:bg-gray-700 transition-colors flex items-center gap-1 mx-auto"
                         title="Eliminar competidor"
                       >
                         <FaTrash /> Eliminar
@@ -429,23 +429,23 @@ const Participants = () => {
 
       {/* Modal de confirmación para eliminar competidor */}
       {participantToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
-          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="dark:bg-boxdark bg-white rounded-lg shadow-xl w-full max-w-md border dark:border-gray-600 border-gray-300 overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
                 <FaTrash size={20} />
               </div>
-              <h3 className="text-xl font-bold text-center text-white mb-2">Eliminar Competidor</h3>
-              <p className="text-gray-400 text-center text-sm mb-4">
+              <h3 className="text-xl font-bold text-center dark:text-white text-gray-900 mb-2">Eliminar Competidor</h3>
+              <p className="dark:text-gray-400 text-gray-500 text-center text-sm mb-4">
                 ¿Estás seguro que deseas expulsar del torneo a <span className="font-semibold">{participantToDelete.name}</span>? Perderá todos sus registros.
               </p>
               {tournament?.categories?.some((cat: any) => cat.rounds?.some((r: any) => r.results?.some((res: any) => res.idCompetitor === participantToDelete.id))) && (
-                <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-3 text-xs text-red-400 mb-4 flex items-start gap-2">
+                <div className="dark:bg-red-900/30 bg-red-50 border-red-200 dark:border-red-700/50 rounded-lg p-3 text-xs text-red-400 mb-4 flex items-start gap-2">
                   <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
                   <span><strong>Este competidor tiene resultados registrados.</strong> Al eliminarlo se perderán definitivamente sus tiempos en todas las rondas.</span>
                 </div>
               )}
-              <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-400 mb-6 flex items-start gap-2">
+              <div className="dark:bg-yellow-900/30 bg-yellow-50 border-yellow-200 dark:border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-400 mb-6 flex items-start gap-2">
                 <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
                 <span>
                   <strong>Nota:</strong> Si este competidor ya tenía lugar en los Horarios/Grupos, su nombre aparecerá temporalmente como "Desconocido". Recuerda <strong>re-generar los horarios</strong> de sus categorías para equilibrar nuevamente.
@@ -454,7 +454,7 @@ const Participants = () => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => setParticipantToDelete(null)}
-                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                  className="flex-1 py-2.5 px-4 dark:bg-gray-700 bg-gray-100 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
                 >
                   Cancelar
                 </button>
@@ -472,17 +472,17 @@ const Participants = () => {
 
       {/* Modal de confirmación para remover categoría */}
       {categoryToRemove && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
-          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="dark:bg-boxdark bg-white rounded-lg shadow-xl w-full max-w-md border dark:border-gray-600 border-gray-300 overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
                 <FaTrash size={20} />
               </div>
-              <h3 className="text-xl font-bold text-center text-white mb-2">Remover Categoría</h3>
-              <p className="text-gray-400 text-center text-sm mb-4">
+              <h3 className="text-xl font-bold text-center dark:text-white text-gray-900 mb-2">Remover Categoría</h3>
+              <p className="dark:text-gray-400 text-gray-500 text-center text-sm mb-4">
                 ¿Seguro que deseas retirar la categoría de <strong>{categoryToRemove.categoryName}</strong> al competidor <span className="font-semibold">{categoryToRemove.participantName}</span>?
               </p>
-              <div className="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-400 mb-6 flex items-start gap-2">
+              <div className="dark:bg-yellow-900/30 bg-yellow-50 border-yellow-200 dark:border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-400 mb-6 flex items-start gap-2">
                 <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
                 <span>
                   <strong>Atención:</strong> Dejará un hueco como "Desconocido" en cualquier horario previamente generado de esta categoría. Se recomienda regenerar los grupos.
@@ -491,7 +491,7 @@ const Participants = () => {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => setCategoryToRemove(null)}
-                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                  className="flex-1 py-2.5 px-4 dark:bg-gray-700 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
                 >
                   Cancelar
                 </button>
@@ -510,14 +510,14 @@ const Participants = () => {
       {/* Modal de confirmación de salida */}
       {showExitModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+          <div className="dark:bg-boxdark bg-white rounded-lg shadow-xl w-full max-w-md border dark:border-gray-600 border-gray-300 overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
                 <FaSave size={22} />
               </div>
-              <h3 className="text-xl font-bold text-center text-white mb-2">Guardar Cambios</h3>
-              <p className="text-gray-400 text-center text-sm mb-6">
-                Se modificaron <strong className="text-white">{changedCount}</strong> {changedCount === 1 ? 'competidor' : 'competidores'}. ¿Qué deseas hacer con los cambios?
+              <h3 className="text-xl font-bold text-center dark:text-white text-gray-900 mb-2">Guardar Cambios</h3>
+              <p className="dark:text-gray-400 text-gray-500 text-center text-sm mb-6">
+                Se modificaron <strong className="bold">{changedCount}</strong> {changedCount === 1 ? 'competidor' : 'competidores'}. ¿Qué deseas hacer con los cambios?
               </p>
               <div className="flex flex-col gap-2">
                 <button onClick={handleSaveAll} className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2">
@@ -543,9 +543,9 @@ const Participants = () => {
       )}
 
       {/* Footer Area */}
-      <div className="mt-12 pt-6 border-t border-gray-700 pb-8">
-        <div className="bg-gray-800/50 rounded-lg p-5 mb-6 text-sm text-gray-400">
-          <h4 className="font-semibold text-gray-300 mb-2">¿Cómo funciona esta sección?</h4>
+      <div className="mt-12 pt-6 border-t dark:border-gray-700 border-gray-200 pb-8">
+        <div className="dark:dark:bg-gray-800 bg-white/50 bg-gray-100 rounded-lg p-5 mb-6 text-sm dark:text-gray-400">
+          <h4 className="font-semibold mb-2">¿Cómo funciona esta sección?</h4>
           <p>
             Desde aquí puedes gestionar a todos los competidores de tu torneo. 
             Utiliza el botón <strong>Activar Edición</strong> en la parte superior para habilitar modificaciones en los nombres de los competidores o gestionar las categorías en las que participan. 

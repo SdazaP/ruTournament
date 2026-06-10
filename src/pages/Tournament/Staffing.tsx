@@ -1,6 +1,19 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { FaUserShield, FaInfoCircle, FaExclamationTriangle, FaEdit, FaTimes, FaGavel, FaRunning, FaRandom, FaLock, FaSave, FaUndo, FaCheck } from 'react-icons/fa';
+import {
+  FaUserShield,
+  FaInfoCircle,
+  FaExclamationTriangle,
+  FaEdit,
+  FaTimes,
+  FaGavel,
+  FaRunning,
+  FaRandom,
+  FaLock,
+  FaSave,
+  FaUndo,
+  FaCheck,
+} from 'react-icons/fa';
 import { MdCategory } from 'react-icons/md';
 import { db } from '../../common/db';
 import { useTournamentStatus } from '../../hooks/useTournamentStatus';
@@ -35,7 +48,9 @@ const Staffing = () => {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [editMode, setEditMode] = useState(false);
-  const [originalCompetitors, setOriginalCompetitors] = useState<Competitor[]>([]);
+  const [originalCompetitors, setOriginalCompetitors] = useState<Competitor[]>(
+    [],
+  );
   const [showExitModal, setShowExitModal] = useState(false);
 
   // Estado para el modal de confirmación
@@ -52,16 +67,18 @@ const Staffing = () => {
     db.tournaments.get(id).then((t) => {
       if (!t) return;
 
-      const formattedCategories: Category[] = (t.categories || []).map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        format: c.format,
-        rounds: (c.rounds ?? []).map((r: any) => ({
-          roundNumber: r.num || r.roundNumber,
-          format: r.format as 'ao3' | 'ao5',
-          isFinal: r.isFinal ?? false,
-        })),
-      }));
+      const formattedCategories: Category[] = (t.categories || []).map(
+        (c: any) => ({
+          id: c.id,
+          name: c.name,
+          format: c.format,
+          rounds: (c.rounds ?? []).map((r: any) => ({
+            roundNumber: r.num || r.roundNumber,
+            format: r.format as 'ao3' | 'ao5',
+            isFinal: r.isFinal ?? false,
+          })),
+        }),
+      );
 
       setCategories(formattedCategories);
 
@@ -75,8 +92,10 @@ const Staffing = () => {
 
   const handleToggleClick = (competitor: Competitor, role: string) => {
     if (!editMode) return;
-    
-    const isAssigned = (competitor.assignedRoles?.[selectedCategory] || []).includes(role);
+
+    const isAssigned = (
+      competitor.assignedRoles?.[selectedCategory] || []
+    ).includes(role);
     const hasGlobalRole = (competitor.roles || []).includes(role);
 
     // Si vamos a asignarlo localmente pero no tiene la habilidad global, mostramos modal
@@ -85,7 +104,7 @@ const Staffing = () => {
         isOpen: true,
         competitorId: competitor.id,
         role,
-        competitorName: competitor.name
+        competitorName: competitor.name,
       });
       return;
     }
@@ -99,7 +118,7 @@ const Staffing = () => {
 
     let updatedCompetitors = [...competitors];
 
-    updatedCompetitors = updatedCompetitors.map(comp => {
+    updatedCompetitors = updatedCompetitors.map((comp) => {
       if (comp.id === competitorId) {
         const currentAssigned = comp.assignedRoles || {};
         const rolesForCategory = currentAssigned[selectedCategory] || [];
@@ -108,7 +127,7 @@ const Staffing = () => {
         let newGlobalRoles = comp.roles || [];
 
         if (rolesForCategory.includes(role)) {
-          newRolesForCategory = rolesForCategory.filter(r => r !== role);
+          newRolesForCategory = rolesForCategory.filter((r) => r !== role);
         } else {
           newRolesForCategory = [...rolesForCategory, role];
           if (!newGlobalRoles.includes(role)) {
@@ -121,8 +140,8 @@ const Staffing = () => {
           roles: newGlobalRoles,
           assignedRoles: {
             ...currentAssigned,
-            [selectedCategory]: newRolesForCategory
-          }
+            [selectedCategory]: newRolesForCategory,
+          },
         };
       }
       return comp;
@@ -139,16 +158,30 @@ const Staffing = () => {
     setCompetitors(updatedCompetitors);
   };
 
-  const changedCount = !editMode ? 0 : (() => {
-    let count = 0;
-    for (const c of competitors) {
-      const orig = originalCompetitors.find(o => o.id === c.id);
-      if (!orig) { count++; continue; }
-      if (JSON.stringify(c.roles) !== JSON.stringify(orig.roles)) { count++; continue; }
-      if (JSON.stringify(c.assignedRoles) !== JSON.stringify(orig.assignedRoles)) { count++; continue; }
-    }
-    return count;
-  })();
+  const changedCount = !editMode
+    ? 0
+    : (() => {
+        let count = 0;
+        for (const c of competitors) {
+          const orig = originalCompetitors.find((o) => o.id === c.id);
+          if (!orig) {
+            count++;
+            continue;
+          }
+          if (JSON.stringify(c.roles) !== JSON.stringify(orig.roles)) {
+            count++;
+            continue;
+          }
+          if (
+            JSON.stringify(c.assignedRoles) !==
+            JSON.stringify(orig.assignedRoles)
+          ) {
+            count++;
+            continue;
+          }
+        }
+        return count;
+      })();
 
   const handleToggleEditMode = () => {
     if (isFinalized) return;
@@ -184,24 +217,23 @@ const Staffing = () => {
     setOriginalCompetitors([]);
   };
 
-
-
   // Ordenar competidores: los que tienen roles primero, los que no, al fondo.
   const sortedCompetitors = useMemo(() => {
     return [...competitors].sort((a, b) => {
-      const aHasRoles = (a.roles && a.roles.length > 0) ? 1 : 0;
-      const bHasRoles = (b.roles && b.roles.length > 0) ? 1 : 0;
+      const aHasRoles = a.roles && a.roles.length > 0 ? 1 : 0;
+      const bHasRoles = b.roles && b.roles.length > 0 ? 1 : 0;
       return bHasRoles - aHasRoles; // Descendente: 1 primero, 0 después
     });
   }, [competitors]);
 
   return (
-    <div className="text-white p-4 md:p-6 lg:p-8">
+    <div className="dark:text-white text-gray-900 p-4 md:p-6 lg:p-8">
       {/* Encabezado */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <FaUserShield className="text-blue-400" /> Asignación de Roles / Staff
+            <FaUserShield className="text-blue-400" /> Asignación de Roles /
+            Staff
           </h2>
         </div>
 
@@ -213,14 +245,18 @@ const Staffing = () => {
             title={isFinalized ? 'El torneo está Finalizado.' : ''}
             className={`px-4 py-2 w-full sm:w-auto rounded-lg transition-colors flex items-center justify-center gap-2 ${
               isFinalized
-                ? 'bg-gray-700 opacity-50 cursor-not-allowed text-white'
-                : editMode 
-                ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
+                ? 'dark:bg-gray-700 bg-gray-100 opacity-50 cursor-not-allowed text-white'
+                : editMode
+                ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
             }`}
           >
             {isFinalized ? <FaLock /> : editMode ? <FaTimes /> : <FaEdit />}
-            {isFinalized ? 'Bloqueado' : editMode ? 'Desactivar Edición' : 'Activar Edición'}
+            {isFinalized
+              ? 'Bloqueado'
+              : editMode
+              ? 'Desactivar Edición'
+              : 'Activar Edición'}
           </button>
 
           {/* Selector de Categoría */}
@@ -231,7 +267,7 @@ const Staffing = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full dark:bg-gray-700 bg-gray-100 border dark:border-gray-600 border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
@@ -256,19 +292,22 @@ const Staffing = () => {
       ) : (
         <div className="flex flex-col gap-4">
           {isFinalized && (
-            <div className="bg-gray-700/40 border border-gray-600 rounded-lg px-4 py-3 flex items-center gap-3 text-gray-300 text-sm">
+            <div className="dark:dark:bg-gray-700 bg-gray-100/40 bg-gray-200 border dark:border-gray-600 border-gray-300 rounded-lg px-4 py-3 flex items-center gap-3 text-gray-300 text-sm">
               <FaLock className="text-gray-400 flex-shrink-0" />
-              <span><strong className="text-white">Torneo Finalizado.</strong> La asignación de roles está bloqueada. Reactiva el torneo desde el Panel.</span>
+              <span>
+                <strong className="text-white">Torneo Finalizado.</strong> La
+                asignación de roles está bloqueada. Reactiva el torneo desde el
+                Panel.
+              </span>
             </div>
           )}
-          <div className="flex flex-col gap-4 border border-gray-700 text-gray-300 text-xs sm:text-sm p-4 rounded-lg">
-
+          <div className="flex flex-col gap-4 border dark:border-gray-700 border-gray-200 text-gray-300 text-xs sm:text-sm p-4 rounded-lg">
             {/* Bloque Rojo - Error Crítico */}
             <div className="flex items-start gap-3">
               <FaExclamationTriangle className="mt-0.5 flex-shrink-0 text-red-500" />
               <p className="font-semibold text-red-400">
-                Los competidores marcados en rojo no
-                tienen <strong>ningún</strong> rol global asignado.
+                Los competidores marcados en rojo no tienen{' '}
+                <strong>ningún</strong> rol global asignado.
               </p>
             </div>
 
@@ -276,69 +315,98 @@ const Staffing = () => {
             <div className="flex items-start gap-3">
               <FaExclamationTriangle className="mt-0.5 flex-shrink-0 text-yellow-500" />
               <p className="font-semibold text-yellow-400">
-                Si seleccionas algún rol, se añadirá automáticamente a sus capacidades globales.
+                Si seleccionas algún rol, se añadirá automáticamente a sus
+                capacidades globales.
               </p>
             </div>
-
           </div>
 
           {/* Leyenda de Roles */}
-          <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 mb-2">
-            <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+          <div className="bg-gray-100/50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 mb-2">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
               <FaInfoCircle /> Significado de los roles de Staff
             </h3>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex bg-gray-750 p-3 rounded-lg border border-gray-600 items-start gap-3">
-                <div className="bg-blue-900/50 text-blue-400 p-2 rounded-full flex-shrink-0">
+              <div className="flex bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-300 dark:border-gray-600 items-start gap-3">
+                <div className="bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400 p-2 rounded-full flex-shrink-0">
                   <FaGavel size={16} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-blue-300 capitalize">Judge (Juez)</h4>
-                  <p className="text-xs text-gray-400 mt-1">Llama al competidor, supervisa que siga las normas de inspección/resolución y firma los tiempos oficiales.</p>
+                  <h4 className="text-sm font-bold text-blue-700 dark:text-blue-300 capitalize">
+                    Judge (Juez)
+                  </h4>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                    Llama al competidor, supervisa que siga las normas de
+                    inspección/resolución y firma los tiempos oficiales.
+                  </p>
                 </div>
               </div>
-              <div className="flex bg-gray-750 p-3 rounded-lg border border-gray-600 items-start gap-3">
-                <div className="bg-green-900/50 text-green-400 p-2 rounded-full flex-shrink-0">
+
+              <div className="flex bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-300 dark:border-gray-600 items-start gap-3">
+                <div className="bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400 p-2 rounded-full flex-shrink-0">
                   <FaRunning size={16} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-green-300 capitalize">Runner (Corredor)</h4>
-                  <p className="text-xs text-gray-400 mt-1">Lleva los cubos revueltos desde la mesa de Scramblers a las estaciones de los Jueces.</p>
+                  <h4 className="text-sm font-bold text-green-700 dark:text-green-300 capitalize">
+                    Runner (Corredor)
+                  </h4>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                    Lleva los cubos revueltos desde la mesa de Scramblers a las
+                    estaciones de los Jueces.
+                  </p>
                 </div>
               </div>
-              <div className="flex bg-gray-750 p-3 rounded-lg border border-gray-600 items-start gap-3">
-                <div className="bg-purple-900/50 text-purple-400 p-2 rounded-full flex-shrink-0">
+
+              <div className="flex bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-300 dark:border-gray-600 items-start gap-3">
+                <div className="bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-400 p-2 rounded-full flex-shrink-0">
                   <FaRandom size={16} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-purple-300 capitalize">Scrambler (Mezclador)</h4>
-                  <p className="text-xs text-gray-400 mt-1">Aplica las mezclas oficiales a cada cubo usando un cover, asegurando que no se filtre información.</p>
+                  <h4 className="text-sm font-bold text-purple-700 dark:text-purple-300 capitalize">
+                    Scrambler (Mezclador)
+                  </h4>
+                  <p className="text-xs text-gray-600 dark:text-gray-200 mt-1">
+                    Aplica las mezclas oficiales a cada cubo usando un cover,
+                    asegurando que no se filtre información.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-900/50">
+              <table className="w-full text-sm text-gray-900 dark:text-gray-100">
+                <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
-                    <th className="p-4 text-left font-semibold text-gray-300">Competidor</th>
-                    <th className="p-4 text-center font-semibold text-gray-300">¿Compite en esta categoría?</th>
-                    <th className="p-4 text-left font-semibold text-gray-300">Asignación de Roles</th>
+                    <th className="p-4 text-left">Competidor</th>
+                    <th className="p-4 text-center">
+                      ¿Compite en esta categoría?
+                    </th>
+                    <th className="p-4 text-left">Asignación de Roles</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-700">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700 ">
                   {sortedCompetitors.map((competitor) => {
-                    const isCompetingHere = competitor.categories.includes(selectedCategory);
+                    const isCompetingHere =
+                      competitor.categories.includes(selectedCategory);
                     const globalRoles = competitor.roles || [];
-                    const assignedHere = competitor.assignedRoles?.[selectedCategory] || [];
+                    const assignedHere =
+                      competitor.assignedRoles?.[selectedCategory] || [];
                     const hasNoGlobalRoles = globalRoles.length === 0;
 
                     return (
-                      <tr key={competitor.id} className="hover:bg-gray-750/50 transition-colors">
+                      <tr
+                        key={competitor.id}
+                        className="bg-white hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-700 "
+                      >
                         <td className="p-4">
-                          <span className={`font-medium block flex items-center gap-2 ${hasNoGlobalRoles ? 'text-red-400' : 'text-white'}`}>
+                          <span
+                            className={`font-medium block items-center gap-2 ${
+                              hasNoGlobalRoles ? 'text-red-400' : ''
+                            }`}
+                          >
                             {competitor.name}
                             {hasNoGlobalRoles && <></>}
                           </span>
@@ -349,7 +417,7 @@ const Staffing = () => {
                               Sí
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium dark:bg-gray-700 bg-gray-100 text-gray-300">
                               No
                             </span>
                           )}
@@ -359,26 +427,46 @@ const Staffing = () => {
                             <div className="flex flex-wrap gap-4">
                               {AVAILABLE_ROLES.map((role) => {
                                 const isAssigned = assignedHere.includes(role);
-                                const hasGlobalRole = globalRoles.includes(role);
+                                const hasGlobalRole =
+                                  globalRoles.includes(role);
+
                                 const roleTextColor = isAssigned
-                                  ? 'text-white font-medium'
-                                  : (hasGlobalRole ? 'text-gray-400' : 'text-yellow-500');
+                                  ? 'text-gray-900 dark:text-white font-medium'
+                                  : hasGlobalRole
+                                  ? 'text-gray-500 dark:text-gray-400'
+                                  : 'text-yellow-700 dark:text-yellow-400';
 
                                 return (
                                   <label
                                     key={role}
                                     className={`flex items-center gap-2 transition-opacity ${
-                                      editMode ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
-                                    } ${isAssigned ? 'opacity-100' : (editMode ? 'opacity-60 hover:opacity-100' : '')}`}
+                                      editMode
+                                        ? 'cursor-pointer'
+                                        : 'cursor-not-allowed opacity-50'
+                                    } ${
+                                      isAssigned
+                                        ? 'opacity-100'
+                                        : editMode
+                                        ? 'opacity-70 hover:opacity-100'
+                                        : ''
+                                    }`}
                                   >
                                     <input
                                       type="checkbox"
                                       checked={isAssigned}
                                       disabled={!editMode}
-                                      onChange={() => handleToggleClick(competitor, role)}
-                                      className={`w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500 focus:ring-2 ${editMode ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                                      onChange={() =>
+                                        handleToggleClick(competitor, role)
+                                      }
+                                      className={`w-4 h-4 rounded border border-gray-300 bg-white accent-blue-600 dark:border-gray-600 dark:bg-gray-700 dark:accent-blue-500 focus:ring-2 focus:ring-blue-500 ${
+                                        editMode
+                                          ? 'cursor-pointer'
+                                          : 'cursor-not-allowed opacity-60'
+                                      }`}
                                     />
-                                    <span className={`capitalize text-sm ${roleTextColor}`}>
+                                    <span
+                                      className={`capitalize text-sm ${roleTextColor}`}
+                                    >
                                       {role}
                                     </span>
                                   </label>
@@ -386,7 +474,9 @@ const Staffing = () => {
                               })}
                             </div>
                           ) : (
-                            <span className="text-gray-500 text-xs italic bg-gray-700/30 px-3 py-1 rounded-md">No participa en esta categoría</span>
+                            <span className="text-gray-600 dark:text-gray-300 text-xs italic bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-md">
+                              No participa en esta categoría
+                            </span>
                           )}
                         </td>
                       </tr>
@@ -407,17 +497,19 @@ const Staffing = () => {
       )}
 
       {/* Footer / Info */}
-      <div className="mt-12 pt-6 border-t border-gray-700 pb-8">
-        <div className="bg-gray-800/50 rounded-lg p-5 mb-6 text-sm text-gray-400">
-          <h4 className="font-semibold text-gray-300 mb-2 flex items-center gap-2">
+      <div className="mt-12 pt-6 border-t dark:border-gray-700 border-gray-200 pb-8 dark:text-gray-400">
+        <div className="dark:dark:bg-gray-800 bg-white/50 bg-gray-100 rounded-lg p-5 mb-6 text-sm ">
+          <h4 className="font-semibold mb-2 flex items-center gap-2">
             <FaInfoCircle className="text-blue-400" />
             ¿Cómo funciona esta sección?
           </h4>
           <p>
-            Aquí puedes designar qué rol ocupará cada miembro del personal <strong>para una categoría en específico</strong>.
-            Todos los competidores tienen las casillas disponibles para agilizar la asignación. Al activar un rol aquí,
-            el competidor adquiere ese rol a nivel general permanentemente.
-            Esta matriz servirá posteriormente para crear y administrar los grupos y horarios de la competencia.
+            Aquí puedes designar qué rol ocupará cada miembro del personal{' '}
+            <strong>para una categoría en específico</strong>. Todos los
+            competidores tienen las casillas disponibles para agilizar la
+            asignación. Al activar un rol aquí, el competidor adquiere ese rol a
+            nivel general permanentemente. Esta matriz servirá posteriormente
+            para crear y administrar los grupos y horarios de la competencia.
           </p>
         </div>
       </div>
@@ -425,26 +517,40 @@ const Staffing = () => {
       {/* Modal de Confirmación para nuevos roles globales */}
       {confirmModal && confirmModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-gray-800 rounded-xl max-w-sm w-full p-6 shadow-2xl border border-gray-700">
+          <div className="dark:bg-gray-800 bg-white rounded-xl max-w-sm w-full p-6 shadow-2xl border dark:border-gray-700 border-gray-200">
             <div className="flex items-center gap-3 text-yellow-500 mb-4">
               <FaExclamationTriangle size={24} />
-              <h3 className="text-lg font-bold text-white">Confirmar Asignación</h3>
+              <h3 className="text-lg font-bold">Confirmar Asignación</h3>
             </div>
-            <p className="text-sm text-gray-300 mb-6 leading-relaxed">
-              El competidor <span className="font-semibold text-white">{confirmModal.competitorName}</span> no tiene el rol de <span className="font-semibold text-yellow-400 capitalize">{confirmModal.role}</span> a nivel global.
-              <br /><br />
-              ¿Estás seguro de que quieres asignárselo? Esto añadirá permanentemente este rol a sus habilidades globales en todas las categorías.
+            <p className="text-sm mb-6 leading-relaxed">
+              El competidor{' '}
+              <span className="font-semibold">
+                {confirmModal.competitorName}
+              </span>{' '}
+              no tiene el rol de{' '}
+              <span className="font-semibold text-yellow-400 capitalize">
+                {confirmModal.role}
+              </span>{' '}
+              a nivel global.
+              <br />
+              <br />
+              ¿Estás seguro de que quieres asignárselo? Esto añadirá
+              permanentemente este rol a sus habilidades globales en todas las
+              categorías.
             </p>
             <div className="flex justify-end gap-3 mt-4">
               <button
                 onClick={() => setConfirmModal(null)}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white transition-colors"
+                className="px-4 py-2 rounded-lg text-sm font-medium dark:bg-gray-700 bg-gray-500 hover:bg-gray-600 text-white transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => {
-                  executeToggleRole(confirmModal.competitorId, confirmModal.role);
+                  executeToggleRole(
+                    confirmModal.competitorId,
+                    confirmModal.role,
+                  );
                   setConfirmModal(null);
                 }}
                 className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
@@ -459,22 +565,35 @@ const Staffing = () => {
       {/* Modal de confirmación de salida */}
       {showExitModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-gray-800 rounded-xl max-w-md w-full p-6 shadow-2xl border border-gray-700">
+          <div className="dark:bg-gray-800 bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border dark:border-gray-700 border-gray-200">
             <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
               <FaSave size={22} />
             </div>
-            <h3 className="text-xl font-bold text-center text-white mb-2">Guardar Cambios</h3>
-            <p className="text-gray-400 text-center text-sm mb-6">
-              Se modificaron <strong className="text-white">{changedCount}</strong> {changedCount === 1 ? 'competidor' : 'competidores'}. ¿Qué deseas hacer con los cambios?
+            <h3 className="text-xl font-bold text-center mb-2">
+              Guardar Cambios
+            </h3>
+            <p className="dark:text-gray-400 text-gray-500 text-center text-sm mb-6">
+              Se modificaron <strong className="bold">{changedCount}</strong>{' '}
+              {changedCount === 1 ? 'competidor' : 'competidores'}. ¿Qué deseas
+              hacer con los cambios?
             </p>
             <div className="flex flex-col gap-2">
-              <button onClick={handleSaveAll} className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2">
+              <button
+                onClick={handleSaveAll}
+                className="w-full py-2.5 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
+              >
                 <FaCheck /> Guardar Cambios
               </button>
-              <button onClick={handleDiscardAll} className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2">
+              <button
+                onClick={handleDiscardAll}
+                className="w-full py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium text-sm flex items-center justify-center gap-2"
+              >
                 <FaUndo /> Descartar Cambios
               </button>
-              <button onClick={() => setShowExitModal(false)} className="w-full py-2.5 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors font-medium text-sm">
+              <button
+                onClick={() => setShowExitModal(false)}
+                className="w-full py-2.5 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors font-medium text-sm"
+              >
                 Cancelar
               </button>
             </div>
