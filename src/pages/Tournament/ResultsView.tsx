@@ -18,29 +18,31 @@ const ResultsView = () => {
   }, [searchParams, tab]);
 
   return (
-    <div className="min-h-screen text-white p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row gap-2 mb-6">
+    <div className="min-h-screen p-4 text-gray-900 dark:text-gray-100 sm:p-6">
+      <div className="mb-6 flex flex-col gap-2 sm:flex-row">
         <button
           onClick={() => setTab('WCA')}
-          className={`px-4 py-2 w-full sm:w-auto rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+          className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors sm:w-auto ${
             tab === 'WCA'
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+              ? 'bg-blue-600 text-white dark:bg-blue-500'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
           }`}
         >
           <FaCube size={14} /> WCA
         </button>
+
         <button
           onClick={() => setTab('RedBull')}
-          className={`px-4 py-2 w-full sm:w-auto rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+          className={`flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors sm:w-auto ${
             tab === 'RedBull'
-              ? 'bg-red-600 text-white'
-              : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+              ? 'bg-red-600 text-white dark:bg-red-500'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
           }`}
         >
           <FaTrophy size={14} /> Red Bull
         </button>
       </div>
+
       {tab === 'WCA' ? (
         <ResultsViewWCA initialCategoryId={initialCategory} />
       ) : (

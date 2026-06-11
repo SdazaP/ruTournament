@@ -406,24 +406,24 @@ const Schedule = () => {
   };
 
   return (
-    <div className="min-h-screen text-white p-4 sm:p-6">
+    <div className="min-h-screen text-gray-900 dark:text-white p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div className="flex items-center gap-3">
           <Link
             to={`/dashboard/tournament/${tournamentId}/categories`}
-            className="text-gray-400 hover:text-white transition-colors"
+            className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors"
           >
             <FaArrowLeft />
           </Link>
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            <FaClock className="text-blue-400" /> Cronograma
+            <FaClock className="text-blue-500 dark:text-blue-400" /> Cronograma
           </h2>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <select
             value={selectedRoom}
             onChange={(e) => setSelectedRoom(e.target.value)}
-            className="bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-full sm:w-auto"
+            className="bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 w-full sm:w-auto"
           >
             <option value="__all__">Todas las salas</option>
             <option value="">Sin sala</option>
@@ -436,7 +436,7 @@ const Schedule = () => {
           {!isFinalized && (
             <button
               onClick={handleToggleEditMode}
-                className={`px-4 py-2 w-full sm:w-auto rounded-lg transition-colors flex items-center justify-center gap-2 text-sm ${
+              className={`px-4 py-2 w-full sm:w-auto rounded-lg transition-colors flex items-center justify-center gap-2 text-sm text-white ${
                 editMode
                   ? 'bg-red-600 hover:bg-red-700'
                   : 'bg-blue-600 hover:bg-blue-700'
@@ -449,7 +449,7 @@ const Schedule = () => {
           {!isFinalized && editMode && (
             <button
               onClick={() => setShowAddRoom(!showAddRoom)}
-                className="flex items-center justify-center gap-1.5 px-3 py-2 w-full sm:w-auto text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors border border-gray-600"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 w-full sm:w-auto text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors border border-gray-300 dark:border-gray-600"
             >
               <FaPlus size={10} /> Nueva Sala
             </button>
@@ -458,7 +458,7 @@ const Schedule = () => {
       </div>
 
       {showAddRoom && !isFinalized && editMode && (
-        <div className="mb-4 flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-lg p-3">
+        <div className="mb-4 flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
           <input
             type="text"
             placeholder="Nombre de la sala..."
@@ -468,13 +468,13 @@ const Schedule = () => {
               if (e.key === 'Enter') handleAddRoom();
               if (e.key === 'Escape') setShowAddRoom(false);
             }}
-            className="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="flex-1 bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             autoFocus
           />
           <button
             onClick={handleAddRoom}
             disabled={!newRoomName.trim() || rooms.includes(newRoomName.trim())}
-            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FaCheck />
           </button>
@@ -483,7 +483,7 @@ const Schedule = () => {
               setShowAddRoom(false);
               setNewRoomName('');
             }}
-            className="px-3 py-1.5 bg-gray-600 hover:bg-gray-500 rounded text-sm"
+            className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white rounded text-sm"
           >
             <FaTimes />
           </button>
@@ -495,13 +495,13 @@ const Schedule = () => {
           {rooms.map((r) => (
             <span
               key={r}
-              className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-700 border border-gray-600 rounded-full text-xs text-gray-300"
+              className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-full text-xs"
             >
               {r}
               {!isFinalized && editMode && (
                 <button
                   onClick={() => handleDeleteRoom(r)}
-                  className="text-gray-500 hover:text-red-400"
+                  className="text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
                   title="Eliminar sala"
                 >
                   <FaTimes size={10} />
@@ -513,42 +513,45 @@ const Schedule = () => {
       )}
 
       {status === 'proximamente' && (
-        <div className="mb-6 bg-blue-900/20 border border-blue-700/40 rounded-lg px-4 py-3 flex items-center gap-3 text-blue-300 text-sm">
+        <div className="mb-6 bg-blue-50 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-700/40 rounded-lg px-4 py-3 flex items-center gap-3 text-blue-800 dark:text-blue-300 text-sm">
           <FaClock className="flex-shrink-0" />
           <span>
-            <strong className="text-white">Torneo Próximamente.</strong> Puedes planificar el cronograma pero la carga de resultados está deshabilitada hasta que actives el torneo.
+            <strong className="text-blue-900 dark:text-white">Torneo Próximamente.</strong> Puedes planificar el cronograma pero la carga de resultados está deshabilitada hasta que actives el torneo.
           </span>
         </div>
       )}
 
       {isFinalized && (
-        <div className="mb-6 bg-gray-700/40 border border-gray-600 rounded-lg px-4 py-3 flex items-center gap-3 text-gray-300 text-sm">
-          <FaClock className="text-gray-400 flex-shrink-0" />
+        <div className="mb-6 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 flex items-center gap-3 text-gray-700 dark:text-gray-300 text-sm">
+          <FaClock className="text-gray-500 dark:text-gray-400 flex-shrink-0" />
           <span>
-            <strong className="text-white">Torneo Finalizado.</strong> El cronograma es solo lectura.
+            <strong className="text-gray-900 dark:text-white">Torneo Finalizado.</strong> El cronograma es solo lectura.
           </span>
         </div>
       )}
 
       {categories.length === 0 ? (
-        <div className="text-center py-16 text-gray-400 flex flex-col items-center gap-3 bg-gray-800/30 rounded-lg border-2 border-dashed border-gray-700">
+        <div className="text-center py-16 text-gray-500 dark:text-gray-400 flex flex-col items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700">
           <FaClock size={32} className="opacity-50" />
           <p>No hay categorías registradas.</p>
           <Link
             to={`/dashboard/tournament/${tournamentId}/categories`}
-            className="text-blue-400 hover:underline text-sm"
+            className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
           >
             Ir a administrar categorías
           </Link>
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-[80px_1fr] gap-0 bg-gray-800 border border-gray-700 rounded-lg overflow-hidden mb-6">
-            <div className="hidden lg:block border-r border-gray-700 bg-gray-850 relative" style={{ minHeight: `${Math.max(totalMinutes * 1.0, 300)}px` }}>
+          <div className="grid grid-cols-1 lg:grid-cols-[80px_1fr] gap-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-6">
+            <div
+              className="hidden lg:block border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 relative"
+              style={{ minHeight: `${Math.max(totalMinutes * 1.0, 300)}px` }}
+            >
               {timeLabels.map((mins) => (
                 <div
                   key={mins}
-                  className="absolute left-0 right-0 px-2 text-xs text-gray-500"
+                  className="absolute left-0 right-0 px-2 text-xs text-gray-500 dark:text-gray-400"
                   style={{ top: `${((mins - earliestMinutes) / totalMinutes) * 100}%`, transform: 'translateY(-50%)' }}
                 >
                   {minutesToTime(mins)}
@@ -558,14 +561,14 @@ const Schedule = () => {
 
             <div
               ref={timelineRef}
-              className="relative bg-gray-800/50"
+              className="relative bg-gray-50 dark:bg-gray-800"
               style={{ minHeight: `${Math.max(totalMinutes * 1.0, 300)}px` }}
               onClick={handleEmptyAreaClick}
             >
               {timeLabels.map((mins) => (
                 <div
                   key={mins}
-                  className="absolute left-0 right-0 border-t border-gray-700/50 pointer-events-none"
+                  className="absolute left-0 right-0 border-t border-gray-200 dark:border-gray-700 pointer-events-none"
                   style={{ top: `${((mins - earliestMinutes) / totalMinutes) * 100}%` }}
                 />
               ))}
@@ -577,12 +580,12 @@ const Schedule = () => {
                 return (
                   <div
                     key={cat.id}
-                    className={`absolute left-2 right-2 rounded-lg border transition-colors group ${
+                    className={`absolute left-2 right-2 rounded-lg border transition-colors group text-white ${
                       isWCA
-                        ? 'bg-blue-600/30 border-blue-500/50 hover:bg-blue-600/50'
-                        : 'bg-red-600/30 border-red-500/50 hover:bg-red-600/50'
-                    } ${conflicting ? 'ring-2 ring-yellow-500/70' : ''} ${
-                      editingCatId === cat.id ? 'ring-2 ring-white/70' : ''
+                        ? 'bg-blue-600/85 border-blue-500 hover:bg-blue-600'
+                        : 'bg-red-600/85 border-red-500 hover:bg-red-600'
+                    } ${conflicting ? 'ring-2 ring-yellow-500/80' : ''} ${
+                      editingCatId === cat.id ? 'ring-2 ring-gray-900/30 dark:ring-white/70' : ''
                     } ${editMode && !isFinalized ? 'cursor-grab active:cursor-grabbing' : ''}`}
                     style={{ top: style.top, height: style.height, minHeight: '28px' }}
                     onMouseDown={(e) => editMode ? handleMouseDown(e, cat.id, 'move') : undefined}
@@ -610,11 +613,11 @@ const Schedule = () => {
                       <span className="text-xs font-bold truncate">
                         {cat.icon} {cat.name}
                       </span>
-                      <span className="text-[10px] text-gray-300 font-mono">
+                      <span className="text-[10px] text-white/90 font-mono">
                         {cat.startTime} - {cat.endTime}
                       </span>
                       {cat.room && (
-                        <span className="text-[10px] text-gray-400 truncate">
+                        <span className="text-[10px] text-white/80 truncate">
                           {cat.room}
                         </span>
                       )}
@@ -630,24 +633,24 @@ const Schedule = () => {
                   const style = getBarStyle(cat);
                   return (
                     <div
-                      className="absolute left-1/2 z-50 bg-gray-800 border border-gray-600 rounded-lg p-4 shadow-xl w-64 transform -translate-x-1/2"
+                      className="absolute left-1/2 z-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg p-4 shadow-xl w-64 transform -translate-x-1/2"
                       style={{ top: `calc(${style.top} + ${parseFloat(style.height) / 2}%)`, transform: 'translate(-50%, -50%)' }}
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="text-sm font-medium text-gray-200 mb-3 truncate pr-5">{cat.name}</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-200 mb-3 truncate pr-5">{cat.name}</div>
                       <div className="flex items-center gap-1.5 mb-3">
                         <input
                           type="time"
                           value={cat.startTime}
                           onChange={(e) => localUpdateTime(cat.id, e.target.value, cat.endTime)}
-                          className="flex-1 min-w-0 bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="flex-1 min-w-0 bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                         <span className="text-gray-500 text-xs flex-shrink-0">a</span>
                         <input
                           type="time"
                           value={cat.endTime}
                           onChange={(e) => localUpdateTime(cat.id, cat.startTime, e.target.value)}
-                          className="flex-1 min-w-0 bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="flex-1 min-w-0 bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                       </div>
                       <select
@@ -660,7 +663,7 @@ const Schedule = () => {
                             localUpdateRoom(cat.id, e.target.value);
                           }
                         }}
-                        className="w-full bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                       >
                         <option value="">Sin sala</option>
                         {rooms.map((r) => (
@@ -670,7 +673,7 @@ const Schedule = () => {
                       </select>
                       <button
                         onClick={() => setEditingCatId(null)}
-                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-300"
+                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
                       >
                         <FaTimes size={14} />
                       </button>
@@ -682,10 +685,10 @@ const Schedule = () => {
           </div>
 
           {conflicts.length > 0 && (
-            <div className="mb-6 bg-yellow-900/20 border border-yellow-700/40 rounded-lg px-4 py-3 flex items-start gap-3 text-yellow-300 text-sm">
+            <div className="mb-6 bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-700/40 rounded-lg px-4 py-3 flex items-start gap-3 text-yellow-800 dark:text-yellow-300 text-sm">
               <FaExclamationTriangle className="mt-0.5 flex-shrink-0" />
               <div>
-                <strong className="text-yellow-200">Conflictos de horario detectados:</strong>
+                <strong className="text-yellow-900 dark:text-yellow-200">Conflictos de horario detectados:</strong>
                 <ul className="mt-1 space-y-0.5 list-disc list-inside">
                   {conflicts.map((c, i) => {
                     const a = categories.find((x) => x.id === c.a);
@@ -701,39 +704,39 @@ const Schedule = () => {
             </div>
           )}
 
-          <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-            <div className="p-4 border-b border-gray-700">
-              <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-300 flex items-center gap-2">
                 <FaEdit size={14} /> Categorías ({filtered.length})
               </h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-750">
+                <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
-                    <th className="p-3 text-left text-xs font-medium text-gray-400">Nombre</th>
-                    <th className="p-3 text-left text-xs font-medium text-gray-400">Formato</th>
-                    <th className="p-3 text-left text-xs font-medium text-gray-400">Sala</th>
-                    <th className="p-3 text-left text-xs font-medium text-gray-400">Inicio</th>
-                    <th className="p-3 text-left text-xs font-medium text-gray-400">Fin</th>
-                    <th className="p-3 text-left text-xs font-medium text-gray-400">Dur.</th>
+                    <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Nombre</th>
+                    <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Formato</th>
+                    <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Sala</th>
+                    <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Inicio</th>
+                    <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Fin</th>
+                    <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Dur.</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-700">
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                   {sorted.map((cat) => (
                     <tr
                       key={cat.id}
-                      className={`hover:bg-gray-750 transition-colors ${
-                        getConflictBadge(cat.id) ? 'bg-yellow-900/10' : ''
+                      className={`transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                        getConflictBadge(cat.id) ? 'bg-yellow-50 dark:bg-yellow-900/10' : 'bg-white dark:bg-gray-800'
                       }`}
                     >
-                      <td className="p-3 font-medium">{cat.name}</td>
+                      <td className="p-3 font-medium text-gray-900 dark:text-white">{cat.name}</td>
                       <td className="p-3">
                         <span
-                          className={`text-xs px-2 py-0.5 rounded-full ${
+                          className={`text-xs px-2 py-0.5 rounded-full border ${
                             cat.format === 'WCA'
-                              ? 'bg-blue-900/50 text-blue-300 border border-blue-700/50'
-                              : 'bg-red-900/50 text-red-300 border border-red-700/50'
+                              ? 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700/50'
+                              : 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-700/50'
                           }`}
                         >
                           {cat.format}
@@ -744,7 +747,7 @@ const Schedule = () => {
                           <select
                             value={cat.room || ''}
                             onChange={(e) => localUpdateRoom(cat.id, e.target.value)}
-                            className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
                           >
                             <option value="">Sin sala</option>
                             {rooms.map((r) => (
@@ -752,41 +755,41 @@ const Schedule = () => {
                             ))}
                           </select>
                         ) : (
-                          <span className="text-xs text-gray-400">{cat.room || '—'}</span>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">{cat.room || '—'}</span>
                         )}
                       </td>
-                      <td className="p-3 font-mono text-xs">
+                      <td className="p-3 font-mono text-xs text-gray-800 dark:text-gray-200">
                         {!isFinalized && editMode ? (
                           <input
                             type="time"
                             value={cat.startTime}
                             onChange={(e) => localUpdateTime(cat.id, e.target.value, cat.endTime)}
-                            className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs w-24 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs w-24 focus:outline-none focus:ring-1 focus:ring-blue-500"
                           />
                         ) : (
                           cat.startTime
                         )}
                       </td>
-                      <td className="p-3 font-mono text-xs">
+                      <td className="p-3 font-mono text-xs text-gray-800 dark:text-gray-200">
                         {!isFinalized && editMode ? (
                           <input
                             type="time"
                             value={cat.endTime}
                             onChange={(e) => localUpdateTime(cat.id, cat.startTime, e.target.value)}
-                            className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs w-24 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="bg-gray-50 text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs w-24 focus:outline-none focus:ring-1 focus:ring-blue-500"
                           />
                         ) : (
                           cat.endTime
                         )}
                       </td>
-                      <td className="p-3 text-xs text-gray-400">
+                      <td className="p-3 text-xs text-gray-600 dark:text-gray-400">
                         {formatDuration(cat.startTime, cat.endTime)}
                       </td>
                     </tr>
                   ))}
                   {sorted.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-4 text-center text-gray-500">
+                      <td colSpan={6} className="p-4 text-center text-gray-500 dark:text-gray-400">
                         {selectedRoom === '__all__'
                           ? 'No hay categorías registradas'
                           : 'No hay categorías en esta sala'}
@@ -802,14 +805,14 @@ const Schedule = () => {
 
       {showConfirmModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-300 dark:border-gray-600 overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
                 <FaSave size={22} />
               </div>
-              <h3 className="text-xl font-bold text-center text-white mb-2">Guardar Cambios</h3>
-              <p className="text-gray-400 text-center text-sm mb-6">
-                Se modificaron <strong className="text-white">{changedCount}</strong> {changedCount === 1 ? 'categoría' : 'categorías'}. ¿Qué deseas hacer con los cambios?
+              <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">Guardar Cambios</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-center text-sm mb-6">
+                Se modificaron <strong className="text-gray-900 dark:text-white">{changedCount}</strong> {changedCount === 1 ? 'categoría' : 'categorías'}. ¿Qué deseas hacer con los cambios?
               </p>
               <div className="flex flex-col gap-2">
                 <button
@@ -826,7 +829,7 @@ const Schedule = () => {
                 </button>
                 <button
                   onClick={() => setShowConfirmModal(false)}
-                  className="w-full py-2.5 px-4 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors font-medium text-sm"
+                  className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 rounded-lg transition-colors font-medium text-sm"
                 >
                   Cancelar
                 </button>
@@ -842,9 +845,9 @@ const Schedule = () => {
         </div>
       )}
 
-      <div className="mt-12 pt-6 border-t border-gray-700 pb-8">
-        <div className="bg-gray-800/50 rounded-lg p-5 mb-6 text-sm text-gray-400">
-          <h4 className="font-semibold text-gray-300 mb-2">Como usar el cronograma</h4>
+      <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 pb-8">
+        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-5 mb-6 text-sm text-gray-700 dark:text-gray-400">
+          <h4 className="font-semibold text-gray-900 dark:text-gray-300 mb-2">Como usar el cronograma</h4>
           <ul className="space-y-1 list-disc list-inside">
             <li>
               <strong>Arrastra</strong> las barras para cambiar el horario de una categoria.

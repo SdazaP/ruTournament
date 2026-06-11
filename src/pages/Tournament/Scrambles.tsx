@@ -5,8 +5,6 @@ import { FaSyncAlt, FaInfoCircle, FaTrash, FaLock } from 'react-icons/fa';
 import { MdCategory, MdOutlineTimer } from 'react-icons/md';
 import { useTournamentStatus } from '../../hooks/useTournamentStatus';
 
-// ─── Tipos locales ───────────────────────────────────────────────────────────
-
 type Group = {
   id: string;
   name: string;
@@ -30,8 +28,6 @@ type Category = {
   rounds: Round[];
 };
 
-// ─── Mapa de eventos WCA ────────────────────────────────────────────────────
-// [cstimerType, scrambleLength (0 = default)]
 const wcaEventMap: Record<string, [string, number]> = {
   '3x3': ['333', 0],
   '2x2': ['222so', 0],
@@ -51,10 +47,6 @@ const wcaEventMap: Record<string, [string, number]> = {
   '5x5 BLD': ['555bld', 60],
 };
 
-// ─── Hook: csTimer Web Worker ────────────────────────────────────────────────
-// Según la documentación oficial, la única forma de usar cstimer_module
-// en el navegador sin jQuery es cargarlo como Web Worker.
-
 function useCstimerWorker() {
   const workerRef = useRef<Worker | null>(null);
   const callbacksRef = useRef<Record<number, (result: string) => void>>({});
@@ -62,7 +54,6 @@ function useCstimerWorker() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // El archivo está en /public/cstimer_module.js → URL absoluta
     const worker = new Worker('/cstimer_module.js');
 
     worker.onmessage = (e: MessageEvent) => {
@@ -111,8 +102,6 @@ function useCstimerWorker() {
   return { ready, getScramble, getImage };
 }
 
-// ─── Componente principal ────────────────────────────────────────────────────
-
 const Scrambles = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -128,7 +117,6 @@ const Scrambles = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Cargar categorías desde la BD
   useEffect(() => {
     if (!id) return;
     db.tournaments.get(id).then((t) => {
@@ -164,13 +152,11 @@ const Scrambles = () => {
     });
   }, [id]);
 
-  // Derivados del estado seleccionado
   const currentCategoryObj = categories.find((c) => c.id === selectedCategory);
   const currentRoundObj = currentCategoryObj?.rounds.find(
     (r) => r.roundNumber === selectedRound,
   );
 
-  // ── Generar mezclas ──────────────────────────────────────────────────────
   const handleGenerateScrambles = async () => {
     if (!currentCategoryObj || !currentRoundObj || !id || !ready) return;
 
@@ -187,12 +173,10 @@ const Scrambles = () => {
     await actuallyGenerateScrambles(currentRoundObj.groups);
   };
 
-  // Genera mezclas sin tomar en cuenta grupos (modo plano, guardado en la ronda)
   const handleGenerateScramblesWithoutGroups = async () => {
     setShowGroupAlert(false);
     if (!currentCategoryObj || !currentRoundObj || !id || !ready) return;
 
-    // Crear un grupo virtual para representar la ronda entera
     const virtualGroup = {
       id: 'no-group',
       name: 'Mezclas de la Ronda',
@@ -215,7 +199,6 @@ const Scrambles = () => {
     const mapping = wcaEventMap[currentCategoryObj.name] ?? ['333', 0];
     const [scType, scLength] = mapping;
 
-    // ao5 → 5 oficiales + 2 extra = 7 | ao3 → 3 + 2 = 5
     const scramblesPerGroup = currentRoundObj.format === 'ao5' ? 7 : 5;
     const groupsCount = groups.length;
     const totalScramblesToGenerate = scramblesPerGroup * groupsCount;
@@ -249,7 +232,6 @@ const Scrambles = () => {
         generatedGroups.push({ ...groups[g], scrambles: newScrambles });
       }
 
-      // Persistir en la BD
       const tournament = await db.tournaments.get(id!);
       if (tournament) {
         const catIdx = tournament.categories.findIndex((c: any) => c.id === selectedCategory);
@@ -272,7 +254,6 @@ const Scrambles = () => {
         }
       }
 
-      // Actualizar estado local
       if (isUngrouped) {
         setCategories((prev) =>
           prev.map((c) => {
@@ -309,7 +290,6 @@ const Scrambles = () => {
     }
   };
 
-  // ── Eliminar mezclas ─────────────────────────────────────────────────────
   const handleDeleteScrambles = () => {
     if (!id || !currentCategoryObj || !currentRoundObj) return;
     setShowDeleteModal(true);
@@ -353,35 +333,30 @@ const Scrambles = () => {
     );
   };
 
-  // ─── Renderizado ──────────────────────────────────────────────────────────
   const hasScrambles = (currentRoundObj?.groups ?? []).some(g => (g.scrambles?.length ?? 0) > 0)
     || (currentRoundObj?.scrambles?.length ?? 0) > 0;
   const officialCount = currentRoundObj?.format === 'ao5' ? 5 : 3;
-  // Categorías con soporte oficial de mezclas en csTimer
   const isSupportedCategory = currentCategoryObj
     ? currentCategoryObj.name in wcaEventMap
     : false;
 
   return (
-    <div className="text-white p-4 md:p-6 lg:p-8">
-
-      {/* Encabezado */}
+    <div className="text-gray-900 dark:text-white p-4 md:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-            <FaSyncAlt className="text-blue-400" /> Generador de Mezclas
+            <FaSyncAlt className="text-blue-500 dark:text-blue-400" /> Generador de Mezclas
           </h2>
           {!ready && (
-            <p className="text-xs text-yellow-400 mt-1 animate-pulse">
+            <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1 animate-pulse">
               ⏳ Cargando motor de mezclas…
             </p>
           )}
         </div>
 
-        {/* Selectores */}
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <div className="flex-1 min-w-[150px]">
-            <label className="block text-xs sm:text-sm text-gray-400 mb-1 flex items-center gap-1">
+            <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-1">
               <MdCategory size={14} /> Categoría
             </label>
             <select
@@ -391,7 +366,7 @@ const Scrambles = () => {
                 const newCat = categories.find((c) => c.id === e.target.value);
                 if (newCat?.rounds.length) setSelectedRound(newCat.rounds[0].roundNumber);
               }}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
@@ -402,13 +377,13 @@ const Scrambles = () => {
           </div>
 
           <div className="flex-1 min-w-[150px]">
-            <label className="block text-xs sm:text-sm text-gray-400 mb-1 flex items-center gap-1">
+            <label className="block text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 flex items-center gap-1">
               <MdOutlineTimer size={14} /> Ronda
             </label>
             <select
               value={selectedRound}
               onChange={(e) => setSelectedRound(parseInt(e.target.value))}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full bg-white text-gray-900 dark:bg-gray-700 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               {currentCategoryObj?.rounds.map((round) => (
                 <option key={round.roundNumber} value={round.roundNumber}>
@@ -420,36 +395,33 @@ const Scrambles = () => {
         </div>
       </div>
 
-      {/* Contenido principal */}
       {categories.length === 0 ? (
-        <div className="text-center py-16 text-gray-400 flex flex-col items-center gap-3">
+        <div className="text-center py-16 text-gray-500 dark:text-gray-400 flex flex-col items-center gap-3">
           <FaInfoCircle size={32} />
           <p>No hay categorías registradas en este torneo.</p>
           <p className="text-sm">Ve a la sección <strong>Categorías</strong> para añadirlas.</p>
         </div>
       ) : currentRoundObj ? (
-        <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-
-          {/* Barra de la ronda */}
-          <div className="p-4 border-b border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-900/40">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-50 dark:bg-gray-900">
             <div>
-              <h3 className="font-bold text-lg">
+              <h3 className="font-bold text-lg text-gray-900 dark:text-white">
                 {currentCategoryObj?.name} — {currentRoundObj.isFinal ? '🏆 Final' : `Ronda ${currentRoundObj.roundNumber}`}
               </h3>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
                 {officialCount} mezclas oficiales + 2 extras · Motor csTimer (WCA-compatible)
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               {isFinalized ? (
-                <span className="px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 bg-gray-700 opacity-60 cursor-not-allowed text-gray-300">
+                <span className="px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-300 opacity-70 cursor-not-allowed border border-gray-300 dark:border-gray-600">
                   <FaLock /> Torneo Finalizado — Sin acceso
                 </span>
               ) : hasScrambles ? (
                 <button
                   onClick={handleDeleteScrambles}
-                  className="px-3 py-1.5 w-full sm:w-auto bg-red-600 hover:bg-red-700 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
+                  className="px-3 py-1.5 w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
                 >
                   <FaTrash /> <span className="hidden sm:inline">Limpiar Todo</span>
                 </button>
@@ -457,16 +429,17 @@ const Scrambles = () => {
                 <button
                   onClick={handleGenerateScrambles}
                   disabled={isGenerating || !ready}
-                  className={`px-4 py-2 w-full sm:w-auto rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${isGenerating || !ready
-                    ? 'bg-gray-600 cursor-not-allowed opacity-70'
-                    : 'bg-green-600 hover:bg-green-700 text-white'
-                    }`}
+                  className={`px-4 py-2 w-full sm:w-auto rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${
+                    isGenerating || !ready
+                      ? 'bg-gray-200 text-gray-500 dark:bg-gray-600 dark:text-gray-300 cursor-not-allowed opacity-70'
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
                 >
                   <FaSyncAlt className={isGenerating ? 'animate-spin' : ''} />
                   {isGenerating ? `Generando… ${progress}%` : 'Generar mezclas'}
                 </button>
               ) : (
-                <span className="text-xs text-yellow-400 flex items-center gap-1.5 bg-yellow-900/20 border border-yellow-700/40 px-3 py-1.5 rounded-lg">
+                <span className="text-xs text-yellow-700 dark:text-yellow-400 flex items-center gap-1.5 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/40 px-3 py-1.5 rounded-lg">
                   <FaInfoCircle />
                   Categoría personalizada — sin mezclas disponibles
                 </span>
@@ -474,9 +447,8 @@ const Scrambles = () => {
             </div>
           </div>
 
-          {/* Barra de progreso */}
           {isGenerating && (
-            <div className="w-full bg-gray-700 h-1">
+            <div className="w-full bg-gray-100 dark:bg-gray-700 h-1">
               <div
                 className="bg-green-500 h-1 transition-all duration-300"
                 style={{ width: `${progress}%` }}
@@ -484,27 +456,25 @@ const Scrambles = () => {
             </div>
           )}
 
-          {/* Listado de scrambles */}
-          <div className="p-4 md:p-6 bg-gray-900/30">
+          <div className="p-4 md:p-6 bg-gray-50 dark:bg-gray-900">
             {!isSupportedCategory ? (
-              <div className="text-center py-12 text-yellow-500/70 flex flex-col items-center gap-3">
+              <div className="text-center py-12 text-yellow-700 dark:text-yellow-500/70 flex flex-col items-center gap-3">
                 <FaInfoCircle size={28} className="opacity-60" />
                 <p className="font-medium">Categoría personalizada</p>
-                <p className="text-sm text-gray-400 max-w-sm">
+                <p className="text-sm text-gray-600 dark:text-gray-400 max-w-sm">
                   Esta categoría fue creada manualmente y no tiene un algoritmo de mezcla
                   oficial disponible en el motor csTimer. Solo los eventos WCA estándar
                   soportan generación automática de mezclas.
                 </p>
               </div>
             ) : !hasScrambles ? (
-              <div className="text-center py-12 text-gray-500 flex flex-col items-center gap-2">
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400 flex flex-col items-center gap-2">
                 <FaSyncAlt size={28} className="opacity-40" />
                 <p>Presiona <strong>"Generar mezclas"</strong> para calcular las secuencias.</p>
               </div>
             ) : (currentRoundObj.scrambles?.length ?? 0) > 0 ? (
-              // Modo sin grupos: mezclas directamente en la ronda
               <div className="space-y-4">
-                <div className="mb-4 bg-blue-900/20 border border-blue-700/40 rounded-lg p-3 text-xs text-blue-300 flex items-center gap-2">
+                <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40 rounded-lg p-3 text-xs text-blue-800 dark:text-blue-300 flex items-center gap-2">
                   <FaInfoCircle />
                   <span>Mezclas generadas sin grupos. Para organizarlas por grupo, genera primero los horarios y regenera las mezclas.</span>
                 </div>
@@ -515,19 +485,21 @@ const Scrambles = () => {
                     <div
                       key={i}
                       className={`flex flex-col xl:flex-row gap-4 items-center rounded-lg p-4 border break-inside-avoid shadow-sm ${
-                        isExtra ? 'border-yellow-700/40 bg-yellow-900/10' : 'border-gray-600 bg-gray-800'
+                        isExtra
+                          ? 'border-yellow-200 dark:border-yellow-700/40 bg-yellow-50 dark:bg-yellow-900/10'
+                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
                       }`}
                     >
                       <div className="flex-1 w-full">
-                        <div className={`text-xs font-bold uppercase tracking-widest mb-1 ${isExtra ? 'text-yellow-400' : 'text-blue-400'}`}>
+                        <div className={`text-xs font-bold uppercase tracking-widest mb-1 ${isExtra ? 'text-yellow-700 dark:text-yellow-400' : 'text-blue-600 dark:text-blue-400'}`}>
                           {isExtra ? `⚠ Extra ${label}` : `Mezcla ${label}`}
                         </div>
-                        <div className="text-lg md:text-xl lg:text-2xl font-mono leading-relaxed break-words">
+                        <div className="text-lg md:text-xl lg:text-2xl font-mono leading-relaxed break-words text-gray-900 dark:text-white">
                           {scramble.text}
                         </div>
                       </div>
                       <div
-                        className="flex-shrink-0 rounded-lg bg-gray-300 p-1.5 mix-blend-screen"
+                        className="flex-shrink-0 rounded-lg bg-gray-100 dark:bg-gray-300 p-1.5 border border-gray-200 dark:border-gray-400"
                         style={{ width: '180px' }}
                         dangerouslySetInnerHTML={{ __html: scramble.svg }}
                       />
@@ -542,13 +514,14 @@ const Scrambles = () => {
 
                   return (
                     <div key={group.id} className="relative">
-                      {/* Header del grupo */}
-                      <div className="sticky top-0 z-10 bg-gray-800 border border-gray-700 p-3 mb-4 rounded-lg flex items-center justify-between shadow-md">
-                        <span className="font-primary font-bold text-lg text-blue-400">{group.name}</span>
-                        <span className="text-xs px-3 py-1 bg-gray-900 text-gray-300 rounded block font-mono border border-gray-700">Horario: {group.startTime} - {group.endTime}</span>
+                      <div className="sticky top-0 z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 mb-4 rounded-lg flex items-center justify-between shadow-md">
+                        <span className="font-bold text-lg text-blue-600 dark:text-blue-400">{group.name}</span>
+                        <span className="text-xs px-3 py-1 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 rounded block font-mono border border-gray-200 dark:border-gray-700">
+                          Horario: {group.startTime} - {group.endTime}
+                        </span>
                       </div>
 
-                      <div className="space-y-4 pl-0 md:pl-4 border-l-0 md:border-l-2 border-gray-700/50">
+                      <div className="space-y-4 pl-0 md:pl-4 border-l-0 md:border-l-2 border-gray-200 dark:border-gray-700">
                         {group.scrambles.map((scramble, i) => {
                           const isExtra = i >= officialCount;
                           const label = isExtra ? `E${i - officialCount + 1}` : `${i + 1}`;
@@ -556,24 +529,23 @@ const Scrambles = () => {
                           return (
                             <div
                               key={i}
-                              className={`flex flex-col xl:flex-row gap-4 items-center rounded-lg p-4 border break-inside-avoid shadow-sm ${isExtra
-                                ? 'border-yellow-700/40 bg-yellow-900/10'
-                                : 'border-gray-600 bg-gray-800'
-                                }`}
+                              className={`flex flex-col xl:flex-row gap-4 items-center rounded-lg p-4 border break-inside-avoid shadow-sm ${
+                                isExtra
+                                  ? 'border-yellow-200 dark:border-yellow-700/40 bg-yellow-50 dark:bg-yellow-900/10'
+                                  : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                              }`}
                             >
-                              {/* Etiqueta + texto */}
                               <div className="flex-1 w-full">
-                                <div className={`text-xs font-bold uppercase tracking-widest mb-1 ${isExtra ? 'text-yellow-400' : 'text-blue-400'}`}>
+                                <div className={`text-xs font-bold uppercase tracking-widest mb-1 ${isExtra ? 'text-yellow-700 dark:text-yellow-400' : 'text-blue-600 dark:text-blue-400'}`}>
                                   {isExtra ? `⚠ Extra ${label}` : `Mezcla ${label}`}
                                 </div>
-                                <div className="text-lg md:text-xl lg:text-2xl font-mono leading-relaxed break-words">
+                                <div className="text-lg md:text-xl lg:text-2xl font-mono leading-relaxed break-words text-gray-900 dark:text-white">
                                   {scramble.text}
                                 </div>
                               </div>
 
-                              {/* SVG del estado final */}
                               <div
-                                className="flex-shrink-0 rounded-lg bg-gray-300 p-1.5 mix-blend-screen"
+                                className="flex-shrink-0 rounded-lg bg-gray-100 dark:bg-gray-300 p-1.5 border border-gray-200 dark:border-gray-400"
                                 style={{ width: '180px' }}
                                 dangerouslySetInnerHTML={{ __html: scramble.svg }}
                               />
@@ -590,10 +562,9 @@ const Scrambles = () => {
         </div>
       ) : null}
 
-      {/* Footer */}
-      <div className="mt-12 pt-6 border-t border-gray-700 pb-8">
-        <div className="bg-gray-800/50 rounded-lg p-5 mb-6 text-sm text-gray-400">
-          <h4 className="font-semibold text-gray-300 mb-2">💡 ¿Cómo funciona esta sección?</h4>
+      <div className="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 pb-8">
+        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-5 mb-6 text-sm text-gray-700 dark:text-gray-400">
+          <h4 className="font-semibold text-gray-900 dark:text-gray-300 mb-2">💡 ¿Cómo funciona esta sección?</h4>
           <p>
             Aquí puedes generar las mezclas oficiales de cada ronda usando el algoritmo de{' '}
             <strong>csTimer</strong>, el mismo motor de generación utilizado por los cronómetros
@@ -606,19 +577,18 @@ const Scrambles = () => {
         </div>
       </div>
 
-      {/* Modal de Alerta de Grupos — con opción de continuar sin grupos */}
       {showGroupAlert && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
-          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-300 dark:border-gray-600 overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-500/20 text-yellow-500 mb-4 mx-auto">
                 <FaInfoCircle size={24} />
               </div>
-              <h3 className="text-xl font-bold text-center text-white mb-2">Sin grupos generados</h3>
-              <p className="text-gray-400 text-center text-sm mb-4">
+              <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">Sin grupos generados</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-center text-sm mb-4">
                 Esta ronda aún no tiene grupos. Para generar mezclas <strong>separadas por grupo</strong>, primero crea los horarios desde el Generador de Horarios.
               </p>
-              <div className="bg-blue-900/20 border border-blue-700/40 rounded-lg p-3 text-xs text-blue-300 mb-6 flex items-start gap-2">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/40 rounded-lg p-3 text-xs text-blue-800 dark:text-blue-300 mb-6 flex items-start gap-2">
                 <FaInfoCircle className="mt-0.5 flex-shrink-0" />
                 <span>También puedes generar <strong>mezclas sin grupos</strong> para imprimir una sola secuencia de la ronda, aunque no estarán organizadas por turnos.</span>
               </div>
@@ -640,7 +610,7 @@ const Scrambles = () => {
                 </button>
                 <button
                   onClick={() => setShowGroupAlert(false)}
-                  className="w-full py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                  className="w-full py-2.5 px-4 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 rounded-lg transition-colors font-medium text-sm"
                 >
                   Cancelar
                 </button>
@@ -650,22 +620,21 @@ const Scrambles = () => {
         </div>
       )}
 
-      {/* Modal de Confirmación de Eliminación */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4">
-          <div className="bg-boxdark rounded-lg shadow-xl w-full max-w-md border border-gray-600 overflow-hidden transform transition-all">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md border border-gray-300 dark:border-gray-600 overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/20 text-red-500 mb-4 mx-auto">
                 <FaTrash size={20} />
               </div>
-              <h3 className="text-xl font-bold text-center text-white mb-2">Eliminar Mezclas Oficiales</h3>
-              <p className="text-gray-400 text-center text-sm mb-6">
+              <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">Eliminar Mezclas Oficiales</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-center text-sm mb-6">
                 ¿Estás seguro de que deseas eliminar todas las secuencias de mezclas de <strong>todos los grupos</strong> de esta ronda? Tendrás que volver a generarlas si cambias de opinión.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium text-sm"
+                  className="flex-1 py-2.5 px-4 bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600 rounded-lg transition-colors font-medium text-sm"
                 >
                   Cancelar
                 </button>
@@ -680,7 +649,6 @@ const Scrambles = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };
