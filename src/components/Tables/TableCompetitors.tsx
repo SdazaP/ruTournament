@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaTrash, FaPlus, FaMinus } from 'react-icons/fa';
 import CategoryToggle from '../CategoryToggle';
+
 interface CompetitorData {
   name: string;
   categories: string[];
@@ -16,32 +17,32 @@ interface TableCompetitorsProps {
   onNameBlur?: (index: number) => void;
 }
 
-const TableCompetitors: React.FC<TableCompetitorsProps> = ({ 
-  competitors, 
-  categories, 
-  onAddRow, 
-  onChange, 
+const TableCompetitors: React.FC<TableCompetitorsProps> = ({
+  competitors,
+  categories,
+  onAddRow,
+  onChange,
   onRemove,
   nameErrors = {},
   onNameBlur,
 }) => {
   return (
-    <div className="w-full bg-gray-800">
-      <div className="overflow-x-auto rounded-t-lg border border-gray-700">
+    <div className="w-full rounded-xl bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100">
+      <div className="overflow-x-auto rounded-t-lg border border-gray-200 dark:border-gray-700">
         {/* Encabezados de la tabla */}
-        <div className="grid min-w-[500px] grid-cols-3 bg-gray-900/50 border-b border-gray-700">
+        <div className="grid min-w-[500px] grid-cols-3 border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900/50">
           <div className="p-4 text-center">
-            <h5 className="text-xs font-bold tracking-wider text-gray-400 uppercase">
+            <h5 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               Competidores
             </h5>
           </div>
           <div className="p-4 text-center">
-            <h5 className="text-xs font-bold tracking-wider text-gray-400 uppercase">
+            <h5 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               Categorías
             </h5>
           </div>
           <div className="p-4 text-center">
-            <h5 className="text-xs font-bold tracking-wider text-gray-400 uppercase">
+            <h5 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               Acciones
             </h5>
           </div>
@@ -49,9 +50,9 @@ const TableCompetitors: React.FC<TableCompetitorsProps> = ({
 
         {/* Filas de la tabla */}
         {competitors.map((competitor, index) => (
-          <div 
-            key={index} 
-            className="grid min-w-[500px] grid-cols-3 border-b border-gray-750 hover:bg-gray-750/30 transition-colors last:border-0"
+          <div
+            key={index}
+            className="grid min-w-[500px] grid-cols-3 border-b border-gray-200 transition-colors last:border-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/30"
           >
             {/* Input para el nombre del competidor */}
             <div className="flex flex-col justify-center p-3">
@@ -61,10 +62,16 @@ const TableCompetitors: React.FC<TableCompetitorsProps> = ({
                 value={competitor.name}
                 onChange={(e) => onChange(index, 'name', e.target.value)}
                 onBlur={() => onNameBlur?.(index)}
-                className={`w-full rounded-md border bg-gray-900 p-2.5 text-sm text-white focus:outline-none transition-all placeholder-gray-500 ${nameErrors[index] ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : 'border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'}`}
+                className={`w-full rounded-md border p-2.5 text-sm transition-all placeholder-gray-400 focus:outline-none ${
+                  nameErrors[index]
+                    ? 'border-red-500 bg-red-50 text-gray-900 focus:border-red-500 focus:ring-1 focus:ring-red-500 dark:bg-red-500/10 dark:text-white dark:placeholder-gray-500'
+                    : 'border-gray-300 bg-white text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-white dark:placeholder-gray-500'
+                }`}
               />
               {nameErrors[index] && (
-                <p className="text-red-400 text-xs mt-1">{nameErrors[index]}</p>
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                  {nameErrors[index]}
+                </p>
               )}
             </div>
 
@@ -75,26 +82,33 @@ const TableCompetitors: React.FC<TableCompetitorsProps> = ({
                 selected={competitor.categories}
                 onToggle={(cat) => {
                   if (competitor.categories.includes(cat)) {
-                    onChange(index, 'categories', competitor.categories.filter((c: string) => c !== cat));
+                    onChange(
+                      index,
+                      'categories',
+                      competitor.categories.filter((c: string) => c !== cat)
+                    );
                   } else {
-                    onChange(index, 'categories', [...competitor.categories, cat]);
+                    onChange(index, 'categories', [
+                      ...competitor.categories,
+                      cat,
+                    ]);
                   }
                 }}
               />
             </div>
 
             {/* Acciones */}
-            <div className="flex items-center justify-center p-3 space-x-2">
+            <div className="flex items-center justify-center space-x-2 p-3">
               {competitors.length > 1 ? (
                 <button
                   onClick={() => onRemove(index)}
-                  className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                  className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 dark:text-gray-400 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                   title="Eliminar competidor"
                 >
                   <FaTrash />
                 </button>
               ) : (
-                <span className="w-8 h-8 flex items-center justify-center text-gray-600">
+                <span className="flex h-8 w-8 items-center justify-center text-gray-400 dark:text-gray-600">
                   -
                 </span>
               )}
@@ -104,10 +118,10 @@ const TableCompetitors: React.FC<TableCompetitorsProps> = ({
       </div>
 
       {/* Botones de acción */}
-      <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 p-2">
+      <div className="mt-4 flex flex-col items-stretch justify-end gap-3 p-2 sm:flex-row sm:items-center">
         <button
           onClick={onAddRow}
-          className="flex items-center justify-center gap-2 rounded-lg bg-blue-500/10 border border-blue-500/30 px-4 py-2 w-full sm:w-auto text-sm text-blue-400 font-medium hover:bg-blue-600 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 transition-all hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-400"
         >
           <FaPlus />
           Añadir Competidor
@@ -116,7 +130,7 @@ const TableCompetitors: React.FC<TableCompetitorsProps> = ({
         {competitors.length > 1 && (
           <button
             onClick={() => onRemove(competitors.length - 1)}
-            className="flex items-center justify-center gap-2 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-2 w-full sm:w-auto text-sm text-red-400 font-medium hover:bg-red-600 hover:text-white transition-all focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition-all hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400"
           >
             <FaMinus />
             Eliminar Último
