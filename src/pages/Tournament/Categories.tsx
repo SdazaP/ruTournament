@@ -396,8 +396,7 @@ const Categories = () => {
       if (currentTournament) {
         currentTournament.categories = currentTournament.categories.map((cat: any) => {
           if (cat.id === id && cat.format === 'wca') {
-            const lastRound = cat.rounds?.[cat.rounds.length - 1];
-            const newRoundNumber = lastRound ? lastRound.num + 1 : 1;
+            const newRoundNumber = (cat.rounds?.length || 0) + 1;
             const isFinal = true;
             const updatedRounds = cat.rounds?.map((round: any) => ({
               ...round,
@@ -420,8 +419,7 @@ const Categories = () => {
     setCategories(
       categories.map((category) => {
         if (category.id === id && category.format === 'WCA') {
-          const lastRound = category.rounds?.[category.rounds.length - 1];
-          const newRoundNumber = lastRound ? lastRound.roundNumber + 1 : 1;
+          const newRoundNumber = (category.rounds?.length || 0) + 1;
           const isFinal = true;
 
           const updatedRounds = category.rounds?.map(round => ({
@@ -460,10 +458,9 @@ const Categories = () => {
       if (currentTournament) {
         currentTournament.categories = currentTournament.categories.map((cat: any) => {
           if (cat.id === id && cat.format === 'wca' && cat.rounds) {
-            const filteredRounds = cat.rounds.filter((round: any) => round.num !== roundNumber);
-            if (filteredRounds.length > 0) {
-              filteredRounds[filteredRounds.length - 1].isFinal = true;
-            }
+            const filteredRounds = cat.rounds
+              .filter((round: any) => round.num !== roundNumber)
+              .map((round: any, i: number, arr: any[]) => ({ ...round, num: i + 1, isFinal: i === arr.length - 1 }));
             return { ...cat, rounds: filteredRounds };
           }
           return cat;
@@ -475,13 +472,9 @@ const Categories = () => {
     setCategories(
       categories.map((category) => {
         if (category.id === id && category.format === 'WCA' && category.rounds) {
-          const filteredRounds = category.rounds.filter(
-            (round) => round.roundNumber !== roundNumber,
-          );
-
-          if (filteredRounds.length > 0) {
-            filteredRounds[filteredRounds.length - 1].isFinal = true;
-          }
+          const filteredRounds = category.rounds
+            .filter((round) => round.roundNumber !== roundNumber)
+            .map((round, i, arr) => ({ ...round, roundNumber: i + 1, isFinal: i === arr.length - 1 }));
 
           return { ...category, rounds: filteredRounds };
         }
