@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { db } from '../../common/db';
 import { FaEdit, FaSave, FaTimes, FaInfoCircle, FaLock, FaUsers, FaLayerGroup } from 'react-icons/fa';
@@ -166,6 +166,8 @@ const ResultsWCA = () => {
     useState<Participant | null>(null);
   const [tempTimes, setTempTimes] = useState<any[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
+  const [dataVersion, setDataVersion] = useState(0);
+  const prevId = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     const handleResize = () => setIsMobileView(window.innerWidth < 768);
@@ -176,6 +178,8 @@ const ResultsWCA = () => {
 
   useEffect(() => {
     if (!id) return;
+    const idChanged = prevId.current !== id;
+    prevId.current = id;
     db.tournaments.get(id).then(tournament => {
       if (!tournament) {
         console.warn('Torneo no encontrado con ID:', id);
@@ -255,23 +259,25 @@ const ResultsWCA = () => {
 
       setCategories(selectedCategories);
 
-      if (categoryName) {
-        const found = selectedCategories.find(
-          (c) => c.name.toLowerCase() === categoryName.toLowerCase(),
-        );
-        if (found) {
-          setSelectedCategory(found.id);
+      if (idChanged) {
+        if (categoryName) {
+          const found = selectedCategories.find(
+            (c) => c.name.toLowerCase() === categoryName.toLowerCase(),
+          );
+          if (found) {
+            setSelectedCategory(found.id);
+            setSelectedRound(1);
+            return;
+          }
+        }
+
+        if (selectedCategories.length > 0) {
+          setSelectedCategory(selectedCategories[0].id);
           setSelectedRound(1);
-          return;
         }
       }
-
-      if (selectedCategories.length > 0) {
-        setSelectedCategory(selectedCategories[0].id);
-        setSelectedRound(1);
-      }
     });
-  }, [id, categoryName]);
+  }, [id, categoryName, dataVersion]);
 
   useEffect(() => {
     if (!id || !selectedCategory || !selectedRound) return;
@@ -386,6 +392,7 @@ const ResultsWCA = () => {
             round.results.push(updatedResult as any);
           }
           await db.tournaments.put(currentTournament as any);
+          setDataVersion(v => v + 1);
         }
       }
     }
