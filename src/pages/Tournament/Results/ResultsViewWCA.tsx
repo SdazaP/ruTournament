@@ -26,6 +26,7 @@ type Participant = {
 type Round = {
   roundNumber: number;
   format: 'ao3' | 'ao5';
+  isFinal?: boolean;
   participants: Participant[];
 };
 
@@ -59,11 +60,39 @@ const ResultsViewWCA = ({ initialCategoryId }: { initialCategoryId?: string }) =
       const loadedCategories: Category[] = tournament.categories
         .filter((c: any) => !c.format || c.format === 'wca')
         .map((category: any) => {
-          const rounds: Round[] = (category.rounds || []).map((round: any) => {
+          const rounds: Round[] = (category.rounds || []).map((round: any, _: any, allRounds: any[]) => {
+            let allowedIds: string[] | null = null;
+
+            if (round.num > 1) {
+              const prevRound = allRounds.find((r: any) => r.num === round.num - 1);
+              if (prevRound && prevRound.results) {
+                const prevResultsWithStats = (prevRound.results || []).map((res: any) => {
+                  const loadedTimes = (res.times || []).map(normalizeTime);
+                  const computed = calculateRulesStats(loadedTimes, prevRound.format as 'ao3'|'ao5');
+                  return {
+                    id: res.idCompetitor,
+                    name: '',
+                    average: parseFloat(res.media) || 0,
+                    best: computed.best > 0 ? computed.best : 0,
+                  };
+                }).sort(sortWCA);
+
+                const cToAdvance = String(prevRound.competitorsToAdvance) === 'all'
+                  ? prevResultsWithStats.length
+                  : Number(prevRound.competitorsToAdvance) || (prevRound.format === 'ao5' ? 12 : 8);
+
+                allowedIds = prevResultsWithStats.slice(0, cToAdvance).map((r: any) => r.id);
+              } else {
+                allowedIds = [];
+              }
+            }
+
             const participants: Participant[] = tournament.competitors
-              .filter((comp: any) =>
-                (comp.categories || []).includes(category.id as string)
-              )
+              .filter((comp: any) => {
+                if (!(comp.categories || []).includes(category.id as string)) return false;
+                if (allowedIds !== null && !allowedIds.includes(comp.id as string)) return false;
+                return true;
+              })
               .map((comp: any) => {
                 const result = (round.results || []).find(
                   (r: any) => r.idCompetitor === comp.id
@@ -93,6 +122,7 @@ const ResultsViewWCA = ({ initialCategoryId }: { initialCategoryId?: string }) =
             return {
               roundNumber: round.num,
               format: round.format as 'ao3' | 'ao5',
+              isFinal: round.isFinal,
               participants: participants
                 .sort(sortWCA)
                 .map((p, i) => ({ ...p, ranking: i + 1 })),
@@ -192,7 +222,9 @@ const ResultsViewWCA = ({ initialCategoryId }: { initialCategoryId?: string }) =
             >
               {currentCategory?.rounds.map((round) => (
                 <option key={round.roundNumber} value={round.roundNumber}>
-                  {round.roundNumber === 1
+                  {round.isFinal
+                    ? 'Final'
+                    : round.roundNumber === 1
                     ? 'Primera Ronda'
                     : round.roundNumber === 2
                     ? 'Segunda Ronda'
@@ -378,7 +410,7 @@ const ResultsViewWCA = ({ initialCategoryId }: { initialCategoryId?: string }) =
                   {sortedParticipants.map((participant) => (
                     <tr
                       key={participant.id}
-                      className="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-750"
+                      className="border-b border-gray-200 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
                     >
                       <td className="px-4 py-3 text-center font-medium">
                         {participant.ranking ? (

@@ -511,7 +511,7 @@ const ResultsViewRB = () => {
                     {ranked.map((p, i) => (
                       <tr
                         key={p.id}
-                        className={`border-b border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-750 ${
+                        className={`border-b border-gray-200 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 ${
                           byedIds.has(p.id)
                             ? 'bg-green-50 dark:bg-green-500/10'
                             : ''
