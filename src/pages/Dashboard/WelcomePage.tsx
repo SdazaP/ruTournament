@@ -88,7 +88,7 @@ const WelcomePage = () => {
               const colorIdx = tournaments.indexOf(t) % colors.length;
               return (
                 <Link to={`/dashboard/tournament/${t.id}`} key={t.id}
-                  className="dark:bg-gray-800 bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow block">
+                  className="dark:bg-gray-800 bg-white rounded-lg shadow-lg p-6 hover:shadow-xl block transition-transform hover:scale-105 ">
                   <div className="flex items-center space-x-4 mb-4">
                     <div className={`w-12 h-12 ${colors[colorIdx]} rounded-full flex items-center justify-center text-white font-bold text-sm`}>
                       {initials}
@@ -119,12 +119,25 @@ const WelcomePage = () => {
         <h2 className="text-2xl font-bold dark:text-white mb-6">¿Listo para comenzar?</h2>
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
           <Link to="new-tournament">
-            <button className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors w-full sm:w-auto">
-              Crear nuevo torneo +
+            <button className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto transition-transform hover:scale-105">
+
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="currentColor" stroke="currentColor" strokeWidth="0.7" strokeLinejoin="round">
+                    <rect x="1" y="1" width="4.4" height="4.4" rx="0.5"/>
+                    <rect x="6.8" y="1" width="4.4" height="4.4" rx="0.5"/>
+                    <rect x="12.6" y="1" width="4.4" height="4.4" rx="0.5"/>
+                    <rect x="1" y="6.8" width="4.4" height="4.4" rx="0.5"/>
+                    <rect x="6.8" y="6.8" width="4.4" height="4.4" rx="0.5"/>
+                    <rect x="12.6" y="6.8" width="4.4" height="4.4" rx="0.5"/>
+                    <rect x="1" y="12.6" width="4.4" height="4.4" rx="0.5"/>
+                    <rect x="6.8" y="12.6" width="4.4" height="4.4" rx="0.5"/>
+                    <rect x="12.6" y="12.6" width="4.4" height="4.4" rx="0.5"/>
+              </svg>
+
+              Crear nuevo torneo 
             </button>
           </Link>
           <Link to="guide">
-            <button className="px-8 py-4 bg-gray-500 dark:bg-gray-700 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto">
+            <button className="px-8 py-4 bg-gray-500 dark:bg-gray-700 text-white text-lg font-semibold rounded-lg shadow-md hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors flex items-center justify-center gap-2 w-full sm:w-auto transition-transform hover:scale-105">
               <FaBook /> Guía de Uso del Sistema
             </button>
           </Link>
