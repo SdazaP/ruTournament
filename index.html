@@ -7,6 +7,16 @@
     <title>Speedcubing Tournaments</title>
   </head>
   <body>
+    <script>
+      (function() {
+        var raw = localStorage.getItem('color-theme');
+        var stored;
+        try { stored = raw ? JSON.parse(raw) : null; } catch(e) { stored = null; }
+        if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.body.classList.add('dark');
+        }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
