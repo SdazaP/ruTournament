@@ -289,10 +289,10 @@ const ResultsViewWCA = ({ initialCategoryId }: { initialCategoryId?: string }) =
                       participant.ranking === 1
                         ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-500/10'
                         : participant.ranking === 2
-                        ? 'border-gray-400 bg-gray-50 dark:bg-gray-750'
+                        ? 'border-gray-400 bg-gray-50 dark:bg-gray-800'
                         : participant.ranking === 3
                         ? 'border-amber-700 bg-amber-50 dark:bg-amber-500/10'
-                        : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-750'
+                        : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
                     }`}
                   >
                     <div className="mb-3 flex items-center justify-between">

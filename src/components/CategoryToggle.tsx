@@ -21,7 +21,7 @@ const CategoryToggle: React.FC<CategoryToggleProps> = ({ categories, selected, o
             className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium border transition-all ${
               isSelected
                 ? `${config?.bg || 'bg-blue-600'} text-white border-transparent`
-                : 'bg-gray-700 text-gray-400 border-gray-600 hover:border-gray-500 hover:text-gray-300'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-400 border-gray-600 hover:border-gray-500 hover:text-gray-300'
             }`}
           >
             {isSelected && <FaCheck size={8} />}

@@ -357,10 +357,10 @@ const ResultsViewRB = () => {
                           i === 0
                             ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-500/10'
                             : i === 1
-                            ? 'border-gray-400 bg-gray-50 dark:bg-gray-750'
+                            ? 'border-gray-400 bg-gray-50 dark:bg-gray-800'
                             : i === 2
                             ? 'border-amber-700 bg-amber-50 dark:bg-amber-500/10'
-                            : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-750'
+                            : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
                         } ${
                           byedIds.has(p.id)
                             ? 'ring-1 ring-green-300 dark:ring-green-900/40'
@@ -600,7 +600,7 @@ const ResultsViewRB = () => {
                 className={`cursor-pointer rounded-lg p-4 shadow-md transition-all hover:bg-gray-100 dark:hover:bg-gray-700 ${
                   match.winner
                     ? 'border-t-4 border-green-500 bg-gray-50 dark:bg-gray-800'
-                    : 'bg-gray-50 dark:bg-gray-750'
+                    : 'bg-gray-50 dark:bg-gray-800'
                 }`}
               >
                 <div className="flex flex-col">

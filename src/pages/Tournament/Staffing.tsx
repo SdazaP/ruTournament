@@ -413,7 +413,7 @@ const Staffing = () => {
                         </td>
                         <td className="p-4 text-center">
                           {isCompetingHere ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900 text-blue-200">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-600 text-white">
                               Sí
                             </span>
                           ) : (
