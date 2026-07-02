@@ -19,6 +19,38 @@ import {
 import { MdCategory, MdPeople } from 'react-icons/md';
 import { db } from '../../common/db';
 
+function resizeImage(file: File, maxSize: number): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+    reader.onload = () => { img.src = reader.result as string; };
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > maxSize) { h *= maxSize / w; w = maxSize; } }
+      else { if (h > maxSize) { w *= maxSize / h; h = maxSize; } }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+const toSvgUri = (s: string) => 'data:image/svg+xml;base64,' + btoa(s);
+
+const DEFAULT_LOGOS: Record<string, string> = {
+  '3x3': toSvgUri(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 18 18" fill="#818CF8" stroke="#6366F1" stroke-width="0.7" stroke-linejoin="round"><rect x="1" y="1" width="4.4" height="4.4" rx="0.5"/><rect x="6.8" y="1" width="4.4" height="4.4" rx="0.5"/><rect x="12.6" y="1" width="4.4" height="4.4" rx="0.5"/><rect x="1" y="6.8" width="4.4" height="4.4" rx="0.5"/><rect x="6.8" y="6.8" width="4.4" height="4.4" rx="0.5"/><rect x="12.6" y="6.8" width="4.4" height="4.4" rx="0.5"/><rect x="1" y="12.6" width="4.4" height="4.4" rx="0.5"/><rect x="6.8" y="12.6" width="4.4" height="4.4" rx="0.5"/><rect x="12.6" y="12.6" width="4.4" height="4.4" rx="0.5"/></svg>`
+  ),
+  '2x2': toSvgUri(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 18 18" fill="#818CF8" stroke="#6366F1" stroke-width="0.7" stroke-linejoin="round"><rect x="1" y="1" width="7" height="7" rx="0.5"/><rect x="10" y="1" width="7" height="7" rx="0.5"/><rect x="1" y="10" width="7" height="7" rx="0.5"/><rect x="10" y="10" width="7" height="7" rx="0.5"/></svg>`
+  ),
+  '4x4': toSvgUri(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 18 18" fill="#818CF8" stroke="#6366F1" stroke-width="0.7" stroke-linejoin="round"><rect x="1" y="1" width="3.25" height="3.25" rx="0.5"/><rect x="5.25" y="1" width="3.25" height="3.25" rx="0.5"/><rect x="9.5" y="1" width="3.25" height="3.25" rx="0.5"/><rect x="13.75" y="1" width="3.25" height="3.25" rx="0.5"/><rect x="1" y="5.25" width="3.25" height="3.25" rx="0.5"/><rect x="5.25" y="5.25" width="3.25" height="3.25" rx="0.5"/><rect x="9.5" y="5.25" width="3.25" height="3.25" rx="0.5"/><rect x="13.75" y="5.25" width="3.25" height="3.25" rx="0.5"/><rect x="1" y="9.5" width="3.25" height="3.25" rx="0.5"/><rect x="5.25" y="9.5" width="3.25" height="3.25" rx="0.5"/><rect x="9.5" y="9.5" width="3.25" height="3.25" rx="0.5"/><rect x="13.75" y="9.5" width="3.25" height="3.25" rx="0.5"/><rect x="1" y="13.75" width="3.25" height="3.25" rx="0.5"/><rect x="5.25" y="13.75" width="3.25" height="3.25" rx="0.5"/><rect x="9.5" y="13.75" width="3.25" height="3.25" rx="0.5"/><rect x="13.75" y="13.75" width="3.25" height="3.25" rx="0.5"/></svg>`
+  ),
+};
+
 type Tournament = {
   id: string;
   name: string;
@@ -115,20 +147,12 @@ const TournamentWelcome = () => {
   };
 
   // Manejar cambio de logo
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!editMode || !tournament) return;
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result && tournament) {
-          setTournament({
-            ...tournament,
-            logo: event.target.result as string,
-          });
-        }
-      };
-      reader.readAsDataURL(file);
+      const dataUri = await resizeImage(file, 200);
+      setTournament({ ...tournament, logo: dataUri });
     }
   };
 
@@ -144,7 +168,7 @@ const TournamentWelcome = () => {
   // Guardar cambios en el torneo
   const saveChanges = async () => {
     if (!tournament) return;
-    await db.tournaments.put(tournament as any);
+    await db.tournaments.put(tournament as unknown as import('../../common/db').TournamentLocal);
     setEditMode(false);
     setOriginalTournament(null);
     setShowExitModal(false);
@@ -251,8 +275,10 @@ const TournamentWelcome = () => {
     <div className="min-h-screen dark:text-white text-gray-900 p-6 mx-auto">
       {/* Encabezado con botones */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-6 mb-4 gap-4">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <FaTrophy className="text-blue-400" /> Panel del Torneo
+        <h1 className="text-xl sm:text-3xl font-bold flex items-center gap-2 truncate">
+          <FaTrophy className="text-blue-400 flex-shrink-0" />
+          <span className="hidden sm:inline">Panel del Torneo —</span>
+          <span className="truncate">{tournament.name}</span>
         </h1>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
           {editMode && (
@@ -356,6 +382,25 @@ const TournamentWelcome = () => {
             <h3 className="text-lg font-semibold mb-1">Logo del Torneo</h3>
             <p className="text-sm text-gray-400">Recomendado: 400×400 px</p>
           </div>
+          {editMode && (
+            <div className="mt-3 flex gap-3">
+              {(['3x3', '2x2', '4x4'] as const).map((key) => (
+                <button
+                  key={key}
+                  onClick={() => setTournament({ ...tournament, logo: DEFAULT_LOGOS[key] })}
+                  title={`Logo ${key}`}
+                  className={`rounded-full border-2 p-1.5 transition hover:border-blue-500 ${
+                    tournament.logo === DEFAULT_LOGOS[key]
+                      ? 'border-blue-500 bg-blue-100 dark:bg-blue-500/20'
+                      : 'border-gray-300 dark:border-gray-600'
+                  }`}
+                >
+                  <img src={DEFAULT_LOGOS[key]} alt={key} className="h-8 w-8" />
+                </button>
+              ))}
+              <span className="self-center text-xs text-gray-400">o sube una imagen</span>
+            </div>
+          )}
         </div>
 
         {/* Columna 2: Información General */}

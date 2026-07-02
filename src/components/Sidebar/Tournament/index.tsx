@@ -37,11 +37,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
     storedSidebarExpanded === null ? false : storedSidebarExpanded === 'true',
   );
   const [tournamentName, setTournamentName] = useState('Nombre de Torneo');
+  const [tournamentLogo, setTournamentLogo] = useState<string>();
 
   useEffect(() => {
     if (id) {
       db.tournaments.get(id).then((t) => {
-        if (t?.name) setTournamentName(t.name);
+        if (t) {
+          if (t.name) setTournamentName(t.name);
+          if ((t as any).logo) setTournamentLogo((t as any).logo as string);
+        }
       });
     }
   }, [id]);
@@ -124,12 +128,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
           className="rounded-full border-4 border-white p-1"
         >
           <img
-            src=""
+            src={tournamentLogo || Logo}
             alt="Logo Tournament"
             className="h-20 w-20 rounded-full object-cover"
           />
         </NavLink>
-        <span className="mt-2 text-sm font-medium dark:text-bodydark1 text-gray-900 truncate px-2 text-center max-w-full">
+        <span className="my-2 text-lg font-semibold dark:text-bodydark1 text-gray-900 truncate px-2 text-center max-w-full">
           {tournamentName}
         </span>
       </div>

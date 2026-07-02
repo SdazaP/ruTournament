@@ -91,6 +91,7 @@ export interface TournamentLocal {
     location: string;
     status: string;
     date: string;
+    logo?: string;
     categories: CategoryLocal[];
     competitors: CompetitorLocal[];
 }
