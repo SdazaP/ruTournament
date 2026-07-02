@@ -1,27 +1,49 @@
-# ruTournament - Rubik's Cube Tournament Management
+# ruTournament
 
-## Descripción General
-**ruTournament** es la plataforma web definitiva desarrollada en React y Tailwind CSS para la gestión integral de competencias locales de cubos de Rubik y otras variaciones. Diseñada para cubrir las necesidades reales de organizadores y delegados, la aplicación estructura de forma eficaz todo el ciclo de vida de un certamen: creación del torneo, selección de grupos, registro de competidores y el ingreso instantáneo de resultados.
+Sistema de gestión de torneos de Rubik's Cube offline-first. SPA construida con React, TypeScript y Tailwind CSS. Permite crear torneos, registrar competidores, configurar categorías WCA y Red Bull, generar grupos y scrambles, ingresar resultados y visualizarlos públicamente.
 
-## Características Principales
+## Características
 
-- 📱 **Arquitectura Offline-First**: Todo se guarda asíncronamente en el caché profundo de tu navegador utilizando IndexedDB (gracias a **Dexie.js**). Online próximamente...
+- **Offline-first** — toda la data persiste en IndexedDB vía Dexie.js. Sin backend.
+- **Formato WCA** — cálculo automático de promedios ao5 y ao3, avance entre rondas, penalizaciones +2/DNF.
+- **Formato Red Bull** — brackets de eliminación directa, ronda previa de colocación opcional, avance automatico de ganadores.
+- **Staffing** — asignación de roles Judge, Runner y Scrambler por competidor y categoría.
+- **Grupos y Scrambles** — generación automática de grupos y mezclas vía csTimer.
+- **Tres estados** — próximamente / activo / finalizado, con bloqueo de solo lectura al finalizar.
+- **Modo oscuro/claro** — detecta preferencia del sistema, toggle manual persistente.
+- **Logo personalizable** — subida de imagen con resize automático a 200px + 3 logos SVG por defecto (3x3, 2x2, 4x4).
+- **Responsive** — vista de resultados adaptada a escritorio y móvil.
 
-- ⏱ **Cálculo Automático de Tiempos Oficiales**:
-  - **Formato WCA**: Calcula con exactitud aritmética promedios `ao5` (Descartando el peor y mejor tiempo) y medias `ao3`. 
-  - **Formato Red Bull**: Configurado para enfrentar competidores uno a uno a través de tablas de batallas (Red Bull Rubik's Cube World Cup mode). Próximamente...
+## Stack
 
-- 🎨 **Interfaz Premium UX/UI**: Construimos este portal para que sea asombroso. Con un Modo Oscuro por defecto, la visibilidad es perfecta en entornos saturados de luz. Integra visualizaciones modernas, bordes translúcidos en tablas y steppers de avance intuitivos para el organizador.
+| Categoría | Tecnología |
+|-----------|-----------|
+| UI | React 18 + TypeScript |
+| Build | Vite 4 |
+| Estilos | Tailwind CSS 3  |
+| Enrutamiento | React Router v6 |
+| Almacenamiento | Dexie.js sobre IndexedDB |
+| Iconografía | react-icons |
+| Formateo | Prettier + prettier-plugin-tailwindcss |
 
-- 👥 **Manejo Centralizado de Competidores**: Soporte para que un mismo participante compita en múltiples categorías (Ej: 3x3, 4x4 y One-Handed) usando un esquema modular para añadir o quitar etiquetas asíncronamente sin recargar la página.
+## Estructura del proyecto
 
-## Tecnologías Utilizadas
-- **Framework & Empaquetador**: React 18 + Vite
-- **Lenguaje**: TypeScript
-- **Base de Datos & Almacenamiento**: IndexedDB vía Dexie.js
-- **Estilos**: Vanilla CSS combinado exhaustivamente con Tailwind CSS. Modificado a mano para un look "Dark-Glassmorphism" con sombras de colores.
-- **Enrutamiento**: React Router v6
-- **Iconografía**: react-icons 
+```
+src/
+├── common/
+│   ├── db.ts              # Esquema Dexie (TournamentLocal, CompetitorLocal, etc.)
+│   └── Loader/            # Spinner de carga inicial
+├── pages/
+│   ├── Dashboard/         # WelcomePage, Tournaments, Guide
+│   ├── NewTournament/     # Wizard de creación (3 pasos)
+│   └── Tournament/        # Competidores, Staffing, Grupos, Categorías,
+│                          # Scrambles, Results, ResultsView, Schedule
+├── components/
+│   ├── Header/            # Barra superior + DarkModeSwitcher
+│   └── Sidebar/           # Sidebar del dashboard y sidebar por torneo
+├── hooks/                 # useColorMode, useLocalStorage
+└── layout/                # DashboardLayout, DashboardTournament
+```
 
 ## Instalación y Configuración Local
 Corre tu propio gestor de ruTournament desde tu computadora en un par de pasos usando Node.js.
@@ -41,11 +63,16 @@ Corre tu propio gestor de ruTournament desde tu computadora en un par de pasos u
     ```bash
     npm run dev
     ```
-4. Navega en tu navegador moderno (Google Chrome o Edge) hacia la dirección predeterminada:
+4. Navega en tu navegador (Google Chrome o Edge) hacia la dirección predeterminada:
     ```text
     http://localhost:5173
     ```
-    *¡Disfruta organizando torneos y midiendo tus records localmente!*
+    *¡Disfruta organizando torneos!*
+
+
+## Guía de uso
+
+La aplicación incluye una guía paso a paso en **/dashboard/guide** que cubre el flujo completo: creación del torneo, navegación, competidores, staffing, categorías, cronograma, grupos, scrambles, resultados WCA y Red Bull, visualización pública y finalización.
 
 ---
-> Diseñado en Pro de la comunidad Speedcubing
+> Diseñado en Pro de la comunidad Speedcubing - SdazaP
